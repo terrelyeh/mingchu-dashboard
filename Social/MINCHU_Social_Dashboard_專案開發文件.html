@@ -393,14 +393,24 @@
       <p>管理者目前在 Google Sheets 上手動模擬各項指標的目標成長率。儀表板新增「目標模擬器」頁籤，提供互動式目標設定工作流：</p>
       <p><strong>Step 1 — 模擬探索（前端即時運算）</strong></p>
       <ul>
-        <li>選擇模擬指標（新增淨追蹤數 / 自然觸及人數）與基期月份</li>
+        <li>選擇模擬指標（新增淨追蹤數 / 自然觸及人數）與基期月份（Demo 預設為最近有數據月份）</li>
         <li>拖動成長率滑桿（0.5x ~ 3.0x）或快速選擇預設情境</li>
         <li>圖表即時顯示實際數據柱狀圖 + 目標軌跡虛線，各月達成率卡片</li>
       </ul>
+      <div class="callout callout-warning" style="margin:12px 0;">
+        <strong>Demo 模式說明</strong>：目前使用 2025 歷史數據示範操作流程，正式版將以最新月份實際數據為基期，向未來推算目標。
+      </div>
       <p><strong>Step 2 — 確認儲存（Phase 2 寫入 Supabase）</strong></p>
       <ul>
         <li>點擊「確認此目標設定」，系統將成長率參數寫入 <code>goals</code> 表</li>
-        <li>所有頁籤自動載入最新目標設定，在圖表上疊加目標參考線</li>
+        <li>確認後影響的頁面：
+          <ul>
+            <li><strong>負責人目標</strong>：週/月/季目標自動依成長率帶入，目標軌跡圖更新</li>
+            <li><strong>總覽</strong>：KPI 卡片新增「vs 目標」達成率顯示</li>
+            <li><strong>成長趨勢</strong>：趨勢線旁疊加目標參考線</li>
+            <li><strong>月度明細</strong>：表格新增目標值與達成率欄位</li>
+          </ul>
+        </li>
       </ul>
     </div>
     <div class="callout callout-info">

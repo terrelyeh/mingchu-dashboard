@@ -59,12 +59,15 @@ MINCHU Dashboard/
 - 自然 vs 廣告觸及分析頁籤
 - 月 UU 趨勢圖預留（含提示文字）
 - 目標模擬器 Demo（互動式成長率滑桿 + 即時預覽圖表 + 模擬確認流程）
+- 目標模擬器 Demo 模式提示（黃色提醒框，說明使用歷史數據示範）
+- 目標模擬器預設基期改為最近有數據月份（2025/12）
 - 專案開發文件（.docx + .md + .html）
 - 技術決策確認：Next.js + shadcn/ui + Tailwind + Recharts + Supabase + Vercel
+- GitHub repo 建立：https://github.com/terrelyeh/mingchu-dashboard（public）
 
 ### ⚠️ Pending / Known Issues
 
-- **GitHub repo**：`mingchu-dashboard` 尚未建立（需手動至 github.com/new 建立）
+- **GitHub repo**：`mingchu-dashboard` 已建立 → https://github.com/terrelyeh/mingchu-dashboard
 - **Supabase 接入**：Phase 2 尚未開始，需建立專案與 DB schema
 - **Meta API 串接**：需取得 Facebook/Instagram 的 Page Access Token
 - **Token 續期機制**：長期 token 60 天過期，需建自動續期
@@ -89,3 +92,5 @@ MINCHU Dashboard/
 - **Meta API token**：短期 token 僅 1-2 小時，開發時需先換成長期 token
 - **Phase 2 遷移注意**：Chart.js → Recharts，需重寫圖表元件；現有資料結構（YEARLY_DATA 等）可保留轉為 API 回傳格式
 - **Supabase service key 不可曝露前端**：必須透過 Next.js Server Components / Route Handlers 存取
+- **目標模擬器基期選擇**：Demo 版使用歷史數據，基期選過去月份等同「回測」；Phase 2 正式版應預設選最近有數據的月份，向未來推算
+- **目標確認後的影響範圍**：確認目標後，成長率參數存入 Supabase，負責人目標、總覽 KPI 達成率、成長趨勢目標線、月度明細目標欄位都會自動更新
