@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINCHU 社群媒體儀表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-header: #1a1a2e;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-on-dark: #ffffff;
+            --fb-color: #1877F2;
+            --ig-gradient-1: #E1306C;
+            --ig-gradient-2: #F77737;
+            --ig-color: #E1306C;
+            --total-color: #6C5CE7;
+            --positive: #00b894;
+            --negative: #d63031;
+            --neutral: #6c757d;
+            --goal-color: #fdcb6e;
+            --gap: 16px;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--gap);
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: var(--text-on-dark);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .badge-demo {
+            background: #fdcb6e;
+            color: #1a1a2e;
+        }
+        .header-subtitle {
+            font-size: 12px;
+            color: #ffeaa7;
+            opacity: 0.85;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .filter-group select {
+            padding: 7px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-on-dark);
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .filter-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        /* KPI Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+        }
+
+        .kpi-card.fb::before { background: var(--fb-color); }
+        .kpi-card.ig::before { background: var(--ig-color); }
+        .kpi-card.total::before { background: var(--total-color); }
+        .kpi-card.goal::before { background: var(--goal-color); }
+        .kpi-card.reach::before { background: #00b894; }
+
+        .kpi-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .kpi-change.positive { color: var(--positive); }
+        .kpi-change.negative { color: var(--negative); }
+
+        /* Goal Progress */
+        .goal-progress-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: var(--gap);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .goal-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .goal-header span {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .goal-bar-track {
+            width: 100%;
+            height: 28px;
+            background: #f0f0f0;
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .goal-bar-fill {
+            height: 100%;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #6C5CE7, #a29bfe);
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+
+        .goal-bar-fill span {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .goal-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .goal-details .fb-part { color: var(--fb-color); font-weight: 600; }
+        .goal-details .ig-part { color: var(--ig-color); font-weight: 600; }
+
+        /* Chart Row */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .chart-container h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .chart-container canvas {
+            max-height: 300px;
+        }
+
+        .chart-full { grid-column: 1 / -1; }
+
+        /* Table */
+        .table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow-x: auto;
+            margin-bottom: var(--gap);
+        }
+
+        .table-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 2px solid #dee2e6;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table thead th:hover { color: var(--text-primary); background: #f8f9fa; }
+
+        .data-table tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table tbody tr:hover { background: #f8f9fa; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.positive { background: #d4edda; color: #155724; }
+        .badge.negative { background: #f8d7da; color: #721c24; }
+
+        /* Footer */
+        .dashboard-footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Simulator */
+        .sim-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: var(--gap);
+        }
+        .sim-title {
+            font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px;
+        }
+        .sim-desc {
+            font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;
+        }
+        .sim-row {
+            display: flex; gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+        }
+        .sim-group { display: flex; flex-direction: column; gap: 4px; }
+        .sim-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .sim-group select {
+            padding: 8px 12px; border: 2px solid #d0d5dd; border-radius: 6px;
+            font-size: 14px; background: #fff; cursor: pointer;
+        }
+        .sim-slider-section { margin-bottom: 18px; }
+        .sim-slider-section > label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px; }
+        .sim-rate-value {
+            display: inline-block; background: #fdcb6e; color: #1a1a2e;
+            padding: 2px 10px; border-radius: 4px; font-weight: 700; font-size: 15px;
+        }
+        #sim-rate {
+            width: 100%; height: 8px; -webkit-appearance: none; appearance: none;
+            border-radius: 4px; background: linear-gradient(to right, #00b894, #fdcb6e, #e17055);
+            outline: none; cursor: pointer;
+        }
+        #sim-rate::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px;
+            border-radius: 50%; background: #fff; border: 3px solid #1a1a2e;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer;
+        }
+        .sim-slider-labels {
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+        }
+        .sim-presets { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .sim-preset-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+        .sim-preset-btn {
+            padding: 6px 14px; border: 2px solid #d0d5dd; border-radius: 6px;
+            background: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .sim-preset-btn:hover { border-color: #1a1a2e; background: #f9fafb; }
+        .sim-preset-active { border-color: #1a1a2e; background: #1a1a2e; color: #fff; }
+        .sim-result-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .sim-result-card {
+            background: #f9fafb; border-radius: 8px; padding: 14px;
+            border-left: 4px solid #6C5CE7; text-align: center;
+        }
+        .sim-result-card .src-month { font-size: 12px; color: var(--text-secondary); }
+        .sim-result-card .src-actual { font-size: 13px; color: var(--text-secondary); margin: 4px 0; }
+        .sim-result-card .src-target { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .sim-result-card .src-growth {
+            font-size: 11px; margin-top: 4px; padding: 2px 8px;
+            border-radius: 4px; display: inline-block;
+        }
+        .sim-confirm-btn {
+            padding: 12px 40px; background: linear-gradient(135deg, #1a1a2e, #0f3460);
+            color: #fff; border: none; border-radius: 8px; font-size: 15px;
+            font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .sim-confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,26,46,0.3); }
+        .sim-confirm-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 6px;
+            margin-bottom: var(--gap);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: 2px solid #d0d5dd;
+            background: #f8f9fb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.25s ease;
+            position: relative;
+            letter-spacing: 0.3px;
+        }
+
+        .tab-btn:hover {
+            background: #e8ecf1;
+            color: var(--text-primary);
+            border-color: #a0a8b4;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #fff;
+            border-color: #1a1a2e;
+            box-shadow: 0 3px 10px rgba(26,26,46,0.3);
+            transform: translateY(-1px);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+            .filters { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media print {
+            body { background: white; }
+            .filters, .tab-nav { display: none; }
+            .chart-container { break-inside: avoid; }
+            .kpi-card { border: 1px solid #dee2e6; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>MINCHU 社群媒體儀表板 <span class="header-badge badge-demo">DEMO DATA</span></h1>
+                <p>Facebook & Instagram 經營成效追蹤</p>
+                <div class="header-subtitle">目前使用歷史手動數據展示，Phase 2 將串接 Meta Graph API 自動擷取即時資料</div>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>平台</label>
+                    <select id="filter-platform" onchange="dashboard.applyFilters()">
+                        <option value="all">全部平台</option>
+                        <option value="fb">Facebook</option>
+                        <option value="ig">Instagram</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>年份</label>
+                    <select id="filter-year" onchange="dashboard.applyFilters()">
+                        <option value="all">全部年份</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <section class="kpi-row" id="kpi-section"></section>
+
+        <!-- Goal Progress -->
+        <section class="goal-progress-container" id="goal-section"></section>
+
+        <!-- Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
+            <button class="tab-btn" onclick="switchTab('pic')">負責人目標</button>
+            <button class="tab-btn" onclick="switchTab('adreach')">自然 vs 廣告</button>
+            <button class="tab-btn" onclick="switchTab('reach')">觸及分析</button>
+            <button class="tab-btn" onclick="switchTab('growth')">成長趨勢</button>
+            <button class="tab-btn" onclick="switchTab('detail')">月度明細</button>
+            <button class="tab-btn" onclick="switchTab('simulator')" style="border-color:#fdcb6e;">目標模擬器</button>
+        </div>
+
+        <!-- Tab: Overview -->
+        <div class="tab-content active" id="tab-overview">
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>歷年粉絲成長</h3>
+                    <canvas id="chart-yearly-followers"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>年增率比較</h3>
+                    <canvas id="chart-yoy-growth"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>各平台粉絲組成</h3>
+                    <canvas id="chart-composition"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab: PIC 負責人目標管理 -->
+        <div class="tab-content" id="tab-pic">
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>FB (Clara Chang) — 週目標達成率</h3>
+                    <canvas id="chart-pic-fb-weekly"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>IG (Mike Chen) — 週目標達成率</h3>
+                    <canvas id="chart-pic-ig-weekly"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>FB (Clara Chang) — 月度觸及趨勢</h3>
+                    <canvas id="chart-pic-fb-monthly"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>IG (Mike Chen) — 月度觸及趨勢</h3>
+                    <canvas id="chart-pic-ig-monthly"></canvas>
+                </div>
+            </section>
+            <section class="table-section">
+                <h3>負責人 KPI 摘要</h3>
+                <div id="pic-summary-table"></div>
+            </section>
+        </div>
+
+        <!-- Tab: 自然 vs 廣告觸及 -->
+        <div class="tab-content" id="tab-adreach">
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>每月自然觸及 vs 廣告觸及</h3>
+                    <canvas id="chart-organic-vs-ad"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>自然觸及占比趨勢</h3>
+                    <canvas id="chart-organic-ratio"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>廣告觸及效率（新增粉絲 / 廣告觸及）</h3>
+                    <canvas id="chart-ad-efficiency"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>月 UU（不重複人數）vs 自然/廣告觸及</h3>
+                    <canvas id="chart-ad-uu-compare"></canvas>
+                </div>
+            </section>
+            <section class="table-section">
+                <h3>自然 vs 廣告觸及明細</h3>
+                <div id="ad-reach-table"></div>
+            </section>
+        </div>
+
+        <!-- Tab: Reach -->
+        <div class="tab-content" id="tab-reach">
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>每月自然觸及人數</h3>
+                    <canvas id="chart-monthly-reach"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>FB vs IG 觸及（按月）</h3>
+                    <canvas id="chart-organic-vs-total"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>觸及月增率</h3>
+                    <canvas id="chart-reach-growth"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>月度不重複人數 (UU) vs 總觸及</h3>
+                    <canvas id="chart-uu-trend"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab: Growth -->
+        <div class="tab-content" id="tab-growth">
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>每月新增粉絲</h3>
+                    <canvas id="chart-new-followers"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>2025 目標達成軌跡</h3>
+                    <canvas id="chart-goal-trajectory"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab: Detail -->
+        <div class="tab-content" id="tab-detail">
+            <section class="table-section" id="detail-table-section">
+                <h3>月度經營數據明細</h3>
+                <div id="detail-table"></div>
+            </section>
+        </div>
+
+        <!-- Tab: Goal Simulator 目標模擬器 -->
+        <div class="tab-content" id="tab-simulator">
+            <section class="sim-panel">
+                <div class="sim-controls">
+                    <h3 class="sim-title">目標模擬器</h3>
+                    <p class="sim-desc">基於歷史實際數據，調整成長率係數即時預覽未來目標軌跡。確認後目標將反映至所有頁面。</p>
+                    <div class="sim-demo-notice" style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#856404;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;">⚠️</span>
+                        <span><strong>Demo 模式</strong>：目前使用 2025 歷史數據示範操作流程，正式版將以最新月份實際數據為基期，向未來推算目標。</span>
+                    </div>
+                    <div class="sim-row">
+                        <div class="sim-group">
+                            <label>模擬指標</label>
+                            <select id="sim-metric" onchange="dashboard.updateSimulator()">
+                                <option value="followers">新增淨追蹤數</option>
+                                <option value="organic">自然觸及人數</option>
+                            </select>
+                        </div>
+                        <div class="sim-group">
+                            <label>基期月份</label>
+                            <select id="sim-base" onchange="dashboard.updateSimulator()">
+                                <option value="0">2025/1</option>
+                                <option value="1">2025/2</option>
+                                <option value="2">2025/3</option>
+                                <option value="3">2025/4</option>
+                                <option value="4">2025/5</option>
+                                <option value="5">2025/6</option>
+                                <option value="6">2025/7</option>
+                                <option value="7">2025/8</option>
+                                <option value="8">2025/9</option>
+                                <option value="9">2025/10</option>
+                                <option value="10">2025/11</option>
+                                <option value="11" selected>2025/12</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="sim-slider-section">
+                        <label>成長率係數：<span id="sim-rate-display" class="sim-rate-value">1.2x</span></label>
+                        <input type="range" id="sim-rate" min="0.5" max="3.0" step="0.1" value="1.2" oninput="dashboard.updateSimulator()">
+                        <div class="sim-slider-labels"><span>0.5x 保守</span><span>1.0x 持平</span><span>2.0x 積極</span><span>3.0x 衝刺</span></div>
+                    </div>
+                    <div class="sim-presets">
+                        <span class="sim-preset-label">快速選擇：</span>
+                        <button class="sim-preset-btn" onclick="dashboard.setSimRate(0.8)">保守 0.8x</button>
+                        <button class="sim-preset-btn" onclick="dashboard.setSimRate(1.0)">持平 1.0x</button>
+                        <button class="sim-preset-btn sim-preset-active" onclick="dashboard.setSimRate(1.2)">穩健 1.2x</button>
+                        <button class="sim-preset-btn" onclick="dashboard.setSimRate(1.5)">積極 1.5x</button>
+                        <button class="sim-preset-btn" onclick="dashboard.setSimRate(2.0)">衝刺 2.0x</button>
+                    </div>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>目標模擬預覽</h3>
+                    <canvas id="chart-sim-preview"></canvas>
+                </div>
+            </section>
+            <section class="sim-panel">
+                <div class="sim-result-grid" id="sim-result-grid"></div>
+            </section>
+            <section class="sim-panel" style="text-align:center;">
+                <button class="sim-confirm-btn" onclick="dashboard.confirmGoals()">確認此目標設定</button>
+                <p class="sim-confirm-hint">（Demo 版本：點擊後模擬儲存流程，Phase 2 將寫入 Supabase）</p>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <span>MINCHU 社群儀表板 — 資料來源：截圖手動匯入。未來規劃：透過 Meta API 自動同步。</span>
+        </footer>
+    </div>
+
+    <script>
+    // ========== DATA ==========
+    const YEARLY_DATA = [
+        { year: 2019, fb: 4000, ig: 0 },
+        { year: 2020, fb: 8000, ig: 2000 },
+        { year: 2021, fb: 10000, ig: 5000 },
+        { year: 2022, fb: 15000, ig: 8000 },
+        { year: 2023, fb: 18000, ig: 9000 },
+        { year: 2024, fb: 24000, ig: 11000 },
+        { year: 2025, fb: 32000, ig: 18000 },
+    ];
+
+    const GOALS = {
+        2025: { total: 65000, fb: null, ig: null }
+    };
+
+    // ========== PIC DATA (負責人目標管理) ==========
+    const PIC_DATA = {
+        fb: {
+            pic: 'Clara Chang',
+            weeklyTargets: { reach: 19718, newFollowers: 130 },
+            quarterlyTargets: { q1: { reach: 330000, followers: 1650 }, q3: { reach: 236616, followers: 1500 } },
+            monthlyTargets: { reach: 110000, newFollowers: 550 },
+            weeks: [
+                { week: 'W30 (07/18-07/24)', reach: 12541, newFollowers: 38 },
+                { week: 'W31 (07/25-07/31)', reach: 15384, newFollowers: 22 },
+                { week: 'W32 (08/01-08/07)', reach: 13815, newFollowers: 74 },
+                { week: 'W33 (08/08-08/14)', reach: 15949, newFollowers: 173 },
+                { week: 'W34 (08/15-08/21)', reach: 30500, newFollowers: 182 },
+            ],
+            monthlySummary: [
+                { month: '6月', reach: 67133, newFollowers: 162 },
+                { month: '7月', reach: 77081, newFollowers: 222 },
+                { month: '8月', reach: 49728, newFollowers: 254 },
+            ],
+            totalFollowers: 29762,
+        },
+        ig: {
+            pic: 'Mike Chen',
+            weeklyTargets: { reach: 14400, newFollowers: 180, engagement: 720 },
+            quarterlyTargets: { q1: { reach: 90000, followers: 1050 } },
+            monthlyTargets: { reach: 30000, newFollowers: 350 },
+            weeks: [
+                { week: 'W30 (07/18-07/24)', reach: 40434, newFollowers: 334 },
+                { week: 'W31 (07/25-07/31)', reach: 30200, newFollowers: 385 },
+                { week: 'W32 (08/01-08/07)', reach: 16165, newFollowers: 106, engagement: 713 },
+                { week: 'W33 (08/08-08/14)', reach: 15420, newFollowers: 60, engagement: 906 },
+                { week: 'W34 (08/15-08/21)', reach: 22270, newFollowers: 163, engagement: 1386 },
+            ],
+            monthlySummary: [
+                { month: '6月', reach: 25921, newFollowers: 171 },
+                { month: '7月', reach: null, newFollowers: null },
+                { month: '8月', reach: null, newFollowers: null },
+            ],
+            totalFollowers: 15270,
+        }
+    };
+
+    // ========== MONTHLY DATA (含自然觸及 + 廣告觸及) ==========
+    const MONTHLY_DATA = [
+        // 2023
+        { year: 2023, month: 10, fb_reach: 77170, ig_reach: null, fb_ad_reach: 81192, ig_ad_reach: null, total_reach: 158362, total_ad_reach: null, new_followers: 334 },
+        { year: 2023, month: 11, fb_reach: null, ig_reach: null, fb_ad_reach: null, ig_ad_reach: null, total_reach: null, total_ad_reach: null, new_followers: null },
+        { year: 2023, month: 12, fb_reach: null, ig_reach: null, fb_ad_reach: null, ig_ad_reach: null, total_reach: null, total_ad_reach: null, new_followers: null },
+        // 2024
+        { year: 2024, month: 1, fb_reach: 60341, ig_reach: null, fb_ad_reach: 61963, ig_ad_reach: null, total_reach: 122304, total_ad_reach: null, new_followers: 377 },
+        // 2025 (from screenshot 2)
+        { year: 2025, month: 1, fb_reach: 66527, ig_reach: null, fb_ad_reach: 120458, ig_ad_reach: null, total_reach: 186985, total_ad_reach: null, new_followers: 1100 },
+        { year: 2025, month: 2, fb_reach: 158449, ig_reach: null, fb_ad_reach: 234153, ig_ad_reach: null, total_reach: 392602, total_ad_reach: null, new_followers: 1620 },
+        { year: 2025, month: 3, fb_reach: 129612, ig_reach: null, fb_ad_reach: 395402, ig_ad_reach: null, total_reach: 525014, total_ad_reach: null, new_followers: 1896 },
+        { year: 2025, month: 4, fb_reach: 100015, ig_reach: null, fb_ad_reach: 124499, ig_ad_reach: null, total_reach: 224514, total_ad_reach: null, new_followers: 876 },
+        { year: 2025, month: 5, fb_reach: 126070, ig_reach: null, fb_ad_reach: 98721, ig_ad_reach: null, total_reach: 224791, total_ad_reach: null, new_followers: 741 },
+        { year: 2025, month: 6, fb_reach: 93054, ig_reach: null, fb_ad_reach: 285199, ig_ad_reach: null, total_reach: 378253, total_ad_reach: null, new_followers: 374 },
+        { year: 2025, month: 7, fb_reach: 176340, ig_reach: null, fb_ad_reach: 475179, ig_ad_reach: null, total_reach: 651519, total_ad_reach: null, new_followers: 1423 },
+        { year: 2025, month: 8, fb_reach: 112682, ig_reach: null, fb_ad_reach: 411178, ig_ad_reach: null, total_reach: 523860, total_ad_reach: null, new_followers: 1245 },
+        { year: 2025, month: 9, fb_reach: 436762, ig_reach: null, fb_ad_reach: 130030, ig_ad_reach: null, total_reach: 566792, total_ad_reach: null, new_followers: 2316 },
+        { year: 2025, month: 10, fb_reach: 105623, ig_reach: null, fb_ad_reach: 347055, ig_ad_reach: null, total_reach: 452678, total_ad_reach: null, new_followers: 832 },
+        { year: 2025, month: 11, fb_reach: 723628, ig_reach: null, fb_ad_reach: 739638, ig_ad_reach: null, total_reach: 1463266, total_ad_reach: null, new_followers: 1439 },
+        { year: 2025, month: 12, fb_reach: 254708, ig_reach: null, fb_ad_reach: 111985, ig_ad_reach: null, total_reach: 366693, total_ad_reach: null, new_followers: 165 },
+        // 2026
+        { year: 2026, month: 1, fb_reach: 687547, ig_reach: null, fb_ad_reach: 784130, ig_ad_reach: null, total_reach: null, total_ad_reach: null, new_followers: 1755 },
+        { year: 2026, month: 2, fb_reach: 491828, ig_reach: null, fb_ad_reach: 164209, ig_ad_reach: null, total_reach: 656037, total_ad_reach: null, new_followers: 651 },
+    ];
+
+    // Aggregated monthly totals for organic reach (from 月重點 sheet)
+    // uu = 月度不重複觸及人數 (Unique Users)
+    // 未來由 Meta API period=month 抓取（已去重）；null = 尚未取得
+    const REACH_SUMMARY = [
+        { year: 2025, month: 1, organic: 66527, ad: 120458, total: 186985, newFollowers: 1100, uu: null },
+        { year: 2025, month: 2, organic: 158449, ad: 234153, total: 392602, newFollowers: 1620, uu: null },
+        { year: 2025, month: 3, organic: 129612, ad: 395402, total: 525014, newFollowers: 1896, uu: null },
+        { year: 2025, month: 4, organic: 100015, ad: 124499, total: 224514, newFollowers: 876, uu: null },
+        { year: 2025, month: 5, organic: 126070, ad: 98721, total: 224791, newFollowers: 741, uu: null },
+        { year: 2025, month: 6, organic: 93054, ad: 285199, total: 378253, newFollowers: 374, uu: null },
+        { year: 2025, month: 7, organic: 176340, ad: 475179, total: 651519, newFollowers: 1423, uu: null },
+        { year: 2025, month: 8, organic: 112682, ad: 411178, total: 523860, newFollowers: 1245, uu: null },
+        { year: 2025, month: 9, organic: 436762, ad: 130030, total: 566792, newFollowers: 2316, uu: null },
+        { year: 2025, month: 10, organic: 105623, ad: 347055, total: 452678, newFollowers: 832, uu: null },
+        { year: 2025, month: 11, organic: 723628, ad: 739638, total: 1463266, newFollowers: 1439, uu: null },
+        { year: 2025, month: 12, organic: 254708, ad: 111985, total: 366693, newFollowers: 165, uu: null },
+    ];
+
+    // ========== COLORS ==========
+    const COLORS = {
+        fb: '#1877F2',
+        ig: '#E1306C',
+        total: '#6C5CE7',
+        goal: '#fdcb6e',
+        positive: '#00b894',
+        negative: '#d63031',
+        grid: '#f0f0f0'
+    };
+
+    // ========== UTILS ==========
+    function fmt(n, type = 'number') {
+        if (n === null || n === undefined) return '—';
+        switch(type) {
+            case 'number':
+                if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+                if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+                return n.toLocaleString();
+            case 'percent':
+                return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+            default: return n.toString();
+        }
+    }
+
+    function monthLabel(m) {
+        return ['', '1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'][m];
+    }
+
+    // ========== DASHBOARD CLASS ==========
+    class Dashboard {
+        constructor() {
+            this.charts = {};
+            this.init();
+        }
+
+        init() {
+            this.renderKPIs();
+            this.renderGoalProgress();
+            this.renderOverviewCharts();
+            this.renderPICCharts();
+            this.renderAdReachCharts();
+            this.renderReachCharts();
+            this.renderGrowthCharts();
+            this.renderDetailTable();
+            this.updateSimulator();
+        }
+
+        getFilters() {
+            const platform = document.getElementById('filter-platform').value;
+            const year = document.getElementById('filter-year').value;
+            return { platform, year };
+        }
+
+        getFilteredReachData() {
+            const { year } = this.getFilters();
+            let data = [...REACH_SUMMARY];
+            if (year !== 'all') data = data.filter(d => d.year === parseInt(year));
+            return data;
+        }
+
+        applyFilters() {
+            this.renderKPIs();
+            this.renderGoalProgress();
+            this.renderReachCharts();
+            this.renderGrowthCharts();
+            this.renderDetailTable();
+        }
+
+        // ---- KPIs ----
+        renderKPIs() {
+            const { platform, year } = this.getFilters();
+            const filtered = this.getFilteredReachData();
+            const latest = YEARLY_DATA[YEARLY_DATA.length - 1];
+            const prev = YEARLY_DATA[YEARLY_DATA.length - 2];
+
+            // Platform-aware follower display
+            let fbVal = latest.fb, igVal = latest.ig, fbPrev = prev.fb, igPrev = prev.ig;
+            const showFb = platform === 'all' || platform === 'fb';
+            const showIg = platform === 'all' || platform === 'ig';
+            const currentTotal = (showFb ? fbVal : 0) + (showIg ? igVal : 0);
+            const prevTotal = (showFb ? fbPrev : 0) + (showIg ? igPrev : 0);
+            const growthPct = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal * 100) : 0;
+            const goalTotal = GOALS[2025]?.total || 65000;
+
+            // Filtered reach summary
+            const totalOrganicReach = filtered.reduce((s, d) => s + d.organic, 0);
+            const totalAdReach = filtered.reduce((s, d) => s + d.ad, 0);
+            const totalAllReach = filtered.reduce((s, d) => s + d.total, 0);
+            const totalNewFollowers = filtered.reduce((s, d) => s + d.newFollowers, 0);
+            const yearLabel = year === 'all' ? '全部' : year;
+            const platformLabel = platform === 'all' ? '' : platform === 'fb' ? '(FB) ' : '(IG) ';
+
+            const html = `
+                <div class="kpi-card fb" ${!showFb ? 'style="opacity:0.4"' : ''}>
+                    <div class="kpi-label">Facebook 粉絲數</div>
+                    <div class="kpi-value">${fmt(fbVal)}</div>
+                    <div class="kpi-change positive">+${fmt(fbVal - fbPrev)} 較 ${prev.year}</div>
+                </div>
+                <div class="kpi-card ig" ${!showIg ? 'style="opacity:0.4"' : ''}>
+                    <div class="kpi-label">Instagram 粉絲數</div>
+                    <div class="kpi-value">${fmt(igVal)}</div>
+                    <div class="kpi-change positive">+${fmt(igVal - igPrev)} 較 ${prev.year}</div>
+                </div>
+                <div class="kpi-card total">
+                    <div class="kpi-label">${platformLabel}總粉絲數</div>
+                    <div class="kpi-value">${fmt(currentTotal)}</div>
+                    <div class="kpi-change positive">${fmt(growthPct, 'percent')} 年增</div>
+                </div>
+                <div class="kpi-card reach">
+                    <div class="kpi-label">${yearLabel} 自然觸及</div>
+                    <div class="kpi-value">${fmt(totalOrganicReach)}</div>
+                    <div class="kpi-change" style="color:var(--text-secondary)">共 ${filtered.length} 個月</div>
+                </div>
+                <div class="kpi-card goal">
+                    <div class="kpi-label">${yearLabel} 新增粉絲</div>
+                    <div class="kpi-value">${fmt(totalNewFollowers)}</div>
+                    <div class="kpi-change" style="color:var(--text-secondary)">總觸及 ${fmt(totalAllReach)}</div>
+                </div>
+            `;
+            document.getElementById('kpi-section').innerHTML = html;
+        }
+
+        // ---- Goal Progress ----
+        renderGoalProgress() {
+            const latest = YEARLY_DATA[YEARLY_DATA.length - 1];
+            const current = latest.fb + latest.ig;
+            const goal = GOALS[2025]?.total || 65000;
+            const pct = Math.min((current / goal * 100), 100).toFixed(1);
+
+            const html = `
+                <div class="goal-header">
+                    <h3>2025 粉絲目標進度</h3>
+                    <span>${fmt(current)} / ${fmt(goal)}</span>
+                </div>
+                <div class="goal-bar-track">
+                    <div class="goal-bar-fill" style="width: ${pct}%">
+                        <span>${pct}%</span>
+                    </div>
+                </div>
+                <div class="goal-details">
+                    <span>FB: <span class="fb-part">${fmt(latest.fb)}</span></span>
+                    <span>IG: <span class="ig-part">${fmt(latest.ig)}</span></span>
+                    <span>尚缺：<strong>${fmt(goal - current)}</strong></span>
+                    <span>每月需增：<strong>${fmt(Math.ceil((goal - current) / 9))}</strong></span>
+                </div>
+            `;
+            document.getElementById('goal-section').innerHTML = html;
+        }
+
+        // ---- Overview Charts ----
+        renderOverviewCharts() {
+            // Yearly followers line chart
+            const years = YEARLY_DATA.map(d => d.year);
+            const ctx1 = document.getElementById('chart-yearly-followers').getContext('2d');
+            this.charts.yearlyFollowers = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Facebook',
+                            data: YEARLY_DATA.map(d => d.fb),
+                            borderColor: COLORS.fb,
+                            backgroundColor: COLORS.fb + '15',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                        },
+                        {
+                            label: 'Instagram',
+                            data: YEARLY_DATA.map(d => d.ig),
+                            borderColor: COLORS.ig,
+                            backgroundColor: COLORS.ig + '15',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                        },
+                        {
+                            label: '合計',
+                            data: YEARLY_DATA.map(d => d.fb + d.ig),
+                            borderColor: COLORS.total,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [6, 4],
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // YoY growth bar chart
+            const growthData = YEARLY_DATA.slice(1).map((d, i) => {
+                const prev = YEARLY_DATA[i];
+                const prevTotal = prev.fb + prev.ig;
+                const curTotal = d.fb + d.ig;
+                return {
+                    year: d.year,
+                    fb: ((d.fb - prev.fb) / prev.fb * 100),
+                    ig: prev.ig > 0 ? ((d.ig - prev.ig) / prev.ig * 100) : 0,
+                    total: prevTotal > 0 ? ((curTotal - prevTotal) / prevTotal * 100) : 0
+                };
+            });
+
+            const ctx2 = document.getElementById('chart-yoy-growth').getContext('2d');
+            this.charts.yoyGrowth = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: growthData.map(d => d.year),
+                    datasets: [
+                        { label: 'FB 成長率', data: growthData.map(d => d.fb), backgroundColor: COLORS.fb + 'BB', borderRadius: 4 },
+                        { label: 'IG 成長率', data: growthData.map(d => d.ig), backgroundColor: COLORS.ig + 'BB', borderRadius: 4 },
+                        { label: '總成長率', data: growthData.map(d => d.total), backgroundColor: COLORS.total + 'BB', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { ticks: { callback: v => v + '%' }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Composition stacked bar
+            const ctx3 = document.getElementById('chart-composition').getContext('2d');
+            this.charts.composition = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: YEARLY_DATA.map(d => d.year),
+                    datasets: [
+                        { label: 'Facebook', data: YEARLY_DATA.map(d => d.fb), backgroundColor: COLORS.fb + 'CC', borderRadius: 4 },
+                        { label: 'Instagram', data: YEARLY_DATA.map(d => d.ig), backgroundColor: COLORS.ig + 'CC', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: (items) => {
+                                    const idx = items[0].dataIndex;
+                                    const d = YEARLY_DATA[idx];
+                                    const total = d.fb + d.ig;
+                                    return `合計：${total.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+        }
+
+        // ---- PIC Charts (負責人目標管理) ----
+        renderPICCharts() {
+            const fbData = PIC_DATA.fb;
+            const igData = PIC_DATA.ig;
+
+            // FB Weekly: actual vs target
+            const ctx_fb_w = document.getElementById('chart-pic-fb-weekly').getContext('2d');
+            const fbWeekLabels = fbData.weeks.map(w => w.week.split(' ')[0]);
+            const fbWeekReach = fbData.weeks.map(w => w.reach);
+            const fbWeekTarget = fbData.weeks.map(() => fbData.weeklyTargets.reach);
+            this.charts.picFbWeekly = new Chart(ctx_fb_w, {
+                type: 'bar',
+                data: {
+                    labels: fbWeekLabels,
+                    datasets: [
+                        { label: '實際觸及', data: fbWeekReach, backgroundColor: COLORS.fb + 'CC', borderRadius: 4 },
+                        { label: '週目標', data: fbWeekTarget, type: 'line', borderColor: '#fdcb6e', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: ctx => {
+                            const val = ctx.parsed.y;
+                            if (ctx.datasetIndex === 0) {
+                                const pct = (val / fbData.weeklyTargets.reach * 100).toFixed(0);
+                                return `實際：${val.toLocaleString()} (${pct}%)`;
+                            }
+                            return `目標：${val.toLocaleString()}`;
+                        }}}
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // IG Weekly: actual vs target
+            const ctx_ig_w = document.getElementById('chart-pic-ig-weekly').getContext('2d');
+            const igWeekLabels = igData.weeks.map(w => w.week.split(' ')[0]);
+            const igWeekReach = igData.weeks.map(w => w.reach);
+            const igWeekTarget = igData.weeks.map(() => igData.weeklyTargets.reach);
+            this.charts.picIgWeekly = new Chart(ctx_ig_w, {
+                type: 'bar',
+                data: {
+                    labels: igWeekLabels,
+                    datasets: [
+                        { label: '實際觸及', data: igWeekReach, backgroundColor: COLORS.ig + 'CC', borderRadius: 4 },
+                        { label: '週目標', data: igWeekTarget, type: 'line', borderColor: '#fdcb6e', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: ctx => {
+                            const val = ctx.parsed.y;
+                            if (ctx.datasetIndex === 0) {
+                                const pct = (val / igData.weeklyTargets.reach * 100).toFixed(0);
+                                return `實際：${val.toLocaleString()} (${pct}%)`;
+                            }
+                            return `目標：${val.toLocaleString()}`;
+                        }}}
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // FB Monthly trend
+            const ctx_fb_m = document.getElementById('chart-pic-fb-monthly').getContext('2d');
+            const fbMonthLabels = fbData.monthlySummary.map(m => m.month);
+            this.charts.picFbMonthly = new Chart(ctx_fb_m, {
+                type: 'bar',
+                data: {
+                    labels: fbMonthLabels,
+                    datasets: [
+                        { label: '實際觸及', data: fbData.monthlySummary.map(m => m.reach), backgroundColor: COLORS.fb + 'BB', borderRadius: 4 },
+                        { label: '新增粉絲', data: fbData.monthlySummary.map(m => m.newFollowers), backgroundColor: '#a29bfe99', borderRadius: 4, yAxisID: 'y1' },
+                        { label: '月目標觸及', data: fbMonthLabels.map(() => fbData.monthlyTargets.reach), type: 'line', borderColor: '#fdcb6e', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 10, font: { size: 11 } } } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, position: 'left', ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } },
+                        y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { callback: v => fmt(v) } }
+                    }
+                }
+            });
+
+            // IG Monthly trend
+            const ctx_ig_m = document.getElementById('chart-pic-ig-monthly').getContext('2d');
+            const igMonthLabels = igData.monthlySummary.filter(m => m.reach !== null).map(m => m.month);
+            this.charts.picIgMonthly = new Chart(ctx_ig_m, {
+                type: 'bar',
+                data: {
+                    labels: igMonthLabels,
+                    datasets: [
+                        { label: '實際觸及', data: igData.monthlySummary.filter(m => m.reach !== null).map(m => m.reach), backgroundColor: COLORS.ig + 'BB', borderRadius: 4 },
+                        { label: '新增粉絲', data: igData.monthlySummary.filter(m => m.reach !== null).map(m => m.newFollowers), backgroundColor: '#a29bfe99', borderRadius: 4, yAxisID: 'y1' },
+                        { label: '月目標觸及', data: igMonthLabels.map(() => igData.monthlyTargets.reach), type: 'line', borderColor: '#fdcb6e', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 10, font: { size: 11 } } } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, position: 'left', ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } },
+                        y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { callback: v => fmt(v) } }
+                    }
+                }
+            });
+
+            // PIC Summary Table
+            const picHtml = `<table class="data-table">
+                <thead><tr>
+                    <th>平台</th><th>負責人</th><th>目前粉絲數</th>
+                    <th>週目標觸及</th><th>最近週實際</th><th>週達成率</th>
+                    <th>月目標觸及</th><th>最近月實際</th><th>月達成率</th>
+                </tr></thead>
+                <tbody>
+                <tr>
+                    <td><strong style="color:${COLORS.fb}">Facebook</strong></td>
+                    <td>${fbData.pic}</td>
+                    <td><strong>${fbData.totalFollowers.toLocaleString()}</strong></td>
+                    <td>${fbData.weeklyTargets.reach.toLocaleString()}</td>
+                    <td>${fbData.weeks[fbData.weeks.length-1].reach.toLocaleString()}</td>
+                    <td><span class="badge ${fbData.weeks[fbData.weeks.length-1].reach >= fbData.weeklyTargets.reach ? 'positive' : 'negative'}">${(fbData.weeks[fbData.weeks.length-1].reach / fbData.weeklyTargets.reach * 100).toFixed(0)}%</span></td>
+                    <td>${fbData.monthlyTargets.reach.toLocaleString()}</td>
+                    <td>${fbData.monthlySummary[fbData.monthlySummary.length-1].reach.toLocaleString()}</td>
+                    <td><span class="badge ${fbData.monthlySummary[fbData.monthlySummary.length-1].reach >= fbData.monthlyTargets.reach ? 'positive' : 'negative'}">${(fbData.monthlySummary[fbData.monthlySummary.length-1].reach / fbData.monthlyTargets.reach * 100).toFixed(0)}%</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color:${COLORS.ig}">Instagram</strong></td>
+                    <td>${igData.pic}</td>
+                    <td><strong>${igData.totalFollowers.toLocaleString()}</strong></td>
+                    <td>${igData.weeklyTargets.reach.toLocaleString()}</td>
+                    <td>${igData.weeks[igData.weeks.length-1].reach.toLocaleString()}</td>
+                    <td><span class="badge ${igData.weeks[igData.weeks.length-1].reach >= igData.weeklyTargets.reach ? 'positive' : 'negative'}">${(igData.weeks[igData.weeks.length-1].reach / igData.weeklyTargets.reach * 100).toFixed(0)}%</span></td>
+                    <td>${igData.monthlyTargets.reach.toLocaleString()}</td>
+                    <td>${igData.monthlySummary[0].reach.toLocaleString()}</td>
+                    <td><span class="badge ${igData.monthlySummary[0].reach >= igData.monthlyTargets.reach ? 'positive' : 'negative'}">${(igData.monthlySummary[0].reach / igData.monthlyTargets.reach * 100).toFixed(0)}%</span></td>
+                </tr>
+                </tbody></table>`;
+            document.getElementById('pic-summary-table').innerHTML = picHtml;
+        }
+
+        // ---- Ad Reach Charts (自然 vs 廣告) ----
+        renderAdReachCharts() {
+            if (this.charts.organicVsAd) this.charts.organicVsAd.destroy();
+            if (this.charts.organicRatio) this.charts.organicRatio.destroy();
+            if (this.charts.adEfficiency) this.charts.adEfficiency.destroy();
+            if (this.charts.adUuCompare) this.charts.adUuCompare.destroy();
+            const data = this.getFilteredReachData();
+            const labels = data.map(d => `${d.year}/${d.month}月`);
+
+            // Stacked bar: organic vs ad
+            const ctx_oa = document.getElementById('chart-organic-vs-ad').getContext('2d');
+            this.charts.organicVsAd = new Chart(ctx_oa, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '自然觸及', data: data.map(d => d.organic), backgroundColor: '#00b894CC', borderRadius: 4 },
+                        { label: '廣告觸及', data: data.map(d => d.ad), backgroundColor: '#e17055CC', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: {
+                            afterBody: (items) => {
+                                const idx = items[0].dataIndex;
+                                const d = data[idx];
+                                return `總觸及：${d.total.toLocaleString()}\n自然占比：${(d.organic / d.total * 100).toFixed(1)}%`;
+                            }
+                        }}
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Organic ratio line
+            const ctx_ratio = document.getElementById('chart-organic-ratio').getContext('2d');
+            const organicPct = data.map(d => d.organic / d.total * 100);
+            this.charts.organicRatio = new Chart(ctx_ratio, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '自然觸及占比 %',
+                        data: organicPct,
+                        borderColor: '#00b894',
+                        backgroundColor: '#00b89420',
+                        borderWidth: 3, fill: true, tension: 0.3, pointRadius: 5, pointHoverRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => `自然占比：${ctx.parsed.y.toFixed(1)}%` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Ad efficiency: new followers per 10K ad reach
+            const ctx_eff = document.getElementById('chart-ad-efficiency').getContext('2d');
+            const efficiency = data.map(d => d.ad > 0 ? (d.newFollowers / d.ad * 10000) : 0);
+            this.charts.adEfficiency = new Chart(ctx_eff, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '每萬次廣告觸及新增粉絲',
+                        data: efficiency,
+                        backgroundColor: efficiency.map(v => v >= 5 ? '#00b89499' : v >= 2 ? '#fdcb6e99' : '#d6303199'),
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => `每萬次廣告觸及 → ${ctx.parsed.y.toFixed(1)} 位新粉絲` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // UU vs Organic/Ad comparison chart
+            if (this.charts.adUuCompare) this.charts.adUuCompare.destroy();
+            const ctx_auc = document.getElementById('chart-ad-uu-compare').getContext('2d');
+            const hasAdUU = data.some(d => d.uu !== null);
+            this.charts.adUuCompare = new Chart(ctx_auc, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '自然觸及', data: data.map(d => d.organic), backgroundColor: '#00b89480', borderRadius: 4, stack: 'reach' },
+                        { label: '廣告觸及', data: data.map(d => d.ad), backgroundColor: '#e1705580', borderRadius: 4, stack: 'reach' },
+                        {
+                            label: '月 UU（不重複人數）',
+                            data: data.map(d => d.uu),
+                            type: 'line',
+                            borderColor: '#00cec9',
+                            backgroundColor: '#00cec920',
+                            borderWidth: 3, tension: 0.3, pointRadius: 5, pointHoverRadius: 8,
+                            fill: false, yAxisID: 'y',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: hasAdUU ? '比較不重複人數與自然/廣告觸及的關係' : '',
+                            font: { size: 13 }, color: '#666', padding: { bottom: 6 }
+                        },
+                        subtitle: {
+                            display: !hasAdUU,
+                            text: 'UU 資料尚未接入，待 Meta API period=month 啟用後自動填入',
+                            color: '#999', font: { size: 12 }, padding: { bottom: 10 }
+                        },
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: {
+                            label: ctx => {
+                                if (ctx.parsed.y === null) return `${ctx.dataset.label}：待接入`;
+                                return `${ctx.dataset.label}：${ctx.parsed.y.toLocaleString()}`;
+                            },
+                            afterBody: (items) => {
+                                const idx = items[0].dataIndex;
+                                const d = data[idx];
+                                if (d.uu !== null) {
+                                    const ratio = (d.uu / d.total * 100).toFixed(1);
+                                    return `\nUU / 總觸及 = ${ratio}%（重複率 ${(100 - parseFloat(ratio)).toFixed(1)}%）`;
+                                }
+                                return '';
+                            }
+                        }}
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Ad reach detail table (with UU column)
+            let tHtml = '<table class="data-table"><thead><tr>';
+            tHtml += '<th>月份</th><th>自然觸及</th><th>廣告觸及</th><th>總觸及</th><th>月 UU</th><th>自然占比</th><th>新增粉絲</th><th>廣告效率</th>';
+            tHtml += '</tr></thead><tbody>';
+            data.forEach(d => {
+                const pct = (d.organic / d.total * 100).toFixed(1);
+                const eff = d.ad > 0 ? (d.newFollowers / d.ad * 10000).toFixed(1) : '—';
+                const uuDisplay = d.uu !== null ? d.uu.toLocaleString() : '<span style="color:#999">待接入</span>';
+                tHtml += `<tr>
+                    <td><strong>${d.year}/${String(d.month).padStart(2,'0')}</strong></td>
+                    <td>${d.organic.toLocaleString()}</td>
+                    <td>${d.ad.toLocaleString()}</td>
+                    <td><strong>${d.total.toLocaleString()}</strong></td>
+                    <td>${uuDisplay}</td>
+                    <td><span class="badge ${parseFloat(pct)>=50?'positive':'negative'}">${pct}%</span></td>
+                    <td>+${d.newFollowers.toLocaleString()}</td>
+                    <td>${eff}</td>
+                </tr>`;
+            });
+            tHtml += '</tbody></table>';
+            document.getElementById('ad-reach-table').innerHTML = tHtml;
+        }
+
+        // ---- Reach Charts ----
+        renderReachCharts() {
+            const data = this.getFilteredReachData();
+            const labels = data.map(d => `${d.year}/${d.month}月`);
+
+            // Monthly Organic Reach
+            if (this.charts.monthlyReach) this.charts.monthlyReach.destroy();
+            const ctx4 = document.getElementById('chart-monthly-reach').getContext('2d');
+            this.charts.monthlyReach = new Chart(ctx4, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: '自然觸及',
+                            data: data.map(d => d.organic),
+                            borderColor: '#00b894',
+                            backgroundColor: '#00b89420',
+                            borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 6,
+                        },
+                        {
+                            label: '總觸及（自然+廣告）',
+                            data: data.map(d => d.total),
+                            borderColor: COLORS.total,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2, borderDash: [6,3], tension: 0.3, pointRadius: 3, pointHoverRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y ? ctx.parsed.y.toLocaleString() : '—'}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Organic vs Ad stacked
+            if (this.charts.organicVsTotal) this.charts.organicVsTotal.destroy();
+            const ctx5 = document.getElementById('chart-organic-vs-total').getContext('2d');
+            this.charts.organicVsTotal = new Chart(ctx5, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '自然觸及', data: data.map(d => d.organic), backgroundColor: '#00b89499', borderRadius: 3 },
+                        { label: '廣告觸及', data: data.map(d => d.ad), backgroundColor: '#e1705599', borderRadius: 3 },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y ? ctx.parsed.y.toLocaleString() : '—'}` } }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Reach Growth Rate
+            if (this.charts.reachGrowth) this.charts.reachGrowth.destroy();
+            const reachGrowth = data.slice(1).map((d, i) => {
+                const prev = data[i];
+                return prev.total > 0 ? ((d.total - prev.total) / prev.total * 100) : 0;
+            });
+            const ctx6 = document.getElementById('chart-reach-growth').getContext('2d');
+            this.charts.reachGrowth = new Chart(ctx6, {
+                type: 'bar',
+                data: {
+                    labels: labels.slice(1),
+                    datasets: [{
+                        label: '觸及月增率',
+                        data: reachGrowth,
+                        backgroundColor: reachGrowth.map(v => v >= 0 ? COLORS.positive + '99' : COLORS.negative + '99'),
+                        borderRadius: 3,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)}%` } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { ticks: { callback: v => v + '%' }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // UU Trend vs Total Reach
+            if (this.charts.uuTrend) this.charts.uuTrend.destroy();
+            const ctx_uu = document.getElementById('chart-uu-trend').getContext('2d');
+            const hasUU = data.some(d => d.uu !== null);
+            const uuDatasets = [
+                {
+                    label: '總觸及（含重複）',
+                    data: data.map(d => d.total),
+                    borderColor: COLORS.total,
+                    backgroundColor: COLORS.total + '15',
+                    borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 6,
+                },
+                {
+                    label: '月 UU（不重複人數）',
+                    data: data.map(d => d.uu),
+                    borderColor: '#00cec9',
+                    backgroundColor: '#00cec920',
+                    borderWidth: 3, fill: true, tension: 0.3, pointRadius: 5, pointHoverRadius: 8,
+                }
+            ];
+            this.charts.uuTrend = new Chart(ctx_uu, {
+                type: 'line',
+                data: { labels, datasets: uuDatasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    if (ctx.parsed.y === null) return `${ctx.dataset.label}: 待接 API`;
+                                    return `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`;
+                                },
+                                afterBody: (items) => {
+                                    const idx = items[0].dataIndex;
+                                    const d = data[idx];
+                                    if (d.uu !== null && d.total > 0) {
+                                        const ratio = (d.uu / d.total * 100).toFixed(1);
+                                        return `UU / 總觸及 = ${ratio}%（重複率 ${(100 - parseFloat(ratio)).toFixed(1)}%）`;
+                                    }
+                                    return '';
+                                }
+                            }
+                        },
+                        subtitle: {
+                            display: !hasUU,
+                            text: 'UU 資料尚未接入，待 Meta API period=month 啟用後自動填入',
+                            color: '#999',
+                            font: { size: 12 },
+                            padding: { bottom: 10 }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+        }
+
+        // ---- Growth Charts ----
+        renderGrowthCharts() {
+            const data = this.getFilteredReachData();
+            const labels = data.map(d => `${d.year}/${d.month}月`);
+
+            // New Followers per Month
+            if (this.charts.newFollowers) this.charts.newFollowers.destroy();
+            const ctx7 = document.getElementById('chart-new-followers').getContext('2d');
+            this.charts.newFollowers = new Chart(ctx7, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '新增粉絲',
+                        data: data.map(d => d.newFollowers),
+                        backgroundColor: COLORS.total + 'BB',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `+${ctx.parsed.y.toLocaleString()} 人` } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Goal Trajectory — always uses full 2025 data regardless of filter
+            if (this.charts.goalTraj) this.charts.goalTraj.destroy();
+            const goal = 65000;
+            const startVal = 50000;
+            const cumulativeActual = [];
+            let runningTotal = startVal;
+            REACH_SUMMARY.filter(d => d.year === 2025).forEach(d => {
+                runningTotal += d.newFollowers;
+                cumulativeActual.push(runningTotal);
+            });
+            const months2025 = REACH_SUMMARY.filter(d => d.year === 2025);
+            const projectedLine = months2025.map((d, i) => {
+                const monthlyTarget = (goal - startVal) / 12;
+                return Math.round(startVal + monthlyTarget * (i + 1));
+            });
+
+            const ctx8 = document.getElementById('chart-goal-trajectory').getContext('2d');
+            this.charts.goalTraj = new Chart(ctx8, {
+                type: 'line',
+                data: {
+                    labels: months2025.map(d => monthLabel(d.month)),
+                    datasets: [
+                        {
+                            label: '累計粉絲數',
+                            data: cumulativeActual,
+                            borderColor: COLORS.total,
+                            backgroundColor: COLORS.total + '20',
+                            borderWidth: 3, fill: false, tension: 0.3, pointRadius: 5, pointHoverRadius: 8,
+                        },
+                        {
+                            label: '目標進度線',
+                            data: projectedLine,
+                            borderColor: COLORS.goal,
+                            borderWidth: 2, borderDash: [8, 4], fill: false, tension: 0, pointRadius: 3,
+                        },
+                        {
+                            label: '目標 (65K)',
+                            data: months2025.map(() => goal),
+                            borderColor: '#e17055',
+                            borderWidth: 1.5, borderDash: [4, 4], fill: false, pointRadius: 0,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { min: 30000, max: 70000, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+        }
+
+        // ---- Detail Table ----
+        renderDetailTable() {
+            const filtered = this.getFilteredReachData();
+            const data = [...filtered].sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            });
+
+            if (data.length === 0) {
+                document.getElementById('detail-table').innerHTML = '<p style="color:var(--text-secondary);padding:20px;">該篩選條件下無資料</p>';
+                return;
+            }
+
+            let html = '<table class="data-table"><thead><tr>';
+            html += '<th>月份</th><th>自然觸及</th><th>廣告觸及</th><th>總觸及</th>';
+            html += '<th>月 UU</th><th>自然占比</th><th>新增粉絲</th><th>月增率</th>';
+            html += '</tr></thead><tbody>';
+
+            // Use full REACH_SUMMARY for MoM calculation context
+            const allSorted = [...REACH_SUMMARY].sort((a, b) => a.year * 100 + a.month - (b.year * 100 + b.month));
+
+            data.forEach((d, idx) => {
+                const organicPct = (d.organic / d.total * 100).toFixed(1);
+                const curIdx = allSorted.findIndex(x => x.year === d.year && x.month === d.month);
+                let momGrowth = null;
+                if (curIdx > 0) {
+                    const prev = allSorted[curIdx - 1];
+                    momGrowth = ((d.total - prev.total) / prev.total * 100);
+                }
+
+                html += '<tr>';
+                html += `<td><strong>${d.year}/${String(d.month).padStart(2,'0')}</strong></td>`;
+                html += `<td>${d.organic.toLocaleString()}</td>`;
+                html += `<td>${d.ad.toLocaleString()}</td>`;
+                html += `<td><strong>${d.total.toLocaleString()}</strong></td>`;
+                html += `<td>${d.uu !== null ? '<strong>' + d.uu.toLocaleString() + '</strong>' : '<span style="color:#ccc;font-size:11px">待接 API</span>'}</td>`;
+                html += `<td><span class="badge ${parseFloat(organicPct) >= 50 ? 'positive' : 'negative'}">${organicPct}%</span></td>`;
+                html += `<td><span class="badge positive">+${d.newFollowers.toLocaleString()}</span></td>`;
+                html += `<td>${momGrowth !== null ? '<span class="badge ' + (momGrowth >= 0 ? 'positive' : 'negative') + '">' + (momGrowth >= 0 ? '+' : '') + momGrowth.toFixed(1) + '%</span>' : '—'}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('detail-table').innerHTML = html;
+        }
+
+        // ---- Goal Simulator ----
+        setSimRate(rate) {
+            document.getElementById('sim-rate').value = rate;
+            document.querySelectorAll('.sim-preset-btn').forEach(b => {
+                b.classList.toggle('sim-preset-active', parseFloat(b.textContent.match(/[\d.]+/)?.[0]) === rate);
+            });
+            this.updateSimulator();
+        }
+
+        updateSimulator() {
+            const metric = document.getElementById('sim-metric').value;
+            const baseIdx = parseInt(document.getElementById('sim-base').value);
+            const rate = parseFloat(document.getElementById('sim-rate').value);
+
+            document.getElementById('sim-rate-display').textContent = rate.toFixed(1) + 'x';
+
+            // Update preset button active state
+            document.querySelectorAll('.sim-preset-btn').forEach(b => {
+                const btnRate = parseFloat(b.textContent.match(/[\d.]+/)?.[0]);
+                b.classList.toggle('sim-preset-active', Math.abs(btnRate - rate) < 0.05);
+            });
+
+            const data = REACH_SUMMARY;
+            const labels = data.map(d => `${d.year}/${d.month}月`);
+            const metricLabel = metric === 'followers' ? '新增淨追蹤數' : '自然觸及人數';
+            const actualValues = data.map(d => metric === 'followers' ? d.newFollowers : d.organic);
+
+            // Calculate targets: from base month onward, apply growth rate
+            const targetValues = actualValues.map((v, i) => {
+                if (i < baseIdx) return null;
+                if (i === baseIdx) return v;
+                const baseVal = actualValues[baseIdx];
+                const monthsFromBase = i - baseIdx;
+                return Math.round(baseVal * Math.pow(rate, monthsFromBase / 6));
+            });
+
+            // Chart
+            if (this.charts.simPreview) this.charts.simPreview.destroy();
+            const ctx = document.getElementById('chart-sim-preview').getContext('2d');
+            this.charts.simPreview = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: `實際${metricLabel}`,
+                            data: actualValues,
+                            backgroundColor: '#6C5CE7BB',
+                            borderRadius: 4,
+                        },
+                        {
+                            label: `目標${metricLabel}（${rate.toFixed(1)}x）`,
+                            data: targetValues,
+                            type: 'line',
+                            borderColor: '#e17055',
+                            backgroundColor: '#e1705520',
+                            borderWidth: 3,
+                            borderDash: [6, 4],
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: targetValues.map((v, i) => {
+                                if (v === null) return 'transparent';
+                                return actualValues[i] >= v ? '#00b894' : '#e17055';
+                            }),
+                            fill: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: { callbacks: {
+                            afterBody: (items) => {
+                                const idx = items[0].dataIndex;
+                                const actual = actualValues[idx];
+                                const target = targetValues[idx];
+                                if (target !== null && target > 0) {
+                                    const pct = (actual / target * 100).toFixed(1);
+                                    return `達成率：${pct}%`;
+                                }
+                                return '';
+                            }
+                        }}
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                    }
+                }
+            });
+
+            // Result grid
+            let gridHtml = '';
+            data.forEach((d, i) => {
+                const actual = actualValues[i];
+                const target = targetValues[i];
+                if (target === null) return;
+                const achieved = actual >= target;
+                const pct = target > 0 ? (actual / target * 100).toFixed(0) : '—';
+                gridHtml += `<div class="sim-result-card" style="border-left-color:${achieved ? '#00b894' : '#e17055'}">
+                    <div class="src-month">${d.year}/${d.month}月</div>
+                    <div class="src-actual">實際 ${actual.toLocaleString()}</div>
+                    <div class="src-target">目標 ${target.toLocaleString()}</div>
+                    <div class="src-growth" style="background:${achieved ? '#d1fae5' : '#fee2e2'};color:${achieved ? '#059669' : '#dc2626'}">
+                        ${achieved ? '達標' : '未達'} ${pct}%
+                    </div>
+                </div>`;
+            });
+            document.getElementById('sim-result-grid').innerHTML = gridHtml;
+        }
+
+        confirmGoals() {
+            const metric = document.getElementById('sim-metric').value;
+            const rate = parseFloat(document.getElementById('sim-rate').value);
+            const metricLabel = metric === 'followers' ? '新增淨追蹤數' : '自然觸及人數';
+
+            // Demo: show confirmation
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:32px;max-width:400px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+                <div style="width:56px;height:56px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <span style="font-size:28px;">&#10003;</span>
+                </div>
+                <h3 style="font-size:18px;margin-bottom:8px;">目標已模擬確認</h3>
+                <p style="color:#6b7280;font-size:14px;margin-bottom:4px;">指標：${metricLabel}</p>
+                <p style="color:#6b7280;font-size:14px;margin-bottom:16px;">成長率係數：${rate.toFixed(1)}x</p>
+                <p style="color:#999;font-size:12px;margin-bottom:20px;">Phase 2 上線後，此設定將自動寫入 Supabase<br>並即時反映至所有儀表板頁面</p>
+                <button onclick="this.closest('div[style]').parentElement.remove()" style="padding:10px 32px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">確認</button>
+            </div>`;
+            document.body.appendChild(overlay);
+        }
+    }
+
+    // ========== TAB SWITCHING ==========
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // ========== INIT ==========
+    const dashboard = new Dashboard();
+    </script>
+</body>
+</html>

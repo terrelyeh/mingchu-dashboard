@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINCHU 社群媒體儀表板 — 專案開發文件</title>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-light: #ebf5ff;
+    --primary-dark: #1e40af;
+    --accent: #2e75b6;
+    --dark: #1f2937;
+    --grey: #6b7280;
+    --light-grey: #f3f4f6;
+    --border: #e5e7eb;
+    --green: #059669;
+    --green-bg: #d1fae5;
+    --amber: #d97706;
+    --amber-bg: #fef3c7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --white: #ffffff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    color: var(--dark);
+    background: var(--light-grey);
+    line-height: 1.8;
+    font-size: 17px;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 56px;
+  }
+  .topbar-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; font-weight: 700; color: var(--primary);
+  }
+  .topbar-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+  .topbar-meta { font-size: 13px; color: var(--grey); }
+  .topbar-meta span { margin-left: 16px; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed; top: 56px; left: 0; bottom: 0; width: 260px;
+    background: var(--white); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 20px 0; z-index: 90;
+    scrollbar-width: thin;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .sidebar .toc-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--grey); padding: 0 20px 8px;
+  }
+  .sidebar a {
+    display: block; padding: 6px 20px; font-size: 14px;
+    color: var(--grey); text-decoration: none;
+    border-left: 3px solid transparent; transition: all 0.15s;
+  }
+  .sidebar a:hover { color: var(--primary); background: var(--primary-light); }
+  .sidebar a.active {
+    color: var(--primary); font-weight: 600;
+    border-left-color: var(--primary); background: var(--primary-light);
+  }
+  .sidebar a.sub { padding-left: 36px; font-size: 12.5px; }
+  .sidebar a.subsub { padding-left: 48px; font-size: 12px; }
+
+  /* ── Main ── */
+  .main {
+    margin-left: 260px; margin-top: 56px; padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: var(--white); border-radius: 12px; padding: 48px 40px;
+    margin-bottom: 40px; box-shadow: var(--shadow-md);
+  }
+  .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+  .hero .subtitle { font-size: 18px; opacity: 0.9; margin-bottom: 20px; }
+  .hero .meta-row { display: flex; gap: 24px; font-size: 13px; opacity: 0.8; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 26px; font-weight: 700; color: var(--primary);
+    padding-bottom: 10px; border-bottom: 2px solid var(--primary-light);
+    margin-bottom: 20px; scroll-margin-top: 80px;
+  }
+  h3 {
+    font-size: 20px; font-weight: 600; color: var(--dark);
+    margin: 24px 0 12px; scroll-margin-top: 80px;
+  }
+  h4 {
+    font-size: 17px; font-weight: 600; color: var(--accent);
+    margin: 16px 0 8px; scroll-margin-top: 80px;
+  }
+  p { margin-bottom: 12px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+  }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    background: var(--white); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; font-size: 15.5px;
+  }
+  thead th {
+    background: var(--primary); color: var(--white);
+    padding: 10px 14px; text-align: left; font-weight: 600; font-size: 14.5px;
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f9fafb; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--primary-light); color: var(--primary); }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 4px solid; border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 14px 18px; margin-bottom: 16px; font-size: 16px;
+  }
+  .callout-warn { border-color: var(--amber); background: var(--amber-bg); }
+  .callout-danger { border-color: var(--red); background: var(--red-bg); }
+  .callout-info { border-color: var(--primary); background: var(--primary-light); }
+  .callout-success { border-color: var(--green); background: var(--green-bg); }
+  .callout strong { display: block; margin-bottom: 4px; }
+
+  /* ── Lists ── */
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+
+  /* ── Code ── */
+  code {
+    background: var(--light-grey); padding: 2px 6px; border-radius: 4px;
+    font-size: 13px; font-family: "SF Mono", "Fira Code", monospace;
+    color: var(--red);
+  }
+
+  /* ── Phase timeline ── */
+  .timeline { position: relative; padding-left: 28px; margin-bottom: 20px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px;
+    width: 2px; background: var(--border);
+  }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -24px; top: 6px;
+    width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary);
+    background: var(--white);
+  }
+  .timeline-item.done::before { background: var(--green); border-color: var(--green); }
+  .timeline-item .tl-title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .timeline-item .tl-time { font-size: 12px; color: var(--grey); margin-bottom: 4px; }
+  .timeline-item .tl-desc { font-size: 14px; color: #4b5563; }
+
+  /* ── Architecture flow ── */
+  .arch-flow {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    margin-bottom: 24px; justify-content: center;
+  }
+  .arch-box {
+    background: var(--white); border: 2px solid var(--primary);
+    border-radius: var(--radius); padding: 14px 18px; text-align: center;
+    min-width: 140px; box-shadow: var(--shadow);
+  }
+  .arch-box .arch-label { font-size: 11px; color: var(--grey); margin-bottom: 4px; }
+  .arch-box .arch-name { font-weight: 700; font-size: 14px; color: var(--primary); }
+  .arch-arrow {
+    font-size: 22px; color: var(--primary); padding: 0 8px; font-weight: 700;
+  }
+
+  /* ── Metric grid ── */
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .metric-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--primary);
+  }
+  .metric-card .mc-label { font-size: 12px; color: var(--grey); margin-bottom: 4px; }
+  .metric-card .mc-value { font-size: 16px; font-weight: 700; color: var(--dark); }
+  .metric-card .mc-sub { font-size: 11px; color: var(--grey); margin-top: 4px; }
+
+  /* ── Print ── */
+  @media print {
+    .topbar, .sidebar { display: none; }
+    .main { margin: 0; padding: 20px; max-width: 100%; }
+    .hero { page-break-after: always; }
+    table { font-size: 11px; }
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px 16px 60px; }
+    .hero { padding: 32px 24px; }
+    .hero h1 { font-size: 24px; }
+    .arch-flow { flex-direction: column; }
+    .arch-arrow { transform: rotate(90deg); }
+    .topbar { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ Top Bar ═══ -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="dot"></span> MINCHU 社群媒體儀表板
+  </div>
+  <div class="topbar-meta">
+    <span>v1.0</span>
+    <span>2026-04-01</span>
+    <span>Terrel Yeh</span>
+  </div>
+</header>
+
+<!-- ═══ Sidebar ═══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="toc-title">目錄</div>
+  <a href="#sec1">1. 專案總覽</a>
+  <a href="#sec1-1" class="sub">1.1 專案背景</a>
+  <a href="#sec1-2" class="sub">1.2 目前成果</a>
+  <a href="#sec2">2. 功能需求</a>
+  <a href="#sec2-1" class="sub">2.1 核心數據指標</a>
+  <a href="#sec2-2" class="sub">2.2 篩選器與互動</a>
+  <a href="#sec2-3" class="sub">2.3 負責人目標管理</a>
+  <a href="#sec2-4" class="sub">2.4 月 UU 整合計畫</a>
+  <a href="#sec2-5" class="sub">2.5 目標模擬器</a>
+  <a href="#sec3">3. 架構設計與部署</a>
+  <a href="#sec3-1" class="sub">3.1 系統架構</a>
+  <a href="#sec3-2" class="sub">3.2 三階段開發</a>
+  <a href="#sec3-3" class="sub">3.3 DB Schema</a>
+  <a href="#sec4">4. API 相關資訊</a>
+  <a href="#sec4-1" class="sub">4.1 API 總覽</a>
+  <a href="#sec4-2" class="sub">4.2 FB Graph API</a>
+  <a href="#sec4-3" class="sub">4.3 IG Graph API</a>
+  <a href="#sec4-4" class="sub">4.4 Marketing API</a>
+  <a href="#sec4-5" class="sub">4.5 擷取策略</a>
+  <a href="#sec5">5. 資料可行性分析</a>
+  <a href="#sec5-1" class="sub">5.1 可實現的數據</a>
+  <a href="#sec5-2" class="sub">5.2 限制與不可實現</a>
+  <a href="#sec5-3" class="sub">5.3 清理策略</a>
+  <a href="#sec6">6. API 限制與風險</a>
+  <a href="#sec6-1" class="sub">6.1 同事擔憂回應</a>
+  <a href="#sec6-2" class="sub">6.2 主要 API 限制</a>
+  <a href="#sec6-3" class="sub">6.3 指標對照層</a>
+  <a href="#sec7">7. 開發時程</a>
+  <a href="#sec8">8. 技術決策</a>
+  <a href="#appendix">附錄</a>
+</nav>
+
+<!-- ═══ Main Content ═══ -->
+<div class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>MINCHU 社群媒體儀表板</h1>
+    <div class="subtitle">專案介紹與開發文件</div>
+    <div class="meta-row">
+      <span>版本 v1.0</span>
+      <span>建立日期 2026-04-01</span>
+      <span>作者 Terrel Yeh</span>
+    </div>
+  </div>
+
+  <!-- ═══ 1. 專案總覽 ═══ -->
+  <section>
+    <h2 id="sec1">1. 專案總覽</h2>
+
+    <h3 id="sec1-1">1.1 專案背景</h3>
+    <div class="card">
+      <p>MINCHU 品牌目前同時經營 Facebook 粉絲專頁與 Instagram 帳號，需要一套統一的社群媒體分析儀表板，將分散在 Meta Business Suite、Google Sheets 與截圖中的數據整合為即時、可互動的視覺化報表。</p>
+      <p>本專案的最終目標是建立一條自動化數據管線：</p>
+      <div class="arch-flow">
+        <div class="arch-box"><div class="arch-label">Step 1</div><div class="arch-name">Meta API 擷取</div></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box"><div class="arch-label">Step 2</div><div class="arch-name">資料分析</div></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box"><div class="arch-label">Step 3</div><div class="arch-name">目標追蹤</div></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box"><div class="arch-label">Step 4</div><div class="arch-name">互動儀表板</div></div>
+      </div>
+      <p><strong>平台範圍：</strong>Facebook 粉絲專頁 + Instagram 商業帳號<br>
+      <strong>數據範圍：</strong>2019 年至今的歷史數據 + 即時 API 數據<br>
+      <strong>負責人：</strong>Clara Chang（FB）、Mike Chen（IG）</p>
+    </div>
+
+    <h3 id="sec1-2">1.2 目前成果</h3>
+    <p>已完成的儀表板原型（<code>MINCHU_Social_Dashboard.html</code>）包含 6 個頁籤、超過 16 個互動圖表：</p>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="mc-label">總覽</div><div class="mc-value">KPI + 目標追蹤</div><div class="mc-sub">年度 KPI 卡片、總粉絲成長曲線</div></div>
+      <div class="metric-card"><div class="mc-label">觸及分析</div><div class="mc-value">觸及趨勢 + UU</div><div class="mc-sub">月觸及人數、UU vs 總觸及對比</div></div>
+      <div class="metric-card"><div class="mc-label">成長趨勢</div><div class="mc-value">新粉絲分析</div><div class="mc-sub">追蹤每月成長率</div></div>
+      <div class="metric-card"><div class="mc-label">月度明細</div><div class="mc-value">完整報表</div><div class="mc-sub">含自然/廣告觸及、UU</div></div>
+      <div class="metric-card"><div class="mc-label">負責人目標</div><div class="mc-value">目標達成率</div><div class="mc-sub">週/月/季目標追蹤</div></div>
+      <div class="metric-card"><div class="mc-label">自然 vs 廣告</div><div class="mc-value">觸及對比 + UU</div><div class="mc-sub">投放效率、UU vs 自然/廣告對比</div></div>
+      <div class="metric-card" style="border-left-color:var(--amber);"><div class="mc-label">目標模擬器</div><div class="mc-value">互動式目標設定</div><div class="mc-sub">成長率滑桿、即時預覽、確認儲存</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ 2. 功能需求 ═══ -->
+  <section>
+    <h2 id="sec2">2. 功能需求</h2>
+
+    <h3 id="sec2-1">2.1 核心數據指標</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>指標名稱</th><th>定義</th><th>來源</th><th>頁籤</th></tr></thead>
+      <tbody>
+        <tr><td><strong>總粉絲數</strong></td><td>FB + IG 粉絲加總</td><td>Meta API / 歷史資料</td><td>總覽、成長趨勢</td></tr>
+        <tr><td><strong>觸及人數（自然）</strong></td><td>未付費觸及的人數</td><td>Meta Graph API</td><td>觸及分析、自然vs廣告</td></tr>
+        <tr><td><strong>觸及人數（廣告）</strong></td><td>付費推廣觸及的人數</td><td>Meta Ads API</td><td>觸及分析、自然vs廣告</td></tr>
+        <tr><td><strong>新增粉絲</strong></td><td>當月新增追蹤數</td><td>Meta Graph API</td><td>成長趨勢、月度明細</td></tr>
+        <tr><td><strong>月 UU</strong></td><td>當月不重複連線訪客</td><td>Meta API <code>period=month</code></td><td>觸及分析、自然vs廣告、月度明細</td></tr>
+        <tr><td><strong>互動數</strong></td><td>讚、留言、分享、儲存</td><td>Meta Graph API</td><td>負責人目標</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec2-2">2.2 篩選器與互動功能</h3>
+    <div class="card">
+      <ul>
+        <li><strong>年份篩選：</strong>切換不同年度的數據視角</li>
+        <li><strong>平台篩選：</strong>全部 / Facebook / Instagram 三種視角</li>
+        <li>KPI 卡片即時回應篩選變更，未選平台之卡片自動淡化</li>
+        <li>圖表支援懸停顯示詳細數值（Chart.js tooltip，繁體中文）</li>
+        <li>目標達成追蹤固定顯示全年軌跡，不受篩選器影響</li>
+      </ul>
+    </div>
+
+    <h3 id="sec2-3">2.3 負責人目標管理模組</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>平台</th><th>負責人</th><th>週目標指標</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">Facebook</span></td><td>Clara Chang</td><td>觸及 19,718 / 新粉 130</td></tr>
+        <tr><td><span class="badge badge-blue">Instagram</span></td><td>Mike Chen</td><td>觸及 14,400 / 新粉 180 / 互動 720</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec2-4">2.4 月 UU（Unique Users）整合計畫</h3>
+    <div class="card">
+      <p>月 UU 是反映實際不重複觸及人數的核心指標。建議將月 UU 納入以下三個頁籤：</p>
+      <ul>
+        <li><strong>觸及分析：</strong>新增「UU 趨勢圖」與現有觸及人數圖並列比較，提供「觸及 vs 實際人數」的分析視角</li>
+        <li><strong>自然 vs 廣告：</strong>在自然/廣告觸及對比中加入 UU 維度，評估廣告投放對「不重複人數」的實際貢獻</li>
+        <li><strong>月度明細：</strong>已預留 UU 欄位，待 API 接入後自動填入</li>
+      </ul>
+    </div>
+    <div class="callout callout-danger">
+      <strong>重要提醒</strong>
+      UU 的取得必須使用 Meta API 的 <code>period=month</code> 參數，由伺服器端去重計算，<strong>絕對不可</strong>用每日數據加總替代。每日加總會嚴重高估實際人數。
+    </div>
+
+    <h3 id="sec2-5">2.5 目標模擬器模組</h3>
+    <div class="card">
+      <p>管理者目前在 Google Sheets 上手動模擬各項指標的目標成長率。儀表板新增「目標模擬器」頁籤，提供互動式目標設定工作流：</p>
+      <p><strong>Step 1 — 模擬探索（前端即時運算）</strong></p>
+      <ul>
+        <li>選擇模擬指標（新增淨追蹤數 / 自然觸及人數）與基期月份</li>
+        <li>拖動成長率滑桿（0.5x ~ 3.0x）或快速選擇預設情境</li>
+        <li>圖表即時顯示實際數據柱狀圖 + 目標軌跡虛線，各月達成率卡片</li>
+      </ul>
+      <p><strong>Step 2 — 確認儲存（Phase 2 寫入 Supabase）</strong></p>
+      <ul>
+        <li>點擊「確認此目標設定」，系統將成長率參數寫入 <code>goals</code> 表</li>
+        <li>所有頁籤自動載入最新目標設定，在圖表上疊加目標參考線</li>
+      </ul>
+    </div>
+    <div class="callout callout-info">
+      <strong>目標計算邏輯</strong>
+      <code>目標值[月 N] = 基期實際值 × 成長率係數 ^ ((N - 基期) / 6)</code><br>
+      Supabase 存的是「成長率參數」而非每月目標數字，管理者隨時可調整，所有頁面即時更新。
+    </div>
+  </section>
+
+  <!-- ═══ 3. 架構設計 ═══ -->
+  <section>
+    <h2 id="sec3">3. 架構設計與部署建議</h2>
+
+    <h3 id="sec3-1">3.1 系統架構</h3>
+    <p>推薦採用中量級架構，具備良好的擴展性與維護性：</p>
+    <div class="arch-flow" style="margin-top:16px;">
+      <div class="arch-box" style="border-color:var(--amber);"><div class="arch-label">數據來源</div><div class="arch-name" style="color:var(--amber);">Meta API</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box" style="border-color:var(--green);"><div class="arch-label">數據擷取</div><div class="arch-name" style="color:var(--green);">Edge Functions</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box"><div class="arch-label">數據儲存</div><div class="arch-name">Supabase</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box" style="border-color:var(--accent);"><div class="arch-label">前端呈現</div><div class="arch-name" style="color:var(--accent);">Next.js + Recharts</div></div>
+    </div>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>層級</th><th>元件</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>數據來源</td><td>Meta Graph API / Ads API</td><td>定期擷取 FB + IG 的指標數據</td></tr>
+        <tr><td>數據擷取</td><td>Supabase Edge Functions + pg_cron</td><td>無伺服器函數，排程執行 API 調用</td></tr>
+        <tr><td>數據儲存</td><td>Supabase (PostgreSQL)</td><td>結構化儲存每日/每月指標數據，RLS 權限控管</td></tr>
+        <tr><td>前端框架</td><td>Next.js 14+ (App Router)</td><td>Server Components 保護 API 金鑰，SSR/SSG 支援</td></tr>
+        <tr><td>UI 元件</td><td>shadcn/ui + Tailwind CSS + Recharts</td><td>可控元件系統，React 原生圖表</td></tr>
+        <tr><td>部署</td><td>Vercel</td><td>git push 即部署，Next.js 原生整合</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec3-2">3.2 三階段漸進式開發</h3>
+    <div class="timeline">
+      <div class="timeline-item done">
+        <div class="tl-title">Phase 1：靜態儀表板 <span class="badge badge-green">已完成</span></div>
+        <div class="tl-desc">手動彙整歷史數據（截圖 + Sheets）。自包含 HTML + Chart.js 儀表板，6 頁籤、16 圖表、篩選器、KPI 卡片、目標追蹤均已實作。</div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-title">Phase 2：API 自動化接入</div>
+        <div class="tl-time">預計 6 週</div>
+        <div class="tl-desc">建立 Supabase 專案與 DB schema。以 Next.js App Router 重寫前端（Chart.js → Recharts，UI 採 shadcn/ui + Tailwind）。開發 Edge Functions 串接 Meta API，設定 pg_cron 排程。部署至 Vercel。</div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-title">Phase 3：進階功能</div>
+        <div class="tl-time">預計 2 週</div>
+        <div class="tl-desc">自動異常警報（指標偏離目標時通知）、歷史數據回填與資料比對、AI 趨勢分析與建議。</div>
+      </div>
+    </div>
+
+    <h3 id="sec3-3">3.3 資料庫 Schema 設計（建議）</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>表名</th><th>主要欄位</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><code>daily_metrics</code></td><td>date, platform, reach_organic, reach_ad, new_followers, engagement</td><td>每日指標原始數據</td></tr>
+        <tr><td><code>monthly_summary</code></td><td>year, month, platform, total_reach, uu, new_followers</td><td>月度彙總（含 UU）</td></tr>
+        <tr><td><code>goals</code></td><td>year, platform, pic, weekly_target, monthly_target, quarterly_target</td><td>目標設定</td></tr>
+        <tr><td><code>follower_snapshots</code></td><td>date, platform, follower_count</td><td>粉絲數快照（每日）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- ═══ 4. API 資訊 ═══ -->
+  <section>
+    <h2 id="sec4">4. API 相關資訊</h2>
+
+    <h3 id="sec4-1">4.1 會用到的 API 總覽</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>API 名稱</th><th>用途</th><th>對應指標</th></tr></thead>
+      <tbody>
+        <tr><td>Facebook Graph API v21.0</td><td>FB 粉專指標</td><td>粉絲、觸及、UU</td></tr>
+        <tr><td>Instagram Graph API</td><td>IG 商業帳號指標</td><td>粉絲、觸及、互動</td></tr>
+        <tr><td>Marketing API (Ads)</td><td>廣告投放數據</td><td>廣告觸及、花費、轉換</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec4-2">4.2 Facebook Graph API 端點與參數</h3>
+
+    <h4>4.2.1 粉絲專頁 Insights</h4>
+    <div class="callout callout-info">
+      <strong>Endpoint</strong>
+      <code>GET /{page-id}/insights</code>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>參數</th><th>值</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><code>metric</code></td><td><code>page_views, page_post_engagements, page_fans_online</code></td><td>指定要查詢的指標</td></tr>
+        <tr><td><code>period</code></td><td><code>day / week / days_28 / month</code></td><td>聚合週期，<strong>UU 必須用 month</strong></td></tr>
+        <tr><td><code>since / until</code></td><td>UNIX timestamp 或 ISO 8601</td><td>查詢的時間範圍</td></tr>
+        <tr><td><code>access_token</code></td><td>Page Access Token</td><td>必須為長期不過期的 token</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>4.2.2 重要指標變更（2025/11 起）</h4>
+    <div class="callout callout-danger">
+      <strong>重大變更</strong>
+      Meta 已於 2025 年 11 月 15 日棄用 <code>impressions</code> 和 <code>page_fans</code> 指標。
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>舊指標（已棄用）</th><th>新指標</th><th>差異說明</th></tr></thead>
+      <tbody>
+        <tr><td><s><code>page_impressions</code></s></td><td><code>page_views</code></td><td>「views」只計完整載入，數字會較低</td></tr>
+        <tr><td><s><code>page_fans</code></s></td><td>（無直接替代）</td><td>需透過 <code>follower_count</code> 快照取得</td></tr>
+        <tr><td><s><code>page_impressions_unique</code></s></td><td><code>page_views_unique</code> (UU)</td><td>必須搭配 <code>period=month</code> 使用</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-warn">
+      <strong>數據空窗期</strong>
+      由於 API 轉換，2025 年 11 月至 2026 年初的數據可能需要額外處理。建議在此期間同時保留舊與新指標以確保數據連續性。
+    </div>
+
+    <h3 id="sec4-3">4.3 Instagram Graph API 端點與參數</h3>
+    <div class="callout callout-info">
+      <strong>Endpoint</strong>
+      <code>GET /{ig-user-id}/insights</code>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>參數</th><th>值</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><code>metric</code></td><td><code>reach, impressions, follower_count, profile_views</code></td><td>查詢指標</td></tr>
+        <tr><td><code>period</code></td><td><code>day / week / days_28</code></td><td>IG 目前<strong>不支援</strong> <code>month</code> 週期</td></tr>
+        <tr><td><code>metric_type</code></td><td><code>total_value</code></td><td>取得加總值</td></tr>
+        <tr><td><code>since / until</code></td><td>UNIX timestamp</td><td>最遠可回查 2 年</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-warn">
+      <strong>IG 特殊限制</strong>
+      Instagram 的 reach 指標目前僅提供每日級別數據，無法透過 API 取得跨日去重的月 UU。每日加總會高估實際人數。
+    </div>
+
+    <h3 id="sec4-4">4.4 Marketing API（廣告數據）</h3>
+    <div class="callout callout-info">
+      <strong>Endpoint</strong>
+      <code>GET /act_{ad-account-id}/insights</code>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>參數</th><th>值</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><code>fields</code></td><td><code>reach, impressions, spend, actions</code></td><td>廣告觸及、曝光、花費、轉換行為</td></tr>
+        <tr><td><code>time_range</code></td><td><code>{"since":"YYYY-MM-DD","until":"YYYY-MM-DD"}</code></td><td>查詢廣告組的時間範圍</td></tr>
+        <tr><td><code>level</code></td><td><code>campaign / adset / ad</code></td><td>資料聚合層級</td></tr>
+        <tr><td><code>breakdowns</code></td><td><code>publisher_platform</code></td><td>可區分 FB / IG 廣告效果</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec4-5">4.5 API 擷取策略</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>擷取任務</th><th>頻率</th><th>策略說明</th></tr></thead>
+      <tbody>
+        <tr><td>每日指標</td><td>每日 02:00 UTC</td><td>拉取前一天的 reach、engagement、new_followers</td></tr>
+        <tr><td>月 UU (FB)</td><td>每月 2 號</td><td>使用 <code>period=month</code> 拉取上月的去重人數</td></tr>
+        <tr><td>粉絲快照</td><td>每日 02:00 UTC</td><td>記錄當前 <code>follower_count</code> 作為歷史快照</td></tr>
+        <tr><td>廣告數據</td><td>每日 06:00 UTC</td><td>廣告數據有延遲，預留 6 小時緩衝</td></tr>
+        <tr><td>歷史回填</td><td>一次性</td><td>初始化時拉取過去 2 年可用數據</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-info">
+      <strong>Rate Limit 注意</strong>
+      Meta API 每小時上限約 200 次呼叫（依 app 級別而定）。建議每次調用合併多個 metric，並於調用間加入 1-2 秒延遲。
+    </div>
+  </section>
+
+  <!-- ═══ 5. 資料可行性 ═══ -->
+  <section>
+    <h2 id="sec5">5. 資料可行性分析</h2>
+
+    <h3 id="sec5-1">5.1 可實現的數據</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>數據項目</th><th>FB 可行性</th><th>IG 可行性</th><th>備註</th></tr></thead>
+      <tbody>
+        <tr><td>粉絲數</td><td><span class="badge badge-green">follower_count</span></td><td><span class="badge badge-green">followers_count</span></td><td>即時取得</td></tr>
+        <tr><td>自然觸及</td><td><span class="badge badge-green">page_views</span></td><td><span class="badge badge-green">reach (day)</span></td><td>FB 用 views（新指標）</td></tr>
+        <tr><td>廣告觸及</td><td><span class="badge badge-green">Ads API</span></td><td><span class="badge badge-green">Ads API</span></td><td>透過 Marketing API</td></tr>
+        <tr><td>新增粉絲</td><td><span class="badge badge-green">page_fan_adds</span></td><td><span class="badge badge-green">follower_count diff</span></td><td>IG 需用快照差值</td></tr>
+        <tr><td>互動數</td><td><span class="badge badge-green">page_post_engagements</span></td><td><span class="badge badge-green">likes, comments, shares</span></td><td>均可透過 API</td></tr>
+        <tr><td>月 UU</td><td><span class="badge badge-green">period=month</span></td><td><span class="badge badge-amber">僅日級加總</span></td><td>IG 無法取得真實月 UU</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec5-2">5.2 無法實現或有限制的數據</h3>
+    <div class="card">
+      <ul>
+        <li><strong>IG 月 UU：</strong>Instagram API 不提供 <code>period=month</code>，無法取得跨日去重人數。建議使用每日加總並於前端標註「每日累計，實際人數可能較低」。</li>
+        <li><strong>歷史 impressions：</strong>2025/11 前的 impressions 數據已無法透過 API 重新查詢，需依賴已保存的歷史資料。</li>
+        <li><strong>page_fans 歷史：</strong>已棄用，需用 <code>follower_count</code> 快照替代，但無法回溯快照前的數據。</li>
+        <li><strong>跨平台去重：</strong>FB 與 IG 的 UU 無法跨平台去重，「總觸及 UU」只能用 FB UU + IG UU，實際人數可能因重疊而較低。</li>
+      </ul>
+    </div>
+
+    <h3 id="sec5-3">5.3 數據清理與整理策略</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>數據情境</th><th>處理策略</th></tr></thead>
+      <tbody>
+        <tr><td>2019–2025/10 歷史數據</td><td>使用已存在的 Google Sheets / 截圖數據作為基線，導入資料庫</td></tr>
+        <tr><td>2025/11 轉換期</td><td>同時保留舊指標與新指標，以係數轉換確保連續性</td></tr>
+        <tr><td>2026 起新數據</td><td>全面使用新 API 指標，自動化擷取入庫</td></tr>
+        <tr><td>缺失值處理</td><td>前端顯示「--」並加註「待接入」，不使用 0 替代</td></tr>
+        <tr><td>IG UU 近似值</td><td>標註「每日累計」與 FB UU（已去重）區分顯示</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- ═══ 6. 限制與風險 ═══ -->
+  <section>
+    <h2 id="sec6">6. Meta API 限制與風險評估</h2>
+
+    <h3 id="sec6-1">6.1 同事提出的擔憂與回應</h3>
+    <p>團隊同事對於 Meta API 的變動提出了幾點重要擔憂，以下逐點分析其有效性與應對方案：</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>同事擔憂</th><th>評估</th><th>建議應對方案</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>impressions 和 page_fans 已棄用，無法取得數據</td>
+          <td><span class="badge badge-green">確實正確，但有替代方案</span></td>
+          <td>改用 <code>page_views</code> 和 <code>follower_count</code> 快照，數字會有差異但趨勢一致</td>
+        </tr>
+        <tr>
+          <td>觸及人數無法去重，加總會高估</td>
+          <td><span class="badge badge-amber">部分正確</span></td>
+          <td>FB 用 <code>period=month</code> 取得真實 UU；IG 用每日加總並標註</td>
+        </tr>
+        <tr>
+          <td>API 數據不穩定，變動太頻繁</td>
+          <td><span class="badge badge-amber">過於悲觀</span></td>
+          <td>開發時預留指標對照表，新版本發布時快速調整</td>
+        </tr>
+        <tr>
+          <td>擔心開發後又要重新調整</td>
+          <td><span class="badge badge-amber">合理但可緩解</span></td>
+          <td>採用「指標對照層」抽象設計，未來只需更新對照表</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec6-2">6.2 主要 API 限制</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>限制類型</th><th>內容</th><th>影響</th></tr></thead>
+      <tbody>
+        <tr><td>Rate Limiting</td><td>每小時 ~200 次呼叫（App-level）</td><td>需合併調用，避免對單一指標獨立請求</td></tr>
+        <tr><td>Token 過期</td><td>短期 1-2 小時，長期 60 天</td><td>必須建立 token 自動續期機制</td></tr>
+        <tr><td>數據回溯</td><td>Insights 最遠 2 年，Ads 最遠 37 個月</td><td>歷史數據超過此範圍需依賴手動備份</td></tr>
+        <tr><td>棄用變更</td><td>平均每年會有指標變動</td><td>採用指標抽象層減少影響</td></tr>
+        <tr><td>IG 去重限制</td><td>僅支援 day / week / days_28</td><td>無法取得真實月 UU</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec6-3">6.3 風險緩解架構：指標對照層</h3>
+    <div class="card">
+      <p>為了因應 Meta API 的頻繁變動，建議在架構中加入<strong>指標對照層</strong>（Metric Mapping Layer）：</p>
+      <ul>
+        <li><strong>對照表設計：</strong>建立「業務指標名稱 &rarr; API 指標名稱」的對應關係表</li>
+        <li><strong>快速調整：</strong>Meta 變更指標時，只需更新對照表，前端與資料庫均不受影響</li>
+        <li><strong>版本管理：</strong>對照表納入版控，記錄每次 API 版本更新的對應調整</li>
+      </ul>
+    </div>
+    <div class="callout callout-success">
+      <strong>架構優勢</strong>
+      透過指標對照層，未來 Meta 的任何 API 變更只需修改一張對照表（約 5-10 分鐘），而非調整整個系統。這直接回應了同事「開發後又要重新調整」的擔憂。
+    </div>
+  </section>
+
+  <!-- ═══ 7. 時程 ═══ -->
+  <section>
+    <h2 id="sec7">7. 開發時程與優先級</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>階段</th><th>時程</th><th>主要任務</th><th>交付物</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">Phase 1</span></td><td>已完成</td><td>靜態儀表板原型</td><td><code>MINCHU_Social_Dashboard.html</code></td></tr>
+        <tr><td><span class="badge badge-blue">Phase 2a</span></td><td>第 1–2 週</td><td>建立 Supabase + DB schema</td><td>資料庫與歷史數據導入</td></tr>
+        <tr><td><span class="badge badge-blue">Phase 2b</span></td><td>第 3–4 週</td><td>開發 Edge Functions + API 串接</td><td>自動化數據擷取運作</td></tr>
+        <tr><td><span class="badge badge-blue">Phase 2c</span></td><td>第 5–6 週</td><td>前端對接 API + UU 整合</td><td>即時數據儀表板</td></tr>
+        <tr><td><span class="badge badge-amber">Phase 3</span></td><td>第 7–8 週</td><td>警報機制、AI 分析</td><td>完整產品</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- ═══ 8. 技術決策 ═══ -->
+  <section>
+    <h2 id="sec8">8. 技術決策與選型理由</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>層級</th><th>選擇</th><th>選型理由</th></tr></thead>
+      <tbody>
+        <tr><td>前端框架</td><td><strong>Next.js 14+ (App Router)</strong></td><td>Server Components 保護 API 金鑰不暴露前端；與 Vercel 原生整合，部署零配置；<code>@supabase/ssr</code> 有一等支援</td></tr>
+        <tr><td>UI 元件庫</td><td><strong>shadcn/ui</strong></td><td>複製原始碼進專案，完全可控不受套件版本影響；底層 Radix UI + Tailwind，品質穩定；AI Coding Agent 支援成熟</td></tr>
+        <tr><td>CSS</td><td><strong>Tailwind CSS</strong></td><td>shadcn/ui 標配；AI Agent 產出品質穩定；響應式、深色模式快速實現</td></tr>
+        <tr><td>圖表</td><td><strong>Recharts</strong></td><td>React 原生元件，與 state 管理自然銜接；shadcn/ui 官方 chart 元件基於 Recharts；取代 Phase 1 的 Chart.js</td></tr>
+        <tr><td>後端 / 資料庫</td><td><strong>Supabase (PostgreSQL)</strong></td><td>Free Tier 足夠（500MB DB、5GB 頻寬）；RLS 權限控管；Edge Functions 處理排程</td></tr>
+        <tr><td>排程</td><td><strong>Edge Functions + pg_cron</strong></td><td>不需依賴 Vercel Pro Plan 的 cron；資料擷取與儲存在同一平台，架構簡單</td></tr>
+        <tr><td>部署</td><td><strong>Vercel</strong></td><td>Next.js 同公司產品，原生整合；git push 即部署；免費額度足夠內部使用</td></tr>
+        <tr><td>認證（選配）</td><td><strong>Supabase Auth</strong></td><td>若需限制團隊登入，Supabase Auth + Next.js middleware 可快速實現</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-info">
+      <strong>Phase 1 → Phase 2 遷移注意</strong>
+      現有 HTML 檔案中的資料結構（<code>YEARLY_DATA</code>、<code>REACH_SUMMARY</code>、<code>PIC_DATA</code>、<code>GOALS</code>）可直接轉為 Supabase 資料表結構或 API 回傳格式。Chart.js 圖表需以 Recharts 元件重寫。Supabase service key 必須透過 Next.js Server Components / Route Handlers 存取，不可暴露前端。
+    </div>
+  </section>
+
+  <!-- ═══ 附錄 ═══ -->
+  <section>
+    <h2 id="appendix">附錄</h2>
+
+    <h3>附錄 A：Meta API 版本變更時間軸</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>日期</th><th>事件</th><th>影響</th></tr></thead>
+      <tbody>
+        <tr><td>2025/11/15</td><td><code>impressions</code>、<code>page_fans</code> 棄用</td><td>需改用 <code>views</code>、<code>follower_count</code></td></tr>
+        <tr><td>2025/11/15</td><td>新增 <code>page_views</code> 指標</td><td>替代 impressions，數字略低</td></tr>
+        <tr><td>2026 Q2（預估）</td><td>Graph API v22.0 發布</td><td>需檢查是否有新棄用指標</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>附錄 B：用語對照表</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>中文術語</th><th>英文術語</th><th>API 對應</th></tr></thead>
+      <tbody>
+        <tr><td>觸及人數</td><td>Reach</td><td><code>page_views</code> / <code>reach</code></td></tr>
+        <tr><td>月不重複訪客</td><td>Monthly Unique Users (UU)</td><td><code>page_views_unique</code> (<code>period=month</code>)</td></tr>
+        <tr><td>自然觸及</td><td>Organic Reach</td><td><code>page_views</code> (organic)</td></tr>
+        <tr><td>廣告觸及</td><td>Paid / Ad Reach</td><td>Ads API <code>reach</code></td></tr>
+        <tr><td>粉絲數</td><td>Follower Count</td><td><code>follower_count</code></td></tr>
+        <tr><td>新增粉絲</td><td>New Followers</td><td><code>page_fan_adds</code> / <code>follower_count</code> diff</td></tr>
+        <tr><td>互動數</td><td>Engagement</td><td><code>page_post_engagements</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+</div><!-- /.main -->
+
+<script>
+// ── Sidebar scroll spy ──
+(function () {
+  const links = document.querySelectorAll('.sidebar a');
+  const ids = Array.from(links).map(a => a.getAttribute('href')?.replace('#', '')).filter(Boolean);
+  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+  function onScroll() {
+    let current = '';
+    for (const sec of sections) {
+      if (sec.getBoundingClientRect().top <= 100) current = sec.id;
+    }
+    links.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // smooth scroll
+  links.forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
+</body>
+</html>
