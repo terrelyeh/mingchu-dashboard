@@ -50,7 +50,7 @@ MINCHU Dashboard/
 
 ## Current Status
 
-Phase 1 Demo 儀表板已完成（8 頁籤、16+ 圖表），含目標模擬器與貼文分析。技術決策已確認（Next.js + shadcn/ui + Supabase + Vercel）。專案開發文件齊備（.docx / .md / .html）。
+Phase 1 Demo 儀表板已完成（9 頁籤、20+ 圖表），含目標模擬器、貼文分析、廣告成效（Mock Data）。技術決策已確認（Next.js + shadcn/ui + Supabase + Vercel）。專案開發文件齊備（.docx / .md / .html）。
 
 **GitHub repo**：https://github.com/terrelyeh/mingchu-dashboard（public）
 
@@ -62,6 +62,15 @@ Phase 1 Demo 儀表板已完成（8 頁籤、16+ 圖表），含目標模擬器�
 - **2025/11 數據空窗**：`impressions` → `views` 轉換期需 Metric Mapping Layer 特殊處理
 - **Google Sheets 數據驗證**：取得 CSV 匯出比對儀表板數據正確性
 - **Cloudflare Pages Demo 站**：目前手動上傳靜態 HTML，Phase 2 正式版將部署到 Vercel（Next.js 原生整合）
+
+### 📋 Phase 2 架構決策（已確認）
+
+- **認證**：Google Social Login + 白名單（Supabase Auth）
+- **Multi-workspace**：所有表加 `workspace_id`，RLS 隔離，從第一天設計進去
+- **Meta API Token**：OAuth 自助串接（非 hardcode），每個 workspace 獨立 token + 自動續期
+- **廣告成效**：Meta Marketing API → 花費 / CPM / CPC / CTR（Demo 已有 Mock Data）
+- **互動率趨勢**：互動 ÷ 觸及，FB/IG 雙線圖（Demo 已有 Mock Data）
+- **受眾輪廓、Reels/Stories 分類、導流追蹤**：規劃中，詳見專案開發文件 Section 9
 
 ## Key API Notes
 

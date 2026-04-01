@@ -282,6 +282,12 @@
   <a href="#sec6-3" class="sub">6.3 指標對照層</a>
   <a href="#sec7">7. 開發時程</a>
   <a href="#sec8">8. 技術決策</a>
+  <a href="#sec9">9. Phase 2 功能藍圖</a>
+  <a href="#sec9-1" class="sub">9.1 認證與權限</a>
+  <a href="#sec9-2" class="sub">9.2 Multi-workspace</a>
+  <a href="#sec9-3" class="sub">9.3 Meta OAuth</a>
+  <a href="#sec9-4" class="sub">9.4 廣告成效</a>
+  <a href="#sec9-5" class="sub">9.5 互動率趨勢</a>
   <a href="#appendix">附錄</a>
 </nav>
 
@@ -785,6 +791,67 @@
     <div class="callout callout-info">
       <strong>Phase 1 → Phase 2 遷移注意</strong>
       現有 HTML 檔案中的資料結構（<code>YEARLY_DATA</code>、<code>REACH_SUMMARY</code>、<code>PIC_DATA</code>、<code>GOALS</code>）可直接轉為 Supabase 資料表結構或 API 回傳格式。Chart.js 圖表需以 Recharts 元件重寫。Supabase service key 必須透過 Next.js Server Components / Route Handlers 存取，不可暴露前端。
+    </div>
+  </section>
+
+  <!-- ═══ 9. Phase 2 功能藍圖 ═══ -->
+  <section>
+    <h2 id="sec9">9. Phase 2 功能藍圖</h2>
+
+    <h3 id="sec9-1">9.1 認證與權限</h3>
+    <div class="card">
+      <ul>
+        <li><strong>登入方式</strong>：Google Social Login（Supabase Auth 原生支援）</li>
+        <li><strong>權限控管</strong>：初期採白名單機制，<code>allowed_users</code> 表存放允許登入的 email</li>
+        <li><strong>未來擴充</strong>：可升級為角色權限（管理者可設目標、編輯只能查看報表）</li>
+      </ul>
+    </div>
+
+    <h3 id="sec9-2">9.2 Multi-workspace 架構</h3>
+    <div class="card">
+      <p>一個帳號可管理多個 workspace（例：兩間分公司獨立資料）。所有資料表加 <code>workspace_id</code>，RLS policy 按 workspace 隔離。</p>
+      <div class="callout callout-warning">
+        <strong>建議從 Phase 2 第一天就設計進去</strong>，後面加比重構容易太多。
+      </div>
+    </div>
+
+    <h3 id="sec9-3">9.3 Meta API OAuth 自助串接</h3>
+    <div class="card">
+      <p>管理者進到「設定」頁面，點「連接 Facebook 粉專」→ 跳出 Meta OAuth 授權視窗 → 系統取得 token 後自動存入 Supabase 加密欄位，綁定對應 workspace。</p>
+      <ul>
+        <li>Edge Function 定期檢查 token 有效期，快過期時自動續期</li>
+        <li>每個 workspace 獨立 token，互不影響</li>
+      </ul>
+    </div>
+
+    <h3 id="sec9-4">9.4 廣告成效分析模組</h3>
+    <div class="card">
+      <p>資料來源：Meta Marketing API（Ad Account Insights）</p>
+      <ul>
+        <li><strong>核心指標</strong>：廣告花費、CPM、CPC、CTR</li>
+        <li><strong>圖表</strong>：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢、CTR 效率、明細表格</li>
+        <li><strong>用途</strong>：評估廣告預算分配效率，發現花費與成效的最佳配比</li>
+      </ul>
+      <p style="margin-top:8px;"><span style="background:#e0f7fa;color:#00838f;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">DEMO</span> Demo 版已用 Mock Data 呈現視覺效果</p>
+    </div>
+
+    <h3 id="sec9-5">9.5 互動率趨勢</h3>
+    <div class="card">
+      <ul>
+        <li><strong>計算方式</strong>：互動率 = 總互動數 ÷ 自然觸及人數</li>
+        <li><strong>意義</strong>：觸及因廣告波動大，互動率才反映內容品質</li>
+        <li><strong>呈現</strong>：FB / IG 雙線趨勢圖，含整體平均 tooltip</li>
+      </ul>
+      <p style="margin-top:8px;"><span style="background:#e0f7fa;color:#00838f;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">DEMO</span> Demo 版已用 Mock Data 呈現於「成長趨勢」頁籤</p>
+    </div>
+
+    <h3>9.6 ~ 9.8 規劃中模組</h3>
+    <div class="card">
+      <ul>
+        <li><strong>受眾輪廓</strong>：年齡 × 性別分布、地區 Top 10（Meta API <code>page_fans_gender_age</code>）</li>
+        <li><strong>Reels / Stories 分類</strong>：貼文分析新增「格式」維度，比較短影音 vs 圖文成效</li>
+        <li><strong>導流追蹤</strong>：GA4 API 串接，追蹤社群→網站轉換（需 UTM，優先級較低）</li>
+      </ul>
     </div>
   </section>
 

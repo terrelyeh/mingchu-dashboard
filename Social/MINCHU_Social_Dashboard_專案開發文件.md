@@ -402,6 +402,64 @@ CREATE TABLE post_categories (
 
 ---
 
+## 9. Phase 2 功能藍圖
+
+### 9.1 認證與權限
+
+- **登入方式**：Google Social Login（Supabase Auth 原生支援）
+- **權限控管**：初期採白名單機制，`allowed_users` 表存放允許登入的 email
+- **未來擴充**：可升級為角色權限（管理者可設目標、編輯只能查看報表）
+
+### 9.2 Multi-workspace 架構
+
+- 一個帳號可管理多個 workspace（例：兩間分公司獨立資料）
+- 所有資料表加 `workspace_id` 欄位，RLS policy 按 workspace 隔離
+- 前端提供 workspace 切換器，切換後所有頁面資料即時更新
+- **建議從 Phase 2 第一天就設計進去**，後面加比重構容易
+
+### 9.3 Meta API OAuth 自助串接
+
+- 管理者進到「設定」頁面，點「連接 Facebook 粉專」→ 跳出 Meta OAuth 授權視窗
+- 系統取得 token 後自動存入 Supabase 加密欄位，綁定對應 workspace
+- Edge Function 定期檢查 token 有效期，快過期時自動續期
+- 每個 workspace 獨立 token，互不影響
+
+### 9.4 廣告成效分析模組
+
+- **資料來源**：Meta Marketing API（Ad Account Insights）
+- **核心指標**：廣告花費、CPM（每千次曝光成本）、CPC（每次點擊成本）、CTR（點擊率）
+- **圖表**：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢線、CTR 效率圖、明細表格
+- **用途**：評估廣告預算分配效率，發現花費與成效的最佳配比
+- Demo 版已用 Mock Data 呈現視覺效果
+
+### 9.5 互動率趨勢
+
+- **計算方式**：互動率 = 總互動數 ÷ 自然觸及人數
+- **意義**：觸及可能因廣告投放波動，互動率才反映內容品質
+- **呈現**：FB / IG 雙線趨勢圖，含整體平均 tooltip
+- Demo 版已用 Mock Data 呈現於「成長趨勢」頁籤
+
+### 9.6 受眾輪廓（規劃中）
+
+- **資料來源**：Meta API `page/insights`（`page_fans_gender_age`、`page_fans_city`）
+- **圖表**：年齡 × 性別分布柱狀圖、地區 Top 10
+- **用途**：了解追蹤者組成，優化內容策略與廣告受眾設定
+
+### 9.7 Reels / Stories 分類分析（規劃中）
+
+- **資料來源**：Instagram API `media_type` 欄位（IMAGE / VIDEO / CAROUSEL / REEL）
+- **整合位置**：貼文分析頁籤新增「格式」篩選維度
+- **圖表**：各格式平均觸及 / 互動比較，評估短影音 vs 圖文的成效差異
+
+### 9.8 導流追蹤（規劃中，需 GA4）
+
+- **資料來源**：Google Analytics 4 API（需額外串接）
+- **指標**：社群來源的網站造訪數、跳出率、轉換率
+- **前提**：需在貼文連結中加入 UTM 參數
+- **優先級較低**，待核心功能穩定後再評估
+
+---
+
 ## 附錄
 
 ### 附錄 A：Meta API 版本變更時間軸

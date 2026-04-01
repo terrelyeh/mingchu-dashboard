@@ -580,6 +580,7 @@
             <button class="tab-btn" onclick="switchTab('growth')">成長趨勢</button>
             <button class="tab-btn" onclick="switchTab('detail')">月度明細</button>
             <button class="tab-btn" onclick="switchTab('posts')">貼文分析</button>
+            <button class="tab-btn" onclick="switchTab('adperf')">廣告成效</button>
             <button class="tab-btn" onclick="switchTab('simulator')" style="border-color:#fdcb6e;">目標模擬器</button>
         </div>
 
@@ -716,6 +717,15 @@
                     <canvas id="chart-goal-trajectory"></canvas>
                 </div>
             </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <h3 style="margin:0;">互動率趨勢（互動 ÷ 觸及）</h3>
+                        <span style="background:#e0f7fa;color:#00838f;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">MOCK DATA</span>
+                    </div>
+                    <canvas id="chart-engagement-rate"></canvas>
+                </div>
+            </section>
         </div>
 
         <!-- Tab: Detail -->
@@ -795,6 +805,58 @@
                             </tr>
                         </thead>
                         <tbody id="post-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab: Ad Performance 廣告成效 -->
+        <div class="tab-content" id="tab-adperf">
+            <section style="margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="background:#e0f7fa;color:#00838f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;">MOCK DATA</span>
+                    <span style="font-size:13px;color:var(--text-secondary);">以下為模擬數據，Phase 2 將透過 Meta Marketing API 自動取得實際廣告成效。</span>
+                </div>
+            </section>
+            <section class="kpi-row" id="adperf-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div class="kpi-card" id="kpi-adperf-spend"></div>
+                <div class="kpi-card" id="kpi-adperf-cpm"></div>
+                <div class="kpi-card" id="kpi-adperf-cpc"></div>
+                <div class="kpi-card" id="kpi-adperf-ctr"></div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container">
+                    <h3>月度廣告花費 vs 觸及人數</h3>
+                    <canvas id="chart-adperf-spend-reach"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>CPM / CPC 趨勢</h3>
+                    <canvas id="chart-adperf-cost-trend"></canvas>
+                </div>
+            </section>
+            <section class="chart-row">
+                <div class="chart-container chart-full">
+                    <h3>廣告效率指標月度趨勢</h3>
+                    <canvas id="chart-adperf-efficiency"></canvas>
+                </div>
+            </section>
+            <section class="table-section">
+                <h3>月度廣告成效明細</h3>
+                <div style="overflow-x:auto;">
+                    <table class="post-table" id="adperf-table">
+                        <thead>
+                            <tr>
+                                <th>月份</th>
+                                <th>廣告花費</th>
+                                <th>廣告觸及</th>
+                                <th>曝光次數</th>
+                                <th>點擊數</th>
+                                <th>CPM</th>
+                                <th>CPC</th>
+                                <th>CTR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adperf-table-body"></tbody>
                     </table>
                 </div>
             </section>
@@ -1019,6 +1081,38 @@
         { date: '2026-01-16', weekday: '五', platform: 'ig', title: '澳門 Justindia 主廚專訪', reach: 1472, engagement: 55, clicks: null, category: '2B 採訪報導', week: 'W03' },
     ];
 
+    // ========== MOCK AD PERFORMANCE DATA ==========
+    const AD_PERF_DATA = [
+        { year: 2025, month: 1, spend: 15000, adReach: 120458, impressions: 185000, clicks: 2410 },
+        { year: 2025, month: 2, spend: 22000, adReach: 234153, impressions: 358000, clicks: 4650 },
+        { year: 2025, month: 3, spend: 35000, adReach: 395402, impressions: 612000, clicks: 7340 },
+        { year: 2025, month: 4, spend: 12000, adReach: 124499, impressions: 190000, clicks: 2280 },
+        { year: 2025, month: 5, spend: 10000, adReach: 98721, impressions: 152000, clicks: 1820 },
+        { year: 2025, month: 6, spend: 28000, adReach: 285199, impressions: 440000, clicks: 5720 },
+        { year: 2025, month: 7, spend: 42000, adReach: 475179, impressions: 735000, clicks: 9560 },
+        { year: 2025, month: 8, spend: 38000, adReach: 411178, impressions: 635000, clicks: 7620 },
+        { year: 2025, month: 9, spend: 13000, adReach: 130030, impressions: 200000, clicks: 2600 },
+        { year: 2025, month: 10, spend: 32000, adReach: 347055, impressions: 536000, clicks: 6430 },
+        { year: 2025, month: 11, spend: 65000, adReach: 739638, impressions: 1142000, clicks: 14820 },
+        { year: 2025, month: 12, spend: 11000, adReach: 111985, impressions: 173000, clicks: 2080 },
+    ];
+
+    // Mock engagement rate data (engagement / organic reach)
+    const ENGAGEMENT_RATE_DATA = [
+        { year: 2025, month: 1, fb_rate: 1.8, ig_rate: 4.2 },
+        { year: 2025, month: 2, fb_rate: 2.1, ig_rate: 3.8 },
+        { year: 2025, month: 3, fb_rate: 1.6, ig_rate: 4.5 },
+        { year: 2025, month: 4, fb_rate: 1.9, ig_rate: 5.1 },
+        { year: 2025, month: 5, fb_rate: 2.3, ig_rate: 4.7 },
+        { year: 2025, month: 6, fb_rate: 1.5, ig_rate: 3.9 },
+        { year: 2025, month: 7, fb_rate: 2.8, ig_rate: 5.6 },
+        { year: 2025, month: 8, fb_rate: 2.2, ig_rate: 4.8 },
+        { year: 2025, month: 9, fb_rate: 3.1, ig_rate: 6.2 },
+        { year: 2025, month: 10, fb_rate: 1.7, ig_rate: 4.1 },
+        { year: 2025, month: 11, fb_rate: 2.5, ig_rate: 5.3 },
+        { year: 2025, month: 12, fb_rate: 1.4, ig_rate: 3.6 },
+    ];
+
     // ========== COLORS ==========
     const COLORS = {
         fb: '#1877F2',
@@ -1065,6 +1159,8 @@
             this.renderGrowthCharts();
             this.renderDetailTable();
             this.renderPostsTab();
+            this.renderAdPerfTab();
+            this.renderEngagementRateChart();
             this.updateSimulator();
         }
 
@@ -1975,6 +2071,247 @@
 
             html += '</tbody></table>';
             document.getElementById('detail-table').innerHTML = html;
+        }
+
+        // ---- Ad Performance 廣告成效 ----
+        renderAdPerfTab() {
+            // KPI cards
+            const totalSpend = AD_PERF_DATA.reduce((s, d) => s + d.spend, 0);
+            const totalImpressions = AD_PERF_DATA.reduce((s, d) => s + d.impressions, 0);
+            const totalClicks = AD_PERF_DATA.reduce((s, d) => s + d.clicks, 0);
+            const avgCPM = (totalSpend / totalImpressions * 1000);
+            const avgCPC = (totalSpend / totalClicks);
+            const avgCTR = (totalClicks / totalImpressions * 100);
+
+            document.getElementById('kpi-adperf-spend').innerHTML = `<div class="kpi-label">年度總花費</div><div class="kpi-value">NT$ ${totalSpend.toLocaleString()}</div><div class="kpi-sub">2025 年累計</div>`;
+            document.getElementById('kpi-adperf-cpm').innerHTML = `<div class="kpi-label">平均 CPM</div><div class="kpi-value">NT$ ${avgCPM.toFixed(1)}</div><div class="kpi-sub">每千次曝光成本</div>`;
+            document.getElementById('kpi-adperf-cpc').innerHTML = `<div class="kpi-label">平均 CPC</div><div class="kpi-value">NT$ ${avgCPC.toFixed(1)}</div><div class="kpi-sub">每次點擊成本</div>`;
+            document.getElementById('kpi-adperf-ctr').innerHTML = `<div class="kpi-label">平均 CTR</div><div class="kpi-value">${avgCTR.toFixed(2)}%</div><div class="kpi-sub">點擊率</div>`;
+
+            // Destroy existing charts
+            if (this.charts.adperfSpendReach) this.charts.adperfSpendReach.destroy();
+            if (this.charts.adperfCostTrend) this.charts.adperfCostTrend.destroy();
+            if (this.charts.adperfEfficiency) this.charts.adperfEfficiency.destroy();
+
+            const labels = AD_PERF_DATA.map(d => `${d.month}月`);
+
+            // Chart 1: Spend vs Reach
+            const ctx1 = document.getElementById('chart-adperf-spend-reach').getContext('2d');
+            this.charts.adperfSpendReach = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: '廣告花費 (NT$)',
+                            data: AD_PERF_DATA.map(d => d.spend),
+                            backgroundColor: '#fdcb6eCC',
+                            borderRadius: 4,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: '廣告觸及人數',
+                            data: AD_PERF_DATA.map(d => d.adReach),
+                            type: 'line',
+                            borderColor: COLORS.fb,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: COLORS.fb,
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: ctx => {
+                            const val = ctx.parsed.y;
+                            return ctx.dataset.label.includes('NT') ? `${ctx.dataset.label}: ${val.toLocaleString()}` : `${ctx.dataset.label}: ${val.toLocaleString()}`;
+                        }}}
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { position: 'left', title: { display: true, text: '花費 (NT$)', font: { size: 11 } }, ticks: { callback: v => 'NT$' + fmt(v) }, grid: { color: COLORS.grid } },
+                        y1: { position: 'right', title: { display: true, text: '觸及人數', font: { size: 11 } }, ticks: { callback: v => fmt(v) }, grid: { drawOnChartArea: false } },
+                    }
+                }
+            });
+
+            // Chart 2: CPM / CPC trend
+            const ctx2 = document.getElementById('chart-adperf-cost-trend').getContext('2d');
+            this.charts.adperfCostTrend = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'CPM (NT$)',
+                            data: AD_PERF_DATA.map(d => +(d.spend / d.impressions * 1000).toFixed(1)),
+                            borderColor: '#e17055',
+                            backgroundColor: '#e1705520',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'CPC (NT$)',
+                            data: AD_PERF_DATA.map(d => +(d.spend / d.clicks).toFixed(1)),
+                            borderColor: '#6C5CE7',
+                            backgroundColor: '#6C5CE720',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: NT$ ${ctx.parsed.y.toFixed(1)}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { position: 'left', title: { display: true, text: 'CPM (NT$)', font: { size: 11 } }, grid: { color: COLORS.grid } },
+                        y1: { position: 'right', title: { display: true, text: 'CPC (NT$)', font: { size: 11 } }, grid: { drawOnChartArea: false } },
+                    }
+                }
+            });
+
+            // Chart 3: CTR efficiency trend
+            const ctx3 = document.getElementById('chart-adperf-efficiency').getContext('2d');
+            this.charts.adperfEfficiency = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: '點擊數',
+                            data: AD_PERF_DATA.map(d => d.clicks),
+                            backgroundColor: '#00b894BB',
+                            borderRadius: 4,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'CTR (%)',
+                            data: AD_PERF_DATA.map(d => +(d.clicks / d.impressions * 100).toFixed(2)),
+                            type: 'line',
+                            borderColor: '#d63031',
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#d63031',
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { position: 'left', title: { display: true, text: '點擊數', font: { size: 11 } }, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } },
+                        y1: { position: 'right', title: { display: true, text: 'CTR (%)', font: { size: 11 } }, ticks: { callback: v => v + '%' }, grid: { drawOnChartArea: false } },
+                    }
+                }
+            });
+
+            // Table
+            let html = '';
+            AD_PERF_DATA.forEach(d => {
+                const cpm = (d.spend / d.impressions * 1000).toFixed(1);
+                const cpc = (d.spend / d.clicks).toFixed(1);
+                const ctr = (d.clicks / d.impressions * 100).toFixed(2);
+                html += `<tr>
+                    <td style="font-weight:600;">${d.year}/${String(d.month).padStart(2,'0')}</td>
+                    <td>NT$ ${d.spend.toLocaleString()}</td>
+                    <td>${d.adReach.toLocaleString()}</td>
+                    <td>${d.impressions.toLocaleString()}</td>
+                    <td>${d.clicks.toLocaleString()}</td>
+                    <td>NT$ ${cpm}</td>
+                    <td>NT$ ${cpc}</td>
+                    <td>${ctr}%</td>
+                </tr>`;
+            });
+            document.getElementById('adperf-table-body').innerHTML = html;
+        }
+
+        // ---- Engagement Rate Chart ----
+        renderEngagementRateChart() {
+            if (this.charts.engagementRate) this.charts.engagementRate.destroy();
+            const labels = ENGAGEMENT_RATE_DATA.map(d => `${d.month}月`);
+            const ctx = document.getElementById('chart-engagement-rate').getContext('2d');
+            this.charts.engagementRate = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'FB 互動率',
+                            data: ENGAGEMENT_RATE_DATA.map(d => d.fb_rate),
+                            borderColor: COLORS.fb,
+                            backgroundColor: COLORS.fb + '20',
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            pointBackgroundColor: COLORS.fb,
+                            fill: true,
+                            tension: 0.3,
+                        },
+                        {
+                            label: 'IG 互動率',
+                            data: ENGAGEMENT_RATE_DATA.map(d => d.ig_rate),
+                            borderColor: COLORS.ig,
+                            backgroundColor: COLORS.ig + '20',
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            pointBackgroundColor: COLORS.ig,
+                            fill: true,
+                            tension: 0.3,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
+                                afterBody: (items) => {
+                                    const idx = items[0]?.dataIndex;
+                                    if (idx === undefined) return '';
+                                    const d = ENGAGEMENT_RATE_DATA[idx];
+                                    const avg = ((d.fb_rate + d.ig_rate) / 2).toFixed(1);
+                                    return `整體平均: ${avg}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '互動率 (%)', font: { size: 11 } },
+                            ticks: { callback: v => v + '%' },
+                            grid: { color: COLORS.grid },
+                        }
+                    }
+                }
+            });
         }
 
         // ---- Post Analysis 貼文分析 ----
