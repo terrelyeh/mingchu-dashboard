@@ -416,6 +416,62 @@
         .sim-confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,26,46,0.3); }
         .sim-confirm-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
 
+        /* Post Analysis 貼文分析 */
+        .post-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .post-filters select, .post-filters input[type="date"] {
+            padding: 8px 12px; border: 1px solid #d0d5dd; border-radius: 8px;
+            font-size: 13px; background: #fff; color: var(--text-primary);
+        }
+        .post-filters .pf-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+        .post-batch-bar {
+            display: none; align-items: center; gap: 12px; padding: 10px 16px;
+            background: #eef2ff; border: 1px solid #a5b4fc; border-radius: 8px;
+            margin-bottom: 12px; font-size: 13px; color: #3730a3;
+        }
+        .post-batch-bar.active { display: flex; }
+        .post-batch-bar select { padding: 6px 10px; border: 1px solid #a5b4fc; border-radius: 6px; font-size: 13px; }
+        .post-batch-bar button {
+            padding: 6px 16px; background: #4f46e5; color: #fff; border: none;
+            border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .post-batch-bar button:hover { background: #4338ca; }
+        .post-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .post-table thead th {
+            background: #f8f9fb; padding: 10px 8px; text-align: left;
+            font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid #e0e0e0;
+            position: sticky; top: 0; white-space: nowrap;
+        }
+        .post-table tbody td {
+            padding: 10px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle;
+        }
+        .post-table tbody tr:hover { background: #f9fafb; }
+        .post-table .week-header td {
+            background: #2d3436; color: #fff; font-weight: 700; padding: 8px 12px;
+            font-size: 13px; letter-spacing: 0.5px;
+        }
+        .post-table .week-summary { font-weight: 700; color: var(--text-primary); }
+        .post-platform-tag {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 700; color: #fff;
+        }
+        .post-platform-tag.fb { background: var(--fb-color); }
+        .post-platform-tag.ig { background: var(--ig-color); }
+        .post-cat-select {
+            padding: 5px 8px; border: 1px solid #d0d5dd; border-radius: 6px;
+            font-size: 12px; background: #fff; min-width: 120px;
+        }
+        .post-cat-select.unclassified { border-color: #ffc107; background: #fffde7; }
+        .post-unclassified-badge {
+            display: inline-block; padding: 1px 6px; background: #fff3cd;
+            color: #856404; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 4px;
+        }
+        .post-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; }
+        .post-top-val { color: #d63031; font-weight: 700; }
+        .post-pending-count {
+            display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px;
+            background: #fff3cd; color: #856404; border-radius: 6px; font-size: 12px; font-weight: 600;
+        }
+
         /* Tab Navigation */
         .tab-nav {
             display: flex;
@@ -521,6 +577,7 @@
             <button class="tab-btn" onclick="switchTab('reach')">觸及分析</button>
             <button class="tab-btn" onclick="switchTab('growth')">成長趨勢</button>
             <button class="tab-btn" onclick="switchTab('detail')">月度明細</button>
+            <button class="tab-btn" onclick="switchTab('posts')">貼文分析</button>
             <button class="tab-btn" onclick="switchTab('simulator')" style="border-color:#fdcb6e;">目標模擬器</button>
         </div>
 
@@ -647,6 +704,80 @@
             <section class="table-section" id="detail-table-section">
                 <h3>月度經營數據明細</h3>
                 <div id="detail-table"></div>
+            </section>
+        </div>
+
+        <!-- Tab: Post Analysis 貼文分析 -->
+        <div class="tab-content" id="tab-posts">
+            <section class="chart-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="chart-container">
+                    <h3>分類成效比較</h3>
+                    <canvas id="chart-post-category"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>發文日成效分析（星期幾）</h3>
+                    <canvas id="chart-post-weekday"></canvas>
+                </div>
+            </section>
+            <section class="table-section">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                    <h3 style="margin:0;">單篇貼文成效</h3>
+                    <span class="post-pending-count" id="post-pending-count"></span>
+                </div>
+                <div class="post-filters" id="post-filters">
+                    <span class="pf-label">平台</span>
+                    <select id="post-filter-platform" onchange="dashboard.renderPostsTab()">
+                        <option value="all">全部</option>
+                        <option value="fb">Facebook</option>
+                        <option value="ig">Instagram</option>
+                    </select>
+                    <span class="pf-label">分類</span>
+                    <select id="post-filter-category" onchange="dashboard.renderPostsTab()">
+                        <option value="all">全部</option>
+                        <option value="unclassified">未分類</option>
+                        <option value="2B 採訪報導">2B 採訪報導</option>
+                        <option value="2C 餐飲食事">2C 餐飲食事</option>
+                        <option value="2B 產業動態">2B 產業動態</option>
+                        <option value="品牌聚焦">品牌聚焦</option>
+                    </select>
+                    <span class="pf-label">排序</span>
+                    <select id="post-filter-sort" onchange="dashboard.renderPostsTab()">
+                        <option value="date">日期（新→舊）</option>
+                        <option value="reach">觸及（高→低）</option>
+                        <option value="engagement">互動（高→低）</option>
+                    </select>
+                </div>
+                <div class="post-batch-bar" id="post-batch-bar">
+                    <span id="post-batch-count">已選 0 篇</span>
+                    <select id="post-batch-category">
+                        <option value="">選擇分類…</option>
+                        <option value="2B 採訪報導">2B 採訪報導</option>
+                        <option value="2C 餐飲食事">2C 餐飲食事</option>
+                        <option value="2B 產業動態">2B 產業動態</option>
+                        <option value="品牌聚焦">品牌聚焦</option>
+                    </select>
+                    <button onclick="dashboard.batchAssignCategory()">套用</button>
+                    <button onclick="dashboard.clearPostSelection()" style="background:#6c757d;">取消選取</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="post-table" id="post-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="post-checkbox" id="post-select-all" onchange="dashboard.toggleAllPosts(this.checked)"></th>
+                                <th>日期</th>
+                                <th>星期</th>
+                                <th>平台</th>
+                                <th>貼文主題</th>
+                                <th>自然觸及</th>
+                                <th>總互動</th>
+                                <th>連結點擊</th>
+                                <th>點擊率</th>
+                                <th>分類</th>
+                            </tr>
+                        </thead>
+                        <tbody id="post-table-body"></tbody>
+                    </table>
+                </div>
             </section>
         </div>
 
@@ -824,6 +955,51 @@
         { year: 2025, month: 12, organic: 254708, ad: 111985, total: 366693, newFollowers: 165, uu: null },
     ];
 
+    // ========== POST DATA (貼文層級) ==========
+    const POST_CATEGORIES = ['2B 採訪報導', '2C 餐飲食事', '2B 產業動態', '品牌聚焦'];
+    const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+
+    const POST_DATA = [
+        // Week 53 / Week 01 (12/28 - 01/03)
+        { date: '2025-12-29', weekday: '一', platform: 'fb', title: 'Théorie Theory', reach: 3802, engagement: 30, clicks: 23, category: '2C 餐飲食事', week: 'W53/W01' },
+        { date: '2025-12-30', weekday: '二', platform: 'fb', title: 'HOPSCOTCH / 英國豬新聞稿（一）', reach: 504, engagement: 6, clicks: 0, category: '品牌聚焦', week: 'W53/W01' },
+        { date: '2025-12-30', weekday: '二', platform: 'fb', title: '精緻南亞料理 Old Nepal Tokyo（施清元）', reach: 1588, engagement: 34, clicks: 6, category: '2B 採訪報導', week: 'W53/W01' },
+        { date: '2025-12-31', weekday: '三', platform: 'fb', title: '98 WINEs & Domaine Tetta', reach: 456, engagement: 9, clicks: 2, category: '2B 產業動態', week: 'W53/W01' },
+        { date: '2026-01-01', weekday: '四', platform: 'fb', title: 'Bistro 以上，Fine Dining 未滿：卉寓主廚陳莛諭', reach: 7176, engagement: 52, clicks: 20, category: '2B 採訪報導', week: 'W53/W01' },
+        { date: '2026-01-02', weekday: '五', platform: 'fb', title: '撈個風生水起——新加坡食客所著迷的熱鬧年菜', reach: 1499, engagement: 21, clicks: 3, category: '2B 採訪報導', week: 'W53/W01' },
+        // IG Week 53/W01
+        { date: '2025-12-29', weekday: '一', platform: 'ig', title: 'Théorie Theory', reach: 3834, engagement: 125, clicks: null, category: '2C 餐飲食事', week: 'W53/W01' },
+        { date: '2025-12-30', weekday: '二', platform: 'ig', title: 'HOPSCOTCH / 英國豬新聞稿（一）', reach: 1276, engagement: 27, clicks: null, category: '品牌聚焦', week: 'W53/W01' },
+        { date: '2025-12-30', weekday: '二', platform: 'ig', title: '精緻南亞料理 Old Nepal Tokyo（施清元）', reach: 1818, engagement: 132, clicks: null, category: '2B 採訪報導', week: 'W53/W01' },
+        { date: '2025-12-31', weekday: '三', platform: 'ig', title: '98 WINEs & Domaine Tetta', reach: 1303, engagement: 93, clicks: null, category: '2B 產業動態', week: 'W53/W01' },
+        { date: '2026-01-01', weekday: '四', platform: 'ig', title: 'Bistro 以上，Fine Dining 未滿：卉寓主廚陳莛諭', reach: 4365, engagement: 236, clicks: null, category: '2B 採訪報導', week: 'W53/W01' },
+        { date: '2026-01-02', weekday: '五', platform: 'ig', title: '撈個風生水起——新加坡食客所著迷的熱鬧年菜', reach: 1134, engagement: 38, clicks: null, category: '2B 採訪報導', week: 'W53/W01' },
+        // Week 02 (01/04 - 01/10)
+        { date: '2026-01-05', weekday: '一', platform: 'fb', title: '孫鍾元', reach: 18321, engagement: 307, clicks: 77, category: '2B 採訪報導', week: 'W02' },
+        { date: '2026-01-06', weekday: '二', platform: 'fb', title: 'ÎLE 島嶼法式海鮮專訪（Mokki）', reach: 2637, engagement: 39, clicks: 17, category: '2B 採訪報導', week: 'W02' },
+        { date: '2026-01-07', weekday: '三', platform: 'fb', title: '2025 回顧 - 台灣食事', reach: 1823, engagement: 16, clicks: 8, category: '2B 產業動態', week: 'W02' },
+        { date: '2026-01-08', weekday: '四', platform: 'fb', title: 'La Vie 冬季菜單', reach: 1643, engagement: 22, clicks: 191, category: '2C 餐飲食事', week: 'W02' },
+        { date: '2026-01-09', weekday: '五', platform: 'fb', title: '新加坡 Odette 重新開業', reach: 7216, engagement: 59, clicks: 26, category: '2C 餐飲食事', week: 'W02' },
+        // IG Week 02
+        { date: '2026-01-05', weekday: '一', platform: 'ig', title: '孫鍾元', reach: 14476, engagement: 1320, clicks: null, category: '2B 採訪報導', week: 'W02' },
+        { date: '2026-01-06', weekday: '二', platform: 'ig', title: 'ÎLE 島嶼法式海鮮專訪（Mokki）', reach: 3090, engagement: 111, clicks: null, category: '2B 採訪報導', week: 'W02' },
+        { date: '2026-01-07', weekday: '三', platform: 'ig', title: '2025 回顧 - 台灣食事', reach: 3538, engagement: 137, clicks: null, category: '2B 產業動態', week: 'W02' },
+        { date: '2026-01-08', weekday: '四', platform: 'ig', title: 'La Vie 冬季菜單', reach: 1875, engagement: 104, clicks: null, category: '2C 餐飲食事', week: 'W02' },
+        { date: '2026-01-09', weekday: '五', platform: 'ig', title: '新加坡 Odette 重新開業', reach: 4382, engagement: 165, clicks: null, category: '2C 餐飲食事', week: 'W02' },
+        // Week 03 (01/11 - 01/17)
+        { date: '2026-01-12', weekday: '一', platform: 'fb', title: '陳撫洸專訪（Mokki）', reach: 4307, engagement: 62, clicks: 15, category: '2B 採訪報導', week: 'W03' },
+        { date: '2026-01-13', weekday: '二', platform: 'fb', title: '2025 回顧 - 國際食事', reach: 823, engagement: 8, clicks: 39, category: '2B 產業動態', week: 'W03' },
+        { date: '2026-01-14', weekday: '三', platform: 'fb', title: '民生早午餐', reach: 2041, engagement: 9, clicks: 12, category: '2C 餐飲食事', week: 'W03' },
+        { date: '2026-01-15', weekday: '四', platform: 'fb', title: '（韓文翻譯）SOUL 主廚專訪', reach: 1220, engagement: 16, clicks: 24, category: '2B 採訪報導', week: 'W03' },
+        { date: '2026-01-16', weekday: '五', platform: 'fb', title: '澳門 Justindia 主廚專訪', reach: 1161, engagement: 9, clicks: 7, category: '2B 採訪報導', week: 'W03' },
+        // IG Week 03
+        { date: '2026-01-12', weekday: '一', platform: 'ig', title: '陳撫洸專訪（Mokki）', reach: 1460, engagement: 58, clicks: null, category: '2B 採訪報導', week: 'W03' },
+        { date: '2026-01-13', weekday: '二', platform: 'ig', title: '2025 回顧 - 國際食事', reach: 1031, engagement: 35, clicks: null, category: '2B 產業動態', week: 'W03' },
+        { date: '2026-01-14', weekday: '三', platform: 'ig', title: '民生早午餐', reach: 3854, engagement: 70, clicks: null, category: '2C 餐飲食事', week: 'W03' },
+        { date: '2026-01-15', weekday: '四', platform: 'ig', title: '（韓文翻譯）SOUL 主廚專訪', reach: 18072, engagement: 581, clicks: null, category: '2B 採訪報導', week: 'W03' },
+        { date: '2026-01-16', weekday: '五', platform: 'ig', title: '澳門 Justindia 主廚專訪', reach: 1472, engagement: 55, clicks: null, category: '2B 採訪報導', week: 'W03' },
+    ];
+
     // ========== COLORS ==========
     const COLORS = {
         fb: '#1877F2',
@@ -869,6 +1045,7 @@
             this.renderReachCharts();
             this.renderGrowthCharts();
             this.renderDetailTable();
+            this.renderPostsTab();
             this.updateSimulator();
         }
 
@@ -1726,6 +1903,254 @@
 
             html += '</tbody></table>';
             document.getElementById('detail-table').innerHTML = html;
+        }
+
+        // ---- Post Analysis 貼文分析 ----
+        renderPostsTab() {
+            this.renderPostCharts();
+            this.renderPostTable();
+        }
+
+        getFilteredPosts() {
+            const platform = document.getElementById('post-filter-platform')?.value || 'all';
+            const category = document.getElementById('post-filter-category')?.value || 'all';
+            const sort = document.getElementById('post-filter-sort')?.value || 'date';
+            let data = [...POST_DATA];
+            if (platform !== 'all') data = data.filter(d => d.platform === platform);
+            if (category === 'unclassified') data = data.filter(d => !d.category);
+            else if (category !== 'all') data = data.filter(d => d.category === category);
+            if (sort === 'reach') data.sort((a, b) => b.reach - a.reach);
+            else if (sort === 'engagement') data.sort((a, b) => b.engagement - a.engagement);
+            else data.sort((a, b) => b.date.localeCompare(a.date) || b.reach - a.reach);
+            return data;
+        }
+
+        renderPostCharts() {
+            // Destroy existing charts
+            if (this.charts.postCategory) this.charts.postCategory.destroy();
+            if (this.charts.postWeekday) this.charts.postWeekday.destroy();
+
+            // Category performance chart
+            const catStats = {};
+            POST_DATA.forEach(p => {
+                const cat = p.category || '未分類';
+                if (!catStats[cat]) catStats[cat] = { reachSum: 0, engSum: 0, count: 0 };
+                catStats[cat].reachSum += p.reach;
+                catStats[cat].engSum += p.engagement;
+                catStats[cat].count++;
+            });
+            const catLabels = Object.keys(catStats);
+            const catColors = { '2B 採訪報導': '#6C5CE7', '2C 餐飲食事': '#00b894', '2B 產業動態': '#fdcb6e', '品牌聚焦': '#e17055', '未分類': '#b2bec3' };
+            const catCtx = document.getElementById('chart-post-category').getContext('2d');
+            this.charts.postCategory = new Chart(catCtx, {
+                type: 'bar',
+                data: {
+                    labels: catLabels,
+                    datasets: [
+                        {
+                            label: '平均觸及',
+                            data: catLabels.map(c => Math.round(catStats[c].reachSum / catStats[c].count)),
+                            backgroundColor: catLabels.map(c => catColors[c] || '#b2bec3'),
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: '平均互動',
+                            data: catLabels.map(c => Math.round(catStats[c].engSum / catStats[c].count)),
+                            backgroundColor: catLabels.map(c => (catColors[c] || '#b2bec3') + '88'),
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    const cat = catLabels[ctx.dataIndex];
+                                    return `共 ${catStats[cat].count} 篇`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: COLORS.grid }, ticks: { callback: v => fmt(v) } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Weekday performance chart
+            const wdStats = {};
+            WEEKDAY_LABELS.forEach(w => wdStats[w] = { reachSum: 0, engSum: 0, count: 0 });
+            POST_DATA.forEach(p => {
+                const wd = p.weekday;
+                if (wdStats[wd]) {
+                    wdStats[wd].reachSum += p.reach;
+                    wdStats[wd].engSum += p.engagement;
+                    wdStats[wd].count++;
+                }
+            });
+            const wdLabels = WEEKDAY_LABELS.filter(w => wdStats[w].count > 0);
+            const wdCtx = document.getElementById('chart-post-weekday').getContext('2d');
+            this.charts.postWeekday = new Chart(wdCtx, {
+                type: 'bar',
+                data: {
+                    labels: wdLabels,
+                    datasets: [
+                        {
+                            label: '平均觸及',
+                            data: wdLabels.map(w => wdStats[w].count ? Math.round(wdStats[w].reachSum / wdStats[w].count) : 0),
+                            backgroundColor: '#6C5CE7',
+                            borderRadius: 6,
+                            barPercentage: 0.5,
+                        },
+                        {
+                            label: '平均互動',
+                            data: wdLabels.map(w => wdStats[w].count ? Math.round(wdStats[w].engSum / wdStats[w].count) : 0),
+                            backgroundColor: '#a29bfe',
+                            borderRadius: 6,
+                            barPercentage: 0.5,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    const wd = wdLabels[ctx.dataIndex];
+                                    return `共 ${wdStats[wd].count} 篇`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: COLORS.grid }, ticks: { callback: v => fmt(v) } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        renderPostTable() {
+            const posts = this.getFilteredPosts();
+            const pendingCount = POST_DATA.filter(p => !p.category).length;
+            const pendingEl = document.getElementById('post-pending-count');
+            if (pendingEl) {
+                pendingEl.textContent = pendingCount > 0 ? `⚠ ${pendingCount} 篇待分類` : '✓ 全部已分類';
+                pendingEl.style.background = pendingCount > 0 ? '#fff3cd' : '#d4edda';
+                pendingEl.style.color = pendingCount > 0 ? '#856404' : '#155724';
+            }
+
+            // Find top values for highlighting
+            const maxReach = Math.max(...posts.map(p => p.reach));
+            const maxEng = Math.max(...posts.map(p => p.engagement));
+
+            // Group by week
+            const weekGroups = {};
+            posts.forEach(p => {
+                if (!weekGroups[p.week]) weekGroups[p.week] = [];
+                weekGroups[p.week].push(p);
+            });
+
+            let html = '';
+            const sortByDate = (document.getElementById('post-filter-sort')?.value || 'date') === 'date';
+
+            if (sortByDate) {
+                // Render grouped by week
+                const weekOrder = ['W53/W01', 'W02', 'W03'];
+                weekOrder.forEach(week => {
+                    const weekPosts = weekGroups[week];
+                    if (!weekPosts) return;
+                    const weekReach = weekPosts.reduce((s, p) => s + p.reach, 0);
+                    const weekEng = weekPosts.reduce((s, p) => s + p.engagement, 0);
+                    const weekLabel = week === 'W53/W01' ? 'Week 53 / Week 01｜1228 - 0103' : week === 'W02' ? 'Week 02｜0104 - 0110' : 'Week 03｜0111 - 0117';
+                    html += `<tr class="week-header"><td colspan="10">${weekLabel}　<span style="font-weight:400;font-size:12px;opacity:0.8;">觸及合計 ${weekReach.toLocaleString()} ／ 互動合計 ${weekEng.toLocaleString()}</span></td></tr>`;
+                    weekPosts.forEach((p, i) => { html += this.renderPostRow(p, i, maxReach, maxEng); });
+                });
+            } else {
+                posts.forEach((p, i) => { html += this.renderPostRow(p, i, maxReach, maxEng); });
+            }
+
+            document.getElementById('post-table-body').innerHTML = html;
+            document.getElementById('post-select-all').checked = false;
+            this.updateBatchBar();
+        }
+
+        renderPostRow(p, idx, maxReach, maxEng) {
+            const clickRate = (p.clicks !== null && p.reach > 0) ? ((p.clicks / p.reach) * 100).toFixed(2) + '%' : '—';
+            const isTopReach = p.reach === maxReach;
+            const isTopEng = p.engagement === maxEng;
+            const catOptions = POST_CATEGORIES.map(c => `<option value="${c}" ${p.category === c ? 'selected' : ''}>${c}</option>`).join('');
+            const isUnclassified = !p.category;
+            return `<tr>
+                <td><input type="checkbox" class="post-checkbox post-row-check" data-idx="${idx}" onchange="dashboard.updateBatchBar()"></td>
+                <td style="white-space:nowrap;">${p.date}</td>
+                <td>${p.weekday}</td>
+                <td><span class="post-platform-tag ${p.platform}">${p.platform === 'fb' ? 'FB' : 'IG'}</span></td>
+                <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.title}">${p.title}</td>
+                <td class="${isTopReach ? 'post-top-val' : ''}">${p.reach.toLocaleString()}</td>
+                <td class="${isTopEng ? 'post-top-val' : ''}">${p.engagement.toLocaleString()}</td>
+                <td>${p.clicks !== null ? p.clicks.toLocaleString() : '—'}</td>
+                <td>${clickRate}</td>
+                <td>
+                    <select class="post-cat-select ${isUnclassified ? 'unclassified' : ''}" onchange="dashboard.assignCategory(${POST_DATA.indexOf(p)}, this.value)">
+                        <option value="" ${isUnclassified ? 'selected' : ''}>未分類</option>
+                        ${catOptions}
+                    </select>
+                </td>
+            </tr>`;
+        }
+
+        assignCategory(postIdx, category) {
+            POST_DATA[postIdx].category = category || null;
+            this.renderPostsTab();
+        }
+
+        toggleAllPosts(checked) {
+            document.querySelectorAll('.post-row-check').forEach(cb => cb.checked = checked);
+            this.updateBatchBar();
+        }
+
+        updateBatchBar() {
+            const checked = document.querySelectorAll('.post-row-check:checked');
+            const bar = document.getElementById('post-batch-bar');
+            const countEl = document.getElementById('post-batch-count');
+            if (checked.length > 0) {
+                bar.classList.add('active');
+                countEl.textContent = `已選 ${checked.length} 篇`;
+            } else {
+                bar.classList.remove('active');
+            }
+        }
+
+        batchAssignCategory() {
+            const category = document.getElementById('post-batch-category').value;
+            if (!category) { alert('請先選擇分類'); return; }
+            const checked = document.querySelectorAll('.post-row-check:checked');
+            const filteredPosts = this.getFilteredPosts();
+            checked.forEach(cb => {
+                const filteredIdx = parseInt(cb.dataset.idx);
+                const post = filteredPosts[filteredIdx];
+                if (post) {
+                    const realIdx = POST_DATA.indexOf(post);
+                    if (realIdx >= 0) POST_DATA[realIdx].category = category;
+                }
+            });
+            document.getElementById('post-batch-category').value = '';
+            this.renderPostsTab();
+        }
+
+        clearPostSelection() {
+            document.querySelectorAll('.post-row-check').forEach(cb => cb.checked = false);
+            document.getElementById('post-select-all').checked = false;
+            this.updateBatchBar();
         }
 
         // ---- Goal Simulator ----

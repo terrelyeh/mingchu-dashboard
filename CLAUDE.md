@@ -52,7 +52,7 @@ MINCHU Dashboard/
 
 ### ✅ Completed
 
-- Phase 1 靜態儀表板：7 頁籤（含目標模擬器）、16+ 圖表、篩選器、KPI 卡片
+- Phase 1 靜態儀表板：8 頁籤（含貼文分析、目標模擬器）、16+ 圖表、篩選器、KPI 卡片
 - 歷史數據整理（2019–2025，從截圖與 Sheets 擷取）
 - 篩選器互動（年份 + 平台切換，KPI 淡化效果）
 - 負責人目標管理模組（週/月/季目標追蹤）
@@ -65,6 +65,7 @@ MINCHU Dashboard/
 - 技術決策確認：Next.js + shadcn/ui + Tailwind + Recharts + Supabase + Vercel
 - GitHub repo 建立：https://github.com/terrelyeh/mingchu-dashboard（public）
 - 貼文層級分析模組規格完成（Phase 2，含 API 欄位對照、DB schema、自動化流程）
+- 貼文分析頁籤 Demo（分類成效圖表、發文日分析、單篇表格含批次分類操作）
 
 ### ⚠️ Pending / Known Issues
 
