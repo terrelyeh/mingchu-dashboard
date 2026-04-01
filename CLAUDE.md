@@ -64,6 +64,7 @@ MINCHU Dashboard/
 - 專案開發文件（.docx + .md + .html）
 - 技術決策確認：Next.js + shadcn/ui + Tailwind + Recharts + Supabase + Vercel
 - GitHub repo 建立：https://github.com/terrelyeh/mingchu-dashboard（public）
+- 貼文層級分析模組規格完成（Phase 2，含 API 欄位對照、DB schema、自動化流程）
 
 ### ⚠️ Pending / Known Issues
 
@@ -94,3 +95,5 @@ MINCHU Dashboard/
 - **Supabase service key 不可曝露前端**：必須透過 Next.js Server Components / Route Handlers 存取
 - **目標模擬器基期選擇**：Demo 版使用歷史數據，基期選過去月份等同「回測」；Phase 2 正式版應預設選最近有數據的月份，向未來推算
 - **目標確認後的影響範圍**：確認目標後，成長率參數存入 Supabase，負責人目標、總覽 KPI 達成率、成長趨勢目標線、月度明細目標欄位都會自動更新
+- **貼文分類只能人工標記**：API 無法判斷貼文類型（如 2B/2C/品牌聚焦），必須由使用者手動分類；分類選項存於 `post_categories` 表
+- **IG 無連結點擊數**：Instagram API 不提供 link clicks 指標，該欄位僅適用於 Facebook

@@ -120,6 +120,67 @@ MINCHU 品牌目前同時經營 Facebook 粉絲專頁與 Instagram 帳號，需�
 
 > Supabase 存的是「成長率參數」而非每月目標數字，管理者隨時可回來調整，所有頁面即時更新。
 
+### 2.6 貼文層級分析模組（Phase 2）
+
+目前 FB 與 IG 的單篇貼文成效數據由團隊手動維護於 Google Sheets，包含每篇貼文的自然觸及、總互動數、連結點擊數等指標，以及手動標記的貼文分類。Phase 2 將透過 API 自動化此流程。
+
+**API 可自動取得的欄位：**
+
+| 欄位 | Facebook API | Instagram API |
+|------|-------------|---------------|
+| 貼文內容/標題 | `message` 欄位 | `caption` 欄位 |
+| 發佈日期 | `created_time` | `timestamp` |
+| 自然觸及人數 | `post_impressions_organic_unique` | `reach` |
+| 總互動數 | `post_engaged_users` | `total_interactions`（或 likes + comments + shares + saved） |
+| 連結點擊數 | `post_clicks` / `post_clicks_by_type` | — (IG 無此指標) |
+| 連結點擊率 | 由連結點擊數 ÷ 自然觸及計算 | — |
+
+**需人工操作的欄位：**
+
+- **貼文分類**：如「2B 採訪報導」「2C 餐飲食事」「品牌聚焦」「產業動態」等，由使用者從下拉選單選取
+- 分類選項存於 `post_categories` 表，可隨時新增/修改
+
+**資料庫設計：**
+
+```sql
+-- 貼文資料表
+CREATE TABLE posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform TEXT NOT NULL,          -- 'facebook' | 'instagram'
+  post_id TEXT UNIQUE NOT NULL,    -- Meta API 的貼文 ID
+  message TEXT,                    -- 貼文內容
+  published_at TIMESTAMPTZ,        -- 發佈時間
+  organic_reach INT,               -- 自然觸及人數
+  total_engagement INT,            -- 總互動數
+  link_clicks INT,                 -- 連結點擊數（FB only）
+  category_id UUID REFERENCES post_categories(id),  -- 人工分類
+  raw_insights JSONB,              -- API 原始回傳（備查）
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 貼文分類表
+CREATE TABLE post_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,              -- e.g. '2B 採訪報導'
+  color TEXT,                      -- 圖表配色
+  sort_order INT DEFAULT 0
+);
+```
+
+**自動化流程：**
+
+1. Supabase Edge Function 每日排程呼叫 `GET /{page-id}/posts` 與 `GET /{ig-user-id}/media`，抓取前一天新增的貼文
+2. 對每篇新貼文呼叫 `GET /{post-id}/insights` 或 `GET /{media-id}/insights`，取得成效指標
+3. 寫入 `posts` 表，`category_id` 預設為空
+4. 使用者進入儀表板「貼文分析」頁面，看到未分類貼文，從下拉選單選擇分類即可
+
+**儀表板分析功能（Phase 2 新增頁籤）：**
+
+- 週彙總表：貼文總觸及、貼文總互動（由 SQL 自動加總，取代手動計算）
+- 分類成效比較：各分類的平均觸及 / 互動 / 點擊率
+- 發文時間分析：星期幾 × 時段的成效熱力圖
+- 單篇 Top N 排行：依觸及或互動排序的最佳貼文
+
 ---
 
 ## 3. 架構設計與部署建議
