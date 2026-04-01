@@ -1,6 +1,6 @@
 # CLAUDE.md — Project Context
 
-> Last updated: 2026-04-01
+> Last updated: 2026-04-02
 
 ## Project Overview
 
@@ -43,39 +43,25 @@ MINCHU Dashboard/
 ## Conventions
 
 - 所有 UI 文字使用**繁體中文**
-- 數據結構主要定義在 HTML 檔案內的 JavaScript 常數（`YEARLY_DATA`、`REACH_SUMMARY`、`PIC_DATA`、`GOALS`）
+- 數據結構主要定義在 HTML 檔案內的 JavaScript 常數（`YEARLY_DATA`、`REACH_SUMMARY`、`PIC_DATA`、`GOALS`、`POST_DATA`、`POST_CATEGORIES`）
 - UU（月不重複訪客）欄位目前為 `null`，待 Meta API `period=month` 接入後填入
 - 缺失值前端顯示 `--` 加註「待接入」，不使用 0 替代
 - 負責人：Clara Chang（FB）、Mike Chen（IG）
 
 ## Current Status
 
-### ✅ Completed
+Phase 1 Demo 儀表板已完成（8 頁籤、16+ 圖表），含目標模擬器與貼文分析。技術決策已確認（Next.js + shadcn/ui + Supabase + Vercel）。專案開發文件齊備（.docx / .md / .html）。
 
-- Phase 1 靜態儀表板：8 頁籤（含貼文分析、目標模擬器）、16+ 圖表、篩選器、KPI 卡片
-- 歷史數據整理（2019–2025，從截圖與 Sheets 擷取）
-- 篩選器互動（年份 + 平台切換，KPI 淡化效果）
-- 負責人目標管理模組（週/月/季目標追蹤）
-- 自然 vs 廣告觸及分析頁籤
-- 月 UU 趨勢圖預留（含提示文字）
-- 目標模擬器 Demo（互動式成長率滑桿 + 即時預覽圖表 + 模擬確認流程）
-- 目標模擬器 Demo 模式提示（黃色提醒框，說明使用歷史數據示範）
-- 目標模擬器預設基期改為最近有數據月份（2025/12）
-- 專案開發文件（.docx + .md + .html）
-- 技術決策確認：Next.js + shadcn/ui + Tailwind + Recharts + Supabase + Vercel
-- GitHub repo 建立：https://github.com/terrelyeh/mingchu-dashboard（public）
-- 貼文層級分析模組規格完成（Phase 2，含 API 欄位對照、DB schema、自動化流程）
-- 貼文分析頁籤 Demo（分類成效圖表、發文日分析、單篇表格含批次分類操作）
+**GitHub repo**：https://github.com/terrelyeh/mingchu-dashboard（public）
 
-### ⚠️ Pending / Known Issues
+### 🔜 Next Steps
 
-- **GitHub repo**：`mingchu-dashboard` 已建立 → https://github.com/terrelyeh/mingchu-dashboard
-- **Supabase 接入**：Phase 2 尚未開始，需建立專案與 DB schema
-- **Meta API 串接**：需取得 Facebook/Instagram 的 Page Access Token
-- **Token 續期機制**：長期 token 60 天過期，需建自動續期
-- **IG 月 UU 限制**：Instagram API 無 `period=month`，只能用每日累計近似值
-- **2025/11 數據空窗**：`impressions` → `views` 轉換期需特殊處理
-- **Google Sheets 原始數據**：尚未取得 CSV 匯出驗證儀表板數據正確性
+- **Supabase 接入**：建立專案與 DB schema（`monthly_metrics`、`posts`、`post_categories`、`goals` 表）
+- **Meta API 串接**：取得 Facebook/Instagram Page Access Token，建立長期 token 自動續期
+- **IG 月 UU 限制**：Instagram API 無 `period=month`，需設計每日累計近似邏輯
+- **2025/11 數據空窗**：`impressions` → `views` 轉換期需 Metric Mapping Layer 特殊處理
+- **Google Sheets 數據驗證**：取得 CSV 匯出比對儀表板數據正確性
+- **Cloudflare Pages Demo 站**：目前手動上傳靜態 HTML，Phase 2 正式版將部署到 Vercel（Next.js 原生整合）
 
 ## Key API Notes
 

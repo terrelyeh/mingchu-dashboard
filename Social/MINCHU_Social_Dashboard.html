@@ -584,19 +584,36 @@
         <!-- Tab: Overview -->
         <div class="tab-content active" id="tab-overview">
             <section class="chart-row">
-                <div class="chart-container">
-                    <h3>歷年粉絲成長</h3>
-                    <canvas id="chart-yearly-followers"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>年增率比較</h3>
-                    <canvas id="chart-yoy-growth"></canvas>
-                </div>
-            </section>
-            <section class="chart-row">
-                <div class="chart-container chart-full">
-                    <h3>各平台粉絲組成</h3>
-                    <canvas id="chart-composition"></canvas>
+                <div class="chart-container chart-full" style="position:relative;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <h3 style="margin:0;">歷年粉絲成長總覽</h3>
+                        <div class="overview-toggle" style="display:flex;gap:4px;">
+                            <button class="ov-toggle-btn active" id="ov-btn-chart" onclick="dashboard.toggleOverviewView('chart')" style="padding:5px 14px;border:1px solid #d0d5dd;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#1a1a2e;color:#fff;">📊 圖表</button>
+                            <button class="ov-toggle-btn" id="ov-btn-table" onclick="dashboard.toggleOverviewView('table')" style="padding:5px 14px;border:1px solid #d0d5dd;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#f8f9fb;color:#495057;">📋 表格</button>
+                        </div>
+                    </div>
+                    <div id="overview-chart-view">
+                        <canvas id="chart-overview-combined"></canvas>
+                    </div>
+                    <div id="overview-table-view" style="display:none;overflow-x:auto;">
+                        <table class="post-table" id="overview-table" style="margin-top:8px;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="color:var(--fb-color);">FB</th>
+                                    <th style="color:var(--fb-color);">FB 成長數</th>
+                                    <th style="color:var(--fb-color);">FB 成長率</th>
+                                    <th style="color:var(--ig-color);">IG</th>
+                                    <th style="color:var(--ig-color);">IG 成長數</th>
+                                    <th style="color:var(--ig-color);">IG 成長率</th>
+                                    <th style="font-weight:700;">總粉絲數</th>
+                                    <th style="font-weight:700;">總成長數</th>
+                                    <th style="font-weight:700;">總成長率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overview-table-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </div>
@@ -1153,47 +1170,94 @@
 
         // ---- Overview Charts ----
         renderOverviewCharts() {
-            // Yearly followers line chart
-            const years = YEARLY_DATA.map(d => d.year);
-            const ctx1 = document.getElementById('chart-yearly-followers').getContext('2d');
-            this.charts.yearlyFollowers = new Chart(ctx1, {
-                type: 'line',
+            // Destroy existing charts
+            if (this.charts.overviewCombined) this.charts.overviewCombined.destroy();
+
+            // Compute growth data
+            const ovData = YEARLY_DATA.map((d, i) => {
+                const prev = i > 0 ? YEARLY_DATA[i - 1] : null;
+                const total = d.fb + d.ig;
+                const fbGrowth = prev ? d.fb - prev.fb : null;
+                const igGrowth = prev ? d.ig - prev.ig : null;
+                const totalGrowth = prev ? total - (prev.fb + prev.ig) : null;
+                return { ...d, total, fbGrowth, igGrowth, totalGrowth };
+            });
+
+            const years = ovData.map(d => d.year);
+            const ctx = document.getElementById('chart-overview-combined').getContext('2d');
+
+            this.charts.overviewCombined = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: years,
                     datasets: [
+                        // Left Y: Follower counts (bars)
                         {
-                            label: 'Facebook',
-                            data: YEARLY_DATA.map(d => d.fb),
-                            borderColor: COLORS.fb,
-                            backgroundColor: COLORS.fb + '15',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 5,
-                            pointHoverRadius: 8,
+                            label: 'FB',
+                            data: ovData.map(d => d.fb),
+                            backgroundColor: COLORS.fb + 'CC',
+                            borderRadius: 4,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.7,
+                            yAxisID: 'y',
+                            order: 3,
                         },
                         {
-                            label: 'Instagram',
-                            data: YEARLY_DATA.map(d => d.ig),
-                            borderColor: COLORS.ig,
-                            backgroundColor: COLORS.ig + '15',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 5,
-                            pointHoverRadius: 8,
+                            label: 'IG',
+                            data: ovData.map(d => d.ig),
+                            backgroundColor: COLORS.ig + 'CC',
+                            borderRadius: 4,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.7,
+                            yAxisID: 'y',
+                            order: 3,
                         },
                         {
-                            label: '合計',
-                            data: YEARLY_DATA.map(d => d.fb + d.ig),
-                            borderColor: COLORS.total,
-                            backgroundColor: 'transparent',
-                            borderWidth: 2,
+                            label: '總粉絲數',
+                            data: ovData.map(d => d.total),
+                            backgroundColor: '#b2bec3aa',
+                            borderRadius: 4,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.7,
+                            yAxisID: 'y',
+                            order: 3,
+                        },
+                        // Right Y: Growth numbers (thinner bars)
+                        {
+                            label: 'FB 成長數',
+                            data: ovData.map(d => d.fbGrowth),
+                            backgroundColor: '#74b9ff',
+                            borderRadius: 3,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.4,
+                            yAxisID: 'y1',
+                            order: 2,
+                        },
+                        {
+                            label: 'IG 成長數',
+                            data: ovData.map(d => d.igGrowth),
+                            backgroundColor: '#fd79a8',
+                            borderRadius: 3,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.4,
+                            yAxisID: 'y1',
+                            order: 2,
+                        },
+                        // Trend lines
+                        {
+                            label: '總成長數',
+                            data: ovData.map(d => d.totalGrowth),
+                            type: 'line',
+                            borderColor: '#fdcb6e',
+                            borderWidth: 2.5,
                             borderDash: [6, 4],
-                            tension: 0.3,
                             pointRadius: 4,
-                            pointHoverRadius: 7,
-                        }
+                            pointBackgroundColor: '#fdcb6e',
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                            order: 1,
+                        },
                     ]
                 },
                 options: {
@@ -1201,87 +1265,93 @@
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } }
-                    },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
-                    }
-                }
-            });
-
-            // YoY growth bar chart
-            const growthData = YEARLY_DATA.slice(1).map((d, i) => {
-                const prev = YEARLY_DATA[i];
-                const prevTotal = prev.fb + prev.ig;
-                const curTotal = d.fb + d.ig;
-                return {
-                    year: d.year,
-                    fb: ((d.fb - prev.fb) / prev.fb * 100),
-                    ig: prev.ig > 0 ? ((d.ig - prev.ig) / prev.ig * 100) : 0,
-                    total: prevTotal > 0 ? ((curTotal - prevTotal) / prevTotal * 100) : 0
-                };
-            });
-
-            const ctx2 = document.getElementById('chart-yoy-growth').getContext('2d');
-            this.charts.yoyGrowth = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: growthData.map(d => d.year),
-                    datasets: [
-                        { label: 'FB 成長率', data: growthData.map(d => d.fb), backgroundColor: COLORS.fb + 'BB', borderRadius: 4 },
-                        { label: 'IG 成長率', data: growthData.map(d => d.ig), backgroundColor: COLORS.ig + 'BB', borderRadius: 4 },
-                        { label: '總成長率', data: growthData.map(d => d.total), backgroundColor: COLORS.total + 'BB', borderRadius: 4 },
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
-                    },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { ticks: { callback: v => v + '%' }, grid: { color: COLORS.grid } }
-                    }
-                }
-            });
-
-            // Composition stacked bar
-            const ctx3 = document.getElementById('chart-composition').getContext('2d');
-            this.charts.composition = new Chart(ctx3, {
-                type: 'bar',
-                data: {
-                    labels: YEARLY_DATA.map(d => d.year),
-                    datasets: [
-                        { label: 'Facebook', data: YEARLY_DATA.map(d => d.fb), backgroundColor: COLORS.fb + 'CC', borderRadius: 4 },
-                        { label: 'Instagram', data: YEARLY_DATA.map(d => d.ig), backgroundColor: COLORS.ig + 'CC', borderRadius: 4 },
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, padding: 12, font: { size: 12 } }
+                        },
                         tooltip: {
                             callbacks: {
+                                label: (ctx) => {
+                                    const val = ctx.parsed.y;
+                                    if (val === null) return null;
+                                    return `${ctx.dataset.label}: ${val.toLocaleString()}`;
+                                },
                                 afterBody: (items) => {
-                                    const idx = items[0].dataIndex;
-                                    const d = YEARLY_DATA[idx];
-                                    const total = d.fb + d.ig;
-                                    return `合計：${total.toLocaleString()}`;
+                                    const idx = items[0]?.dataIndex;
+                                    if (idx === undefined || idx === 0) return '';
+                                    const d = ovData[idx];
+                                    const prev = ovData[idx - 1];
+                                    const fbRate = prev.fb > 0 ? ((d.fb - prev.fb) / prev.fb * 100).toFixed(0) : '—';
+                                    const igRate = prev.ig > 0 ? ((d.ig - prev.ig) / prev.ig * 100).toFixed(0) : '—';
+                                    const totalRate = prev.total > 0 ? ((d.total - prev.total) / prev.total * 100).toFixed(0) : '—';
+                                    return `─────────\nFB 成長率: ${fbRate}%\nIG 成長率: ${igRate}%\n總成長率: ${totalRate}%`;
                                 }
                             }
                         }
                     },
                     scales: {
-                        x: { stacked: true, grid: { display: false } },
-                        y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: COLORS.grid } }
+                        x: { grid: { display: false } },
+                        y: {
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: '粉絲數', font: { size: 12 } },
+                            ticks: { callback: v => fmt(v) },
+                            grid: { color: COLORS.grid },
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: true,
+                            title: { display: true, text: '成長數', font: { size: 12 } },
+                            ticks: { callback: v => fmt(v) },
+                            grid: { drawOnChartArea: false },
+                        }
                     }
                 }
             });
+
+            // Render table view
+            this.renderOverviewTable(ovData);
+        }
+
+        renderOverviewTable(ovData) {
+            let html = '';
+            ovData.forEach((d, i) => {
+                const prev = i > 0 ? ovData[i - 1] : null;
+                const fbRate = prev && prev.fb > 0 ? ((d.fb - prev.fb) / prev.fb * 100).toFixed(0) + '%' : '';
+                const igRate = prev && prev.ig > 0 ? ((d.ig - prev.ig) / prev.ig * 100).toFixed(0) + '%' : '';
+                const totalRate = prev && prev.total > 0 ? ((d.total - prev.total) / prev.total * 100).toFixed(0) + '%' : '';
+                html += `<tr>
+                    <td style="font-weight:700;">${d.year}</td>
+                    <td>${d.fb.toLocaleString()}</td>
+                    <td style="color:var(--fb-color);">${d.fbGrowth !== null ? d.fbGrowth.toLocaleString() : ''}</td>
+                    <td style="color:var(--fb-color);">${fbRate}</td>
+                    <td>${d.ig.toLocaleString()}</td>
+                    <td style="color:var(--ig-color);">${d.igGrowth !== null ? d.igGrowth.toLocaleString() : ''}</td>
+                    <td style="color:var(--ig-color);">${igRate}</td>
+                    <td style="font-weight:700;">${d.total.toLocaleString()}</td>
+                    <td>${d.totalGrowth !== null ? d.totalGrowth.toLocaleString() : ''}</td>
+                    <td>${totalRate}</td>
+                </tr>`;
+            });
+            document.getElementById('overview-table-body').innerHTML = html;
+        }
+
+        toggleOverviewView(view) {
+            const chartDiv = document.getElementById('overview-chart-view');
+            const tableDiv = document.getElementById('overview-table-view');
+            const btnChart = document.getElementById('ov-btn-chart');
+            const btnTable = document.getElementById('ov-btn-table');
+            if (view === 'chart') {
+                chartDiv.style.display = 'block';
+                tableDiv.style.display = 'none';
+                btnChart.style.background = '#1a1a2e'; btnChart.style.color = '#fff';
+                btnTable.style.background = '#f8f9fb'; btnTable.style.color = '#495057';
+            } else {
+                chartDiv.style.display = 'none';
+                tableDiv.style.display = 'block';
+                btnTable.style.background = '#1a1a2e'; btnTable.style.color = '#fff';
+                btnChart.style.background = '#f8f9fb'; btnChart.style.color = '#495057';
+            }
         }
 
         // ---- PIC Charts (負責人目標管理) ----
