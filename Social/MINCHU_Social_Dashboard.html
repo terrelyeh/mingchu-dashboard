@@ -289,8 +289,10 @@
             font-size: 13px;
             margin: 10px 0;
         }
-        .target-row { background: #e6f9f1 !important; }
-        .target-row td { font-weight: 600; color: var(--positive); }
+        .target-row { background: #e6f9f1 !important; border-left: 4px solid var(--positive); }
+        .target-row td { font-weight: 700; color: var(--positive); font-size: 15px; }
+        .target-row td:first-child { font-size: 13px; }
+        .goal-source-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
 
         /* Post Analysis */
         .top-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
@@ -1218,12 +1220,15 @@ class Dashboard {
                     <th>達成率</th>
                 </tr></thead>
                 <tbody>
-                <tr class="target-row"><td>週目標</td><td>${this.fmt(GOALS.fb.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.fb.weekly.followers)}</td><td>--</td></tr>`;
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td>${this.fmt(GOALS.fb.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.fb.weekly.followers)}</td><td>--</td></tr>
+                <tr><td colspan="5" class="goal-source-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
 
+        const fbWeeklyReachGoal = GOALS.fb.weekly.reach;
+        const fbWeeklyFollowGoal = GOALS.fb.weekly.followers;
         recentWeeks.forEach(w => {
             const isFuture = w._future;
-            const fbReachRate = w.fb_reach != null ? Math.round(w.fb_reach / GOALS.fb.weekly.reach * 100) : null;
-            const fbFollowRate = w.fb_followers != null ? Math.round(w.fb_followers / GOALS.fb.weekly.followers * 100) : null;
+            const fbReachRate = w.fb_reach != null ? Math.round(w.fb_reach / fbWeeklyReachGoal * 100) : null;
+            const fbFollowRate = w.fb_followers != null ? Math.round(w.fb_followers / fbWeeklyFollowGoal * 100) : null;
             html += `<tr${isFuture ? ' style="opacity:0.45; font-style:italic;"' : ''}>
                 <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}${isFuture ? ' <span style="font-size:10px; color:var(--text-secondary);">待填</span>' : ''}</td>
                 <td>${this.fmt(w.fb_reach)}</td>
@@ -1280,7 +1285,8 @@ class Dashboard {
                     <th>互動數 <span class="badge-src badge-auto">自動</span></th>
                 </tr></thead>
                 <tbody>
-                <tr class="target-row"><td>週目標</td><td>${this.fmt(GOALS.ig.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.ig.weekly.followers)}</td><td>--</td><td>--</td></tr>`;
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td>${this.fmt(GOALS.ig.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.ig.weekly.followers)}</td><td>--</td><td>--</td></tr>
+                <tr><td colspan="6" class="goal-source-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
 
         recentWeeks.forEach(w => {
             const isFuture = w._future;
@@ -1591,7 +1597,7 @@ class Dashboard {
         });
 
         document.getElementById('simConfirm').addEventListener('click', () => {
-            alert('目標已確認！Phase 2 正式版將儲存至 Supabase。');
+            this.syncGoalsFromSimulator();
         });
 
         this.updateSimulator();
@@ -1691,6 +1697,58 @@ class Dashboard {
             <div class="big">${this.fmt(month12Target)}</div>
             <div style="font-size:13px; color:var(--text-secondary); margin-top:6px;">年度累計目標：${this.fmt(annualTarget)} | 基期值：${this.fmt(baseValue)} | 月成長率：${(growthRate * 100).toFixed(1)}%</div>
         `;
+    }
+
+    syncGoalsFromSimulator() {
+        const metric = document.getElementById('simMetric').value;
+        const platform = document.getElementById('simPlatform').value;
+        const growthRate = parseFloat(document.getElementById('simRate').value) / 100;
+        const baseVal = document.getElementById('simBase').value.split('-');
+        const baseYear = parseInt(baseVal[0]);
+        const baseMonth = parseInt(baseVal[1]);
+        const baseData = this.getMonthData(platform, baseYear, baseMonth);
+
+        if (!baseData) { alert('找不到基期資料'); return; }
+
+        let baseValue = 0;
+        switch (metric) {
+            case 'organic_reach': baseValue = baseData.organic || 0; break;
+            case 'total_reach': baseValue = baseData.total || 0; break;
+            case 'followers': baseValue = baseData.followers || 0; break;
+            case 'engagement': baseValue = baseData.engagement || 0; break;
+        }
+
+        // Derive monthly target (next month's projected value)
+        const monthlyTarget = Math.round(baseValue * (1 + growthRate));
+        const weeklyTarget = Math.round(monthlyTarget / 4);
+        const quarterlyTarget = Math.round(monthlyTarget * 3);
+
+        // Determine which goal field to update
+        const isReach = metric === 'organic_reach' || metric === 'total_reach';
+        const goalKey = isReach ? 'reach' : 'followers';
+
+        const updatePlatformGoals = (p) => {
+            GOALS[p].weekly[goalKey] = weeklyTarget;
+            GOALS[p].monthly[goalKey] = monthlyTarget;
+            GOALS[p].q1[goalKey] = quarterlyTarget;
+        };
+
+        if (platform === 'all' || platform === 'fb') updatePlatformGoals('fb');
+        if (platform === 'all' || platform === 'ig') updatePlatformGoals('ig');
+
+        // Re-render weekly tracking to reflect new goals
+        this.renderWeeklyTracking();
+
+        // Show confirmation with details
+        const platLabel = platform === 'all' ? 'FB + IG' : platform.toUpperCase();
+        const metricLabel = isReach ? '觸及' : '追蹤';
+        alert(`✅ 目標已更新！\n\n平台：${platLabel}｜指標：${metricLabel}\n週目標：${weeklyTarget.toLocaleString()}\n月目標：${monthlyTarget.toLocaleString()}\n季目標：${quarterlyTarget.toLocaleString()}\n\n週報追蹤已同步更新。Phase 2 正式版將儲存至 Supabase。`);
+
+        // Switch to weekly tab so user can see the updated goals
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-tab="weekly"]').classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-weekly').classList.add('active');
     }
 }
 
