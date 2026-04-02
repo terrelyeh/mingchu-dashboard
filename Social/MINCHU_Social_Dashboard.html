@@ -811,6 +811,7 @@ class Dashboard {
                 followers: this.safeAdd(fb?.followers, ig?.followers),
                 engagement: this.safeAdd(fb?.engagement, ig?.engagement),
                 clicks: platform === 'ig' ? null : this.safeAdd(fb?.clicks, ig?.clicks),
+                uu: null, // UU 不可跨平台加總，全平台模式下不顯示
             };
         }
         const src = MONTHLY_DATA[platform];
@@ -951,12 +952,17 @@ class Dashboard {
 
         // Table
         const showClicks = f.platform !== 'ig';
+        const uuLabel = f.platform === 'ig' ? '月 UU <span class="badge-src badge-auto" style="background:rgba(225,48,108,0.12);color:#E1306C;">近似</span>'
+            : f.platform === 'all' ? '月 UU <span class="badge-src badge-auto">自動</span>'
+            : '月 UU <span class="badge-src badge-auto">自動</span>';
+        const showUU = f.platform !== 'all'; // UU 不可跨平台加總
         html += `<div class="table-wrap"><table>
         <thead><tr>
             <th>月份</th>
             <th>自然觸及 <span class="badge-src badge-auto">自動</span></th>
             <th>廣告觸及 <span class="badge-src badge-auto">自動</span></th>
             <th>總觸及 <span class="badge-src badge-calc">計算</span></th>
+            ${showUU ? `<th>${uuLabel}</th>` : ''}
             <th>新增淨追蹤 <span class="badge-src badge-auto">自動</span></th>
             <th>互動數 <span class="badge-src badge-auto">自動</span></th>
             ${showClicks ? '<th>連結點擊 <span class="badge-src badge-auto">自動</span></th>' : ''}
@@ -994,7 +1000,8 @@ class Dashboard {
         for (let m = 0; m < 12; m++) {
             const d = yearData[m];
             if (!d) {
-                html += `<tr><td>${MONTHS[m]}</td><td colspan="${showClicks ? (f.yoy ? 8 : 6) : (f.yoy ? 7 : 5)}" class="val-null" style="text-align:center;">尚無資料</td></tr>`;
+                const emptyCols = (showClicks ? 6 : 5) + (showUU ? 1 : 0) + (f.yoy ? 2 : 0);
+                html += `<tr><td>${MONTHS[m]}</td><td colspan="${emptyCols}" class="val-null" style="text-align:center;">尚無資料</td></tr>`;
             } else {
                 annualTotals.hasData = true;
                 annualTotals.organic += d.organic || 0;
@@ -1016,11 +1023,13 @@ class Dashboard {
                     yoyHTML = `<td class="yoy-col">${prevD ? this.fmt(prevD.total) : this.fmt(null)}</td><td class="yoy-col">${this.fmtPct(yoyPct)}</td>`;
                 }
 
+                const uuDisplay = showUU ? `<td>${d.uu != null ? this.fmt(d.uu) : '<span class="val-null">待接入</span>'}</td>` : '';
                 html += `<tr>
                     <td>${MONTHS[m]}</td>
                     <td>${this.fmt(d.organic)}</td>
                     <td>${this.fmt(d.ad)}</td>
                     <td>${this.fmt(d.total)}${warn}</td>
+                    ${uuDisplay}
                     <td>${this.fmt(d.followers)}</td>
                     <td>${this.fmt(d.engagement)}</td>
                     ${showClicks ? `<td>${this.fmt(d.clicks)}</td>` : ''}
@@ -1073,6 +1082,7 @@ class Dashboard {
                         <td>${this.fmt(qOrg)}</td>
                         <td>${this.fmt(qAd)}</td>
                         <td>${this.fmt(qTotal)}</td>
+                        ${showUU ? '<td class="val-null">--</td>' : ''}
                         <td>${this.fmt(qFollow)}</td>
                         <td>${this.fmt(qEng || null)}</td>
                         ${showClicks ? `<td>${this.fmt(qClicks || null)}</td>` : ''}
@@ -1101,6 +1111,7 @@ class Dashboard {
                 <td>${this.fmt(annualTotals.organic)}</td>
                 <td>${this.fmt(annualTotals.ad)}</td>
                 <td>${this.fmt(annualTotals.total)}</td>
+                ${showUU ? '<td class="val-null">--</td>' : ''}
                 <td>${this.fmt(annualTotals.followers)}</td>
                 <td>${this.fmt(annualTotals.engagement || null)}</td>
                 ${showClicks ? `<td>${this.fmt(annualTotals.clicks || null)}</td>` : ''}
