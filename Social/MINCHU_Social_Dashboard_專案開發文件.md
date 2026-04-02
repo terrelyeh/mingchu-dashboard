@@ -426,11 +426,12 @@ CREATE TABLE post_categories (
 
 ### 9.4 廣告成效分析模組
 
-- **資料來源**：Meta Marketing API（Ad Account Insights）
+- **資料來源**：Meta Marketing API（Ad Account Insights + per-ad Post ID 交叉比對）
 - **核心指標**：廣告花費、CPM（每千次曝光成本）、CPC（每次點擊成本）、CTR（點擊率）
-- **圖表**：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢線、CTR 效率圖、明細表格
-- **用途**：評估廣告預算分配效率，發現花費與成效的最佳配比
-- Demo 版已用 Mock Data 呈現視覺效果
+- **月度彙總圖表**：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢線、CTR 效率圖、明細表格
+- **推廣貼文明細**：按月份分組，可展開 / 收合查看該月所有被 boost 的貼文，每則顯示平台、標題、花費、觸及、曝光、點擊、CPM、CPC、CTR
+- **用途**：評估廣告預算分配效率，並可追溯每筆花費對應的具體內容
+- Demo 版已用 Mock Data 呈現月度彙總 + 推廣貼文明細（`AD_PERF_DATA` + `AD_PROMOTED_POSTS`）
 
 ### 9.5 互動率趨勢
 

@@ -1,0 +1,17 @@
+{
+  "projectSettings": {
+    "framework": null
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/Social/MINCHU_Social_Dashboard.html" },
+    { "source": "/docs", "destination": "/Social/MINCHU_Social_Dashboard_專案開發文件.html" }
+  ]
+}

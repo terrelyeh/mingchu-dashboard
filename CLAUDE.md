@@ -43,7 +43,7 @@ MINCHU Dashboard/
 ## Conventions
 
 - 所有 UI 文字使用**繁體中文**
-- 數據結構主要定義在 HTML 檔案內的 JavaScript 常數（`YEARLY_DATA`、`REACH_SUMMARY`、`PIC_DATA`、`GOALS`、`POST_DATA`、`POST_CATEGORIES`）
+- 數據結構主要定義在 HTML 檔案內的 JavaScript 常數（`YEARLY_DATA`、`REACH_SUMMARY`、`PIC_DATA`、`GOALS`、`POST_DATA`、`POST_CATEGORIES`、`AD_PERF_DATA`、`AD_PROMOTED_POSTS`、`ENGAGEMENT_RATE_DATA`）
 - UU（月不重複訪客）欄位目前為 `null`，待 Meta API `period=month` 接入後填入
 - 缺失值前端顯示 `--` 加註「待接入」，不使用 0 替代
 - 負責人：Clara Chang（FB）、Mike Chen（IG）

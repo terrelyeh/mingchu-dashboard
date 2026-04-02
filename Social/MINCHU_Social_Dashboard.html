@@ -452,6 +452,17 @@
             font-size: 13px; letter-spacing: 0.5px;
         }
         .post-table .week-summary { font-weight: 700; color: var(--text-primary); }
+        .ad-month-header {
+            cursor: pointer; background: #f8f9fa; font-weight: 700; transition: background 0.15s;
+        }
+        .ad-month-header:hover { background: #e9ecef; }
+        .ad-month-header td { padding: 10px 12px; }
+        .ad-month-toggle { display: inline-block; width: 18px; transition: transform 0.2s; }
+        .ad-month-toggle.open { transform: rotate(90deg); }
+        .ad-post-row { background: #fff; }
+        .ad-post-row.hidden { display: none; }
+        .ad-post-row td { padding: 8px 12px; font-size: 13px; border-top: 1px solid #f0f0f0; }
+        .ad-post-title { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .post-platform-tag {
             display: inline-block; padding: 2px 8px; border-radius: 4px;
             font-size: 11px; font-weight: 700; color: #fff;
@@ -860,6 +871,28 @@
                     </table>
                 </div>
             </section>
+            <section class="table-section" id="adperf-promoted-section">
+                <h3>推廣貼文明細 <span style="font-size:12px;color:var(--text-secondary);font-weight:400;margin-left:8px;">點擊月份展開 / 收合</span></h3>
+                <div style="overflow-x:auto;">
+                    <table class="post-table" id="adperf-promoted-table">
+                        <thead>
+                            <tr>
+                                <th style="width:90px;">月份</th>
+                                <th>平台</th>
+                                <th>推廣貼文標題</th>
+                                <th>廣告花費</th>
+                                <th>廣告觸及</th>
+                                <th>曝光次數</th>
+                                <th>點擊數</th>
+                                <th>CPM</th>
+                                <th>CPC</th>
+                                <th>CTR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adperf-promoted-body"></tbody>
+                    </table>
+                </div>
+            </section>
         </div>
 
         <!-- Tab: Goal Simulator 目標模擬器 -->
@@ -1095,6 +1128,41 @@
         { year: 2025, month: 10, spend: 32000, adReach: 347055, impressions: 536000, clicks: 6430 },
         { year: 2025, month: 11, spend: 65000, adReach: 739638, impressions: 1142000, clicks: 14820 },
         { year: 2025, month: 12, spend: 11000, adReach: 111985, impressions: 173000, clicks: 2080 },
+    ];
+
+    // Mock promoted posts data — per-post ad performance by month
+    const AD_PROMOTED_POSTS = [
+        { year: 2025, month: 1, platform: 'fb', title: '新年特輯：2025 值得關注的餐飲趨勢', spend: 8000, adReach: 68230, impressions: 105000, clicks: 1360 },
+        { year: 2025, month: 1, platform: 'ig', title: '冬季限定甜點合輯 ❄️', spend: 7000, adReach: 52228, impressions: 80000, clicks: 1050 },
+        { year: 2025, month: 2, platform: 'fb', title: '情人節餐廳推薦 TOP 5', spend: 12000, adReach: 134890, impressions: 208000, clicks: 2700 },
+        { year: 2025, month: 2, platform: 'fb', title: 'MINCHU 品牌年度回顧', spend: 5000, adReach: 48120, impressions: 72000, clicks: 940 },
+        { year: 2025, month: 2, platform: 'ig', title: '情人節約會餐廳 Reels', spend: 5000, adReach: 51143, impressions: 78000, clicks: 1010 },
+        { year: 2025, month: 3, platform: 'fb', title: '春季新開幕餐廳巡禮', spend: 15000, adReach: 178200, impressions: 275000, clicks: 3300 },
+        { year: 2025, month: 3, platform: 'ig', title: '櫻花季甜點特搜 🌸', spend: 10000, adReach: 112450, impressions: 170000, clicks: 2040 },
+        { year: 2025, month: 3, platform: 'fb', title: '2B 產業動態：Fine Dining 新趨勢', spend: 10000, adReach: 104752, impressions: 167000, clicks: 2000 },
+        { year: 2025, month: 4, platform: 'fb', title: '清明連假美食地圖', spend: 7000, adReach: 72340, impressions: 110000, clicks: 1320 },
+        { year: 2025, month: 4, platform: 'ig', title: '春日野餐組合推薦', spend: 5000, adReach: 52159, impressions: 80000, clicks: 960 },
+        { year: 2025, month: 5, platform: 'fb', title: '母親節餐廳預訂攻略', spend: 6000, adReach: 58930, impressions: 91000, clicks: 1090 },
+        { year: 2025, month: 5, platform: 'ig', title: '母親節限定蛋糕合集', spend: 4000, adReach: 39791, impressions: 61000, clicks: 730 },
+        { year: 2025, month: 6, platform: 'fb', title: '夏季消暑飲品大賞', spend: 12000, adReach: 125600, impressions: 194000, clicks: 2520 },
+        { year: 2025, month: 6, platform: 'ig', title: '冰品甜點 TOP 10 Reels', spend: 8000, adReach: 82350, impressions: 127000, clicks: 1650 },
+        { year: 2025, month: 6, platform: 'fb', title: 'MINCHU 品牌聚焦：主廚專訪', spend: 8000, adReach: 77249, impressions: 119000, clicks: 1550 },
+        { year: 2025, month: 7, platform: 'fb', title: '暑假親子餐廳推薦', spend: 18000, adReach: 205800, impressions: 318000, clicks: 4140 },
+        { year: 2025, month: 7, platform: 'ig', title: '夏日沁涼特調 Reels', spend: 12000, adReach: 138200, impressions: 214000, clicks: 2780 },
+        { year: 2025, month: 7, platform: 'fb', title: '米其林新入選餐廳解析', spend: 12000, adReach: 131179, impressions: 203000, clicks: 2640 },
+        { year: 2025, month: 8, platform: 'fb', title: '七夕浪漫餐廳精選', spend: 15000, adReach: 168300, impressions: 260000, clicks: 3120 },
+        { year: 2025, month: 8, platform: 'ig', title: '約會氛圍餐廳 Stories', spend: 10000, adReach: 108560, impressions: 168000, clicks: 2020 },
+        { year: 2025, month: 8, platform: 'fb', title: '夏末甜點快閃店導覽', spend: 13000, adReach: 134318, impressions: 207000, clicks: 2480 },
+        { year: 2025, month: 9, platform: 'fb', title: '中秋節聚餐推薦', spend: 8000, adReach: 81520, impressions: 125000, clicks: 1630 },
+        { year: 2025, month: 9, platform: 'ig', title: '月餅禮盒開箱 🥮', spend: 5000, adReach: 48510, impressions: 75000, clicks: 970 },
+        { year: 2025, month: 10, platform: 'fb', title: '秋季新菜單巡禮', spend: 14000, adReach: 155200, impressions: 240000, clicks: 2880 },
+        { year: 2025, month: 10, platform: 'ig', title: '萬聖節限定甜點 🎃', spend: 10000, adReach: 104350, impressions: 161000, clicks: 1930 },
+        { year: 2025, month: 10, platform: 'fb', title: '2B 採訪：永續食材供應鏈', spend: 8000, adReach: 87505, impressions: 135000, clicks: 1620 },
+        { year: 2025, month: 11, platform: 'fb', title: '感恩節特輯：值得感謝的餐廳', spend: 25000, adReach: 289600, impressions: 448000, clicks: 5820 },
+        { year: 2025, month: 11, platform: 'ig', title: '冬季暖心料理合輯 Reels', spend: 20000, adReach: 228400, impressions: 353000, clicks: 4590 },
+        { year: 2025, month: 11, platform: 'fb', title: '年末聚餐餐廳排行榜', spend: 20000, adReach: 221638, impressions: 341000, clicks: 4410 },
+        { year: 2025, month: 12, platform: 'fb', title: '聖誕跨年餐廳預訂指南', spend: 6000, adReach: 62180, impressions: 96000, clicks: 1160 },
+        { year: 2025, month: 12, platform: 'ig', title: '跨年派對甜點推薦 🎉', spend: 5000, adReach: 49805, impressions: 77000, clicks: 920 },
     ];
 
     // Mock engagement rate data (engagement / organic reach)
@@ -2247,6 +2315,64 @@
                 </tr>`;
             });
             document.getElementById('adperf-table-body').innerHTML = html;
+
+            // Promoted posts detail
+            this.renderAdPromotedPosts();
+        }
+
+        // ---- Promoted Posts Detail ----
+        renderAdPromotedPosts() {
+            // Group by month
+            const byMonth = {};
+            AD_PROMOTED_POSTS.forEach(p => {
+                const key = `${p.year}-${p.month}`;
+                if (!byMonth[key]) byMonth[key] = { year: p.year, month: p.month, posts: [] };
+                byMonth[key].posts.push(p);
+            });
+
+            let html = '';
+            // Sort by month descending (latest first)
+            const months = Object.values(byMonth).sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month));
+
+            months.forEach(m => {
+                const monthId = `adpromo-${m.year}-${m.month}`;
+                const totalSpend = m.posts.reduce((s, p) => s + p.spend, 0);
+                const postCount = m.posts.length;
+                html += `<tr class="ad-month-header" onclick="dashboard.toggleAdMonth('${monthId}')">
+                    <td colspan="10">
+                        <span class="ad-month-toggle" id="toggle-${monthId}">▶</span>
+                        ${m.year}/${String(m.month).padStart(2,'0')}
+                        <span style="font-weight:400;color:var(--text-secondary);margin-left:12px;">${postCount} 則推廣貼文 ・ 合計 NT$ ${totalSpend.toLocaleString()}</span>
+                    </td>
+                </tr>`;
+                m.posts.forEach(p => {
+                    const cpm = (p.spend / p.impressions * 1000).toFixed(1);
+                    const cpc = (p.spend / p.clicks).toFixed(1);
+                    const ctr = (p.clicks / p.impressions * 100).toFixed(2);
+                    html += `<tr class="ad-post-row hidden" data-month="${monthId}">
+                        <td></td>
+                        <td><span class="post-platform-tag ${p.platform}">${p.platform === 'fb' ? 'FB' : 'IG'}</span></td>
+                        <td class="ad-post-title" title="${p.title}">${p.title}</td>
+                        <td>NT$ ${p.spend.toLocaleString()}</td>
+                        <td>${p.adReach.toLocaleString()}</td>
+                        <td>${p.impressions.toLocaleString()}</td>
+                        <td>${p.clicks.toLocaleString()}</td>
+                        <td>NT$ ${cpm}</td>
+                        <td>NT$ ${cpc}</td>
+                        <td>${ctr}%</td>
+                    </tr>`;
+                });
+            });
+
+            document.getElementById('adperf-promoted-body').innerHTML = html;
+        }
+
+        toggleAdMonth(monthId) {
+            const rows = document.querySelectorAll(`tr[data-month="${monthId}"]`);
+            const toggle = document.getElementById(`toggle-${monthId}`);
+            const isHidden = rows[0]?.classList.contains('hidden');
+            rows.forEach(r => r.classList.toggle('hidden', !isHidden));
+            toggle.classList.toggle('open', isHidden);
         }
 
         // ---- Engagement Rate Chart ----

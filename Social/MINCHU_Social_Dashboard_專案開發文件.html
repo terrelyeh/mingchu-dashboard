@@ -826,13 +826,14 @@
 
     <h3 id="sec9-4">9.4 廣告成效分析模組</h3>
     <div class="card">
-      <p>資料來源：Meta Marketing API（Ad Account Insights）</p>
+      <p>資料來源：Meta Marketing API（Ad Account Insights + per-ad Post ID 交叉比對）</p>
       <ul>
         <li><strong>核心指標</strong>：廣告花費、CPM、CPC、CTR</li>
-        <li><strong>圖表</strong>：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢、CTR 效率、明細表格</li>
-        <li><strong>用途</strong>：評估廣告預算分配效率，發現花費與成效的最佳配比</li>
+        <li><strong>月度彙總圖表</strong>：月度花費 vs 觸及（雙 Y 軸）、CPM/CPC 趨勢、CTR 效率、明細表格</li>
+        <li><strong>推廣貼文明細</strong>：按月份分組可展開/收合，顯示該月所有 boost 貼文的平台、標題、花費、觸及、曝光、點擊、CPM、CPC、CTR</li>
+        <li><strong>用途</strong>：評估廣告預算分配效率，並可追溯每筆花費對應的具體內容</li>
       </ul>
-      <p style="margin-top:8px;"><span style="background:#e0f7fa;color:#00838f;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">DEMO</span> Demo 版已用 Mock Data 呈現視覺效果</p>
+      <p style="margin-top:8px;"><span style="background:#e0f7fa;color:#00838f;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">DEMO</span> Demo 版已用 Mock Data 呈現月度彙總 + 推廣貼文明細（<code>AD_PERF_DATA</code> + <code>AD_PROMOTED_POSTS</code>）</p>
     </div>
 
     <h3 id="sec9-5">9.5 互動率趨勢</h3>
