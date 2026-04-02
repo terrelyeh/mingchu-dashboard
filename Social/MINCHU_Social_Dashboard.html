@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINCHU 社群媒體儀表板</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
     <style>
         :root {
-            --bg-primary: #f0f2f5;
+            --bg-primary: #e0e1dd;
             --bg-card: #ffffff;
-            --bg-header: #1a1a2e;
-            --text-primary: #2C3345;
+            --bg-header: #333333;
+            --brand-gold: #c99700;
+            --text-primary: #333333;
             --text-secondary: #6c757d;
             --text-on-dark: #ffffff;
             --fb-color: #1877F2;
@@ -18,16 +22,16 @@
             --total-color: #6C5CE7;
             --positive: #00b894;
             --negative: #d63031;
-            --goal-color: #fdcb6e;
+            --goal-color: #c99700;
             --gap: 16px;
             --radius: 12px;
-            --border: #e9ecef;
+            --border: #d5d6d2;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.5;
@@ -114,7 +118,7 @@
             transition: all 0.2s;
         }
         .tab-btn:hover { background: var(--bg-primary); color: var(--text-primary); }
-        .tab-btn.active { background: #b28500; color: #fff; }
+        .tab-btn.active { background: var(--brand-gold); color: #fff; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -452,11 +456,14 @@
 <div class="container">
     <!-- Header -->
     <div class="dashboard-header">
-        <div class="header-left">
-            <h1>MINCHU 社群媒體儀表板 <span class="header-badge badge-demo">Phase 1 Demo</span></h1>
+        <div class="header-left" style="display:flex; align-items:center; gap:16px;">
+            <img src="../MINGCHU_Logo.png" alt="MINGCHU" style="height:40px; filter:brightness(0) invert(1);">
+            <div>
+            <h1>社群媒體儀表板 <span class="header-badge badge-demo">Phase 1 Demo</span></h1>
             <div class="header-fans">
                 <div>FB 粉絲：<span>29,762</span></div>
                 <div>IG 粉絲：<span>15,270</span></div>
+            </div>
             </div>
         </div>
         <div class="header-right">
@@ -906,7 +913,7 @@ class Dashboard {
                     <div class="progress-track"><div class="progress-fill ${ytdReachPct >= timePct ? 'green' : ytdReachPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdReachPct, 100)}%"></div></div>
                     <span class="progress-label">${ytdReachPct}%</span>
                 </div>
-                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
             </div>
             <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
                 <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計新增追蹤 <span class="badge-src badge-calc">計算</span></div>
@@ -915,7 +922,7 @@ class Dashboard {
                     <div class="progress-track"><div class="progress-fill ${ytdFollowPct >= timePct ? 'green' : ytdFollowPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdFollowPct, 100)}%"></div></div>
                     <span class="progress-label">${ytdFollowPct}%</span>
                 </div>
-                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
             </div>
         </div>`;
 
@@ -1355,7 +1362,7 @@ class Dashboard {
             const totalFollow = weeks.reduce((s, w) => s + (platform === 'fb' ? (w.fb_followers || 0) : (w.ig_followers || 0)), 0);
             const expanded = expandedMonths.has(monthKey);
             const isCurrent = monthNum === currentMonthNum;
-            const headerStyle = isCurrent ? ' style="background:#fff8e1 !important; border-left:4px solid #b28500;"' : '';
+            const headerStyle = isCurrent ? ' style="background:#fff8e1 !important; border-left:4px solid #c99700;"' : '';
             return `<tr class="month-group-header" data-weekly-toggle="${platform}-${monthKey}"${headerStyle}>
                 <td colspan="${colSpan}"><span class="month-toggle">${expanded ? '▼' : '▶'}</span>${label}${isCurrent ? ' 📍' : ''}<span class="month-stats">${weeks.length} 週　|　觸及 ${this.fmt(totalReach)}　|　追蹤 +${this.fmt(totalFollow)}</span></td>
             </tr>`;
@@ -1380,7 +1387,7 @@ class Dashboard {
                 </tr></thead>
                 <tbody>
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
-                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
+                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
 
         // Order: current month → future weeks → older months
         const dataMonths = monthGroups.filter(k => k !== '_future').reverse();
@@ -1438,7 +1445,7 @@ class Dashboard {
                 </tr></thead>
                 <tbody>
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="ig" data-metric="reach">${this.fmt(GOALS.ig.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="ig" data-metric="followers">${this.fmt(GOALS.ig.weekly.followers)}</span></td><td>--</td><td>--</td></tr>
-                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
+                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
 
         // Reverse order: newest month first, future weeks last
         // Order: current month → future weeks → older months
@@ -2001,9 +2008,9 @@ class Dashboard {
         document.getElementById('simResult').innerHTML = `
             <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">基期值 ${this.fmt(baseValue)}（${platLabel}）× 月成長率 ${(growthRate * 100).toFixed(1)}% → 確認後同步至週報追蹤</div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">
-                <div style="background:#fff; border-radius:8px; padding:14px; border:2px solid #b28500;">
+                <div style="background:#fff; border-radius:8px; padding:14px; border:2px solid #c99700;">
                     <div style="font-size:11px; font-weight:600; color:var(--text-secondary);">週目標${metricLabel}</div>
-                    <div style="font-size:28px; font-weight:700; color:#b28500; margin:4px 0;">${this.fmt(weeklyTarget)}</div>
+                    <div style="font-size:28px; font-weight:700; color:#c99700; margin:4px 0;">${this.fmt(weeklyTarget)}</div>
                     <div style="font-size:11px; color:var(--text-secondary);">= 月目標 ÷ 4</div>
                 </div>
                 <div style="background:#fff; border-radius:8px; padding:14px; border:1px solid var(--border);">
