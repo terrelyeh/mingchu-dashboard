@@ -1050,8 +1050,10 @@ class Dashboard {
         for (let m = 0; m < 12; m++) {
             const d = yearData[m];
             if (!d) {
-                const emptyCols = (showClicks ? 6 : 5) + (showUU ? 1 : 0) + (f.yoy ? 2 : 0);
-                html += `<tr><td>${MONTHS[m]}</td><td colspan="${emptyCols}" class="val-null" style="text-align:center;">尚無資料</td></tr>`;
+                if (f.view !== 'quarterly') {
+                    const emptyCols = (showClicks ? 6 : 5) + (showUU ? 1 : 0) + (f.yoy ? 2 : 0);
+                    html += `<tr><td>${MONTHS[m]}</td><td colspan="${emptyCols}" class="val-null" style="text-align:center;">尚無資料</td></tr>`;
+                }
             } else {
                 annualTotals.hasData = true;
                 annualTotals.organic += d.organic || 0;
@@ -1074,6 +1076,7 @@ class Dashboard {
                 }
 
                 const uuDisplay = showUU ? `<td>${d.uu != null ? this.fmt(d.uu) : '<span class="val-null">待接入</span>'}</td>` : '';
+                if (f.view !== 'quarterly') {
                 html += `<tr>
                     <td>${MONTHS[m]}</td>
                     <td>${this.fmt(d.organic)}</td>
@@ -1086,6 +1089,7 @@ class Dashboard {
                     <td>${this.fmtPct(mom)}</td>
                     ${yoyHTML}
                 </tr>`;
+                } // end if not quarterly
             }
 
             // Quarterly subtotals
