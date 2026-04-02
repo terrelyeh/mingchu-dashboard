@@ -1677,18 +1677,20 @@ class Dashboard {
             </div>
             <div class="table-wrap"><table>
                 <thead><tr>
-                    <th style="width:30px;"></th>
-                    <th>日期 <span class="badge-src badge-auto">自動</span></th>
-                    <th>星期</th>
-                    <th>平台</th>
-                    <th>貼文主題 <span class="badge-src badge-auto">自動</span></th>
-                    <th>分類 <span class="badge-src badge-manual">手動</span></th>
-                    <th>W1 觸及 <span class="badge-src badge-auto">自動</span></th>
-                    <th>W2 觸及 <span class="badge-src badge-auto">自動</span></th>
-                    <th>累積觸及 <span class="badge-src badge-auto">自動</span></th>
-                    <th>總互動 <span class="badge-src badge-auto">自動</span></th>
-                    <th>連結點擊 <span class="badge-src badge-auto">自動</span></th>
-                    <th>點擊率 <span class="badge-src badge-calc">計算</span></th>
+                    <th rowspan="2" style="width:30px;"></th>
+                    <th rowspan="2">日期 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">星期</th>
+                    <th rowspan="2">平台</th>
+                    <th rowspan="2">貼文主題 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">分類 <span class="badge-src badge-manual">手動</span></th>
+                    <th colspan="3" style="text-align:center; border-bottom:2px solid var(--brand-gold); color:var(--brand-gold);">自然觸及 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">總互動 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">連結點擊 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">點擊率 <span class="badge-src badge-calc">計算</span></th>
+                </tr><tr>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">W1（7天）</th>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">W2（14天）</th>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">累積</th>
                 </tr></thead><tbody>`;
 
         let currentWeek = null;
