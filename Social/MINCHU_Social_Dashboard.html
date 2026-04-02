@@ -187,6 +187,9 @@
         .filter-group { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f8f9fa; border-radius: 8px; }
         .filter-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
         .filter-divider { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+        .top5-plat-btn { padding: 3px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: all 0.15s; }
+        .top5-plat-btn.active { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+        .top5-plat-btn:hover:not(.active) { border-color: var(--text-secondary); }
 
         /* Tables */
         .table-wrap { overflow-x: auto; }
@@ -1424,11 +1427,19 @@ class Dashboard {
         else if (f.sortBy === 'engagement') filtered.sort((a, b) => (b.engagement || 0) - (a.engagement || 0));
         else filtered.sort((a, b) => a.date.localeCompare(b.date));
 
-        // Top 5
-        const top5 = [...POST_DATA].sort((a, b) => (b.organic_reach || 0) - (a.organic_reach || 0)).slice(0, 5);
+        // Top 5 — respects platform filter
+        const top5Pool = f.platform !== 'all' ? POST_DATA.filter(p => p.platform === f.platform) : POST_DATA;
+        const top5 = [...top5Pool].sort((a, b) => (b.organic_reach || 0) - (a.organic_reach || 0)).slice(0, 5);
+        const top5Label = f.platform !== 'all' ? f.platform : '全平台';
 
         let html = `<div class="card">
-            <div class="card-title">本期 Top 5 貼文</div>
+            <div class="card-title" style="display:flex; align-items:center; gap:10px;">本期 Top 5 貼文
+                <div style="display:inline-flex; gap:4px; font-size:12px;">
+                    <button class="top5-plat-btn${f.platform === 'all' ? ' active' : ''}" data-plat="all">全部</button>
+                    <button class="top5-plat-btn${f.platform === 'FB' ? ' active' : ''}" data-plat="FB">FB</button>
+                    <button class="top5-plat-btn${f.platform === 'IG' ? ' active' : ''}" data-plat="IG">IG</button>
+                </div>
+            </div>
             <div class="top-posts">`;
         top5.forEach((p, i) => {
             html += `<div class="top-post-card">
@@ -1548,6 +1559,16 @@ class Dashboard {
         document.getElementById('paPlat').addEventListener('change', e => { this.postFilters.platform = e.target.value; this.renderPostAnalysis(); });
         document.getElementById('paCat').addEventListener('change', e => { this.postFilters.category = e.target.value; this.renderPostAnalysis(); });
         document.getElementById('paSort').addEventListener('change', e => { this.postFilters.sortBy = e.target.value; this.renderPostAnalysis(); });
+
+        // Top 5 platform toggle
+        document.querySelectorAll('.top5-plat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const plat = btn.dataset.plat;
+                this.postFilters.platform = plat === 'all' ? 'all' : plat;
+                document.getElementById('paPlat').value = this.postFilters.platform;
+                this.renderPostAnalysis();
+            });
+        });
 
         // Select all checkbox
         document.getElementById('batchSelectAll').addEventListener('change', e => {
