@@ -164,7 +164,7 @@
         /* Filter Bar */
         .filter-bar {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
             margin-bottom: var(--gap);
@@ -184,6 +184,9 @@
             border-color: var(--text-primary);
         }
         .filter-bar label { font-size: 13px; color: var(--text-secondary); }
+        .filter-group { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f8f9fa; border-radius: 8px; }
+        .filter-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+        .filter-divider { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
 
         /* Tables */
         .table-wrap { overflow-x: auto; }
@@ -727,7 +730,7 @@ class Dashboard {
     constructor() {
         this.charts = {};
         this.monthlyFilters = { year: 2025, platform: 'all', view: 'monthly', yoy: false };
-        this.postFilters = { platform: 'all', category: 'all', sortBy: 'reach' };
+        this.postFilters = { platform: 'all', category: 'all', sortBy: 'date' };
         this.init();
     }
 
@@ -1441,9 +1444,16 @@ class Dashboard {
         // Filters + Batch
         html += `<div class="card">
             <div class="filter-bar">
-                <label>平台</label><select id="paPlat">${platOpts}</select>
-                <label>分類</label><select id="paCat">${catOpts}</select>
-                <label>排序</label><select id="paSort">${sortOpts}</select>
+                <div class="filter-group">
+                    <label>平台</label><select id="paPlat">${platOpts}</select>
+                </div>
+                <div class="filter-group">
+                    <label>分類</label><select id="paCat">${catOpts}</select>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <label>排序</label><select id="paSort">${sortOpts}</select>
+                </div>
             </div>
             <div class="batch-actions">
                 <input type="checkbox" id="batchSelectAll"> <label for="batchSelectAll" style="font-size:13px;">全選</label>
