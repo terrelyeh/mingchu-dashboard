@@ -1,7 +1,7 @@
 # MINCHU 社群媒體儀表板 — 專案介紹與開發文件
 
-> 文件版本：v1.0
-> 建立日期：2026-04-01
+> 文件版本：v2.0
+> 更新日期：2026-04-02
 > 作者：Terrel Yeh
 
 ---
@@ -9,13 +9,25 @@
 ## 目錄
 
 1. [專案總覽](#1-專案總覽)
+   - 1.1 [專案背景](#11-專案背景)
+   - 1.2 [專案範圍](#12-專案範圍)
+   - 1.3 [目前成果](#13-目前成果)
 2. [功能需求](#2-功能需求)
+   - 2.1 [核心數據指標](#21-核心數據指標)
+   - 2.2 [篩選器與互動功能](#22-篩選器與互動功能)
+   - 2.3 [目標管理模組](#23-目標管理模組)
+   - 2.4 [月 UU 整合計畫](#24-月-uuunique-users整合計畫)
+   - 2.5 [目標模擬器模組](#25-目標模擬器模組)
+   - 2.6 [貼文層級分析模組](#26-貼文層級分析模組phase-2)
+   - 2.7 [資料來源標籤系統](#27-資料來源標籤系統)
 3. [架構設計與部署建議](#3-架構設計與部署建議)
 4. [API 相關資訊](#4-api-相關資訊)
 5. [資料可行性分析](#5-資料可行性分析)
 6. [Meta API 限制與風險評估](#6-meta-api-限制與風險評估)
 7. [開發時程與優先級](#7-開發時程與優先級)
-8. [附錄](#附錄)
+8. [技術決策與選型理由](#8-技術決策與選型理由)
+9. [Phase 2 功能藍圖](#9-phase-2-功能藍圖)
+10. [附錄](#附錄)
 
 ---
 
@@ -31,23 +43,21 @@ MINCHU 品牌目前同時經營 Facebook 粉絲專頁與 Instagram 帳號，需�
 
 - **平台範圍**：Facebook 粉絲專頁 + Instagram 商業帳號
 - **數據範圍**：2019 年至今的歷史數據 + 即時 API 數據
+- **內部報表整合**：原 8 張 Google Sheets 管理報表精簡為 5 個儀表板頁籤
 - **技術方案**：Next.js + shadcn/ui + Recharts（前端）、Supabase（後端）、Vercel（部署）
 - **負責人管理**：Clara Chang（FB）、Mike Chen（IG）
 
 ### 1.3 目前成果
 
-已完成的儀表板原型（`MINCHU_Social_Dashboard.html`）包含 6 個頁籤、超過 16 個互動圖表：
+已完成的儀表板原型（`MINCHU_Social_Dashboard.html`）包含 5 個頁籤、20+ 個互動圖表：
 
 | 頁籤名稱 | 功能說明 |
 |----------|---------|
-| 總覽 | 年度 KPI 卡片、總粉絲成長曲線、目標達成追蹤 |
-| 觸及分析 | 每月觸及人數趨勢、平台對比、月 UU vs 總觸及對比圖（待 API 接入） |
-| 成長趨勢 | 新增粉絲數分析、追蹤每月成長率 |
-| 月度明細 | 完整月度數據表格，含自然/廣告觸及、新粉絲、UU |
-| 負責人目標 | FB / IG 分開的週目標、月目標、季目標達成率 |
-| 自然 vs 廣告 | 自然觸及與廣告觸及對比分析、投放效率評估、月 UU vs 自然/廣告觸及對比圖（待 API 接入） |
-| 貼文分析 | 單篇貼文成效表格、分類成效比較圖、發文日分析圖、批次分類操作 |
-| 目標模擬器 | 互動式成長率滑桿、即時目標軌跡預覽、確認後目標反映至所有頁面 |
+| 總覽 | 年度 KPI 卡片（粉絲總數、本月觸及、新增追蹤、互動）、歷年粉絲成長趨勢圖（FB/IG/合計，hover 顯示全年對比 tooltip） |
+| 月度明細 | 年份/平台篩選器、表格/圖表切換、月度數據含自然觸及/廣告觸及/新粉絲/UU（待接入），資料來源標籤（自動/手動/計算） |
+| 週報追蹤 | FB/IG 分開的週報表格，含**週目標（可 inline 點擊編輯）**、每週達成率（綠/橘/紅三色）、月/季目標摘要行、月進度條、差距分析（剩餘 N 週需每週 X）、季度 pace projection。目標與「目標模擬器」雙向連動。Line 數據區。未來 4 週自動產生待填行。 |
+| 貼文分析 | Top 5 貼文卡片（可切換全部/FB/IG）、篩選器（平台/分類/排序，分組式 UI）、排序選項含「月份」可收合分組（顯示月匯總：篇數、總觸及、總互動、篇均觸及）、批次分類、分類成效比較圖。平台欄位以彩色標籤區分（FB 藍/IG 粉）。 |
+| 目標模擬器 | 選擇指標/平台/基期，拖動成長率滑桿，即時預覽 12 個月目標軌跡。確認後**即時同步更新 GOALS**，週報追蹤的週/月/季目標與達成率自動重新計算並跳轉。Phase 2 寫入 Supabase。 |
 
 ---
 
@@ -72,14 +82,33 @@ MINCHU 品牌目前同時經營 Facebook 粉絲專頁與 Instagram 帳號，需�
 - 圖表支援懸停顯示詳細數值（Chart.js tooltip）
 - 目標達成追蹤固定顯示全年軌跡，不受篩選器影響
 
-### 2.3 負責人目標管理模組
+### 2.3 目標管理模組
 
-各平台負責人可設定週目標、月目標、季目標，系統自動計算達成率並以顏色標註狀態：
+目標設定支援兩種方式，可靈活搭配使用：
 
-| 平台 | 負責人 | 週目標指標 |
-|------|--------|-----------|
-| Facebook | Clara Chang | 觸及 19,718 / 新粉 130 |
-| Instagram | Mike Chen | 觸及 14,400 / 新粉 180 / 互動 720 |
+**方式一：Inline 手動編輯**
+- 在週報追蹤頁面直接點擊週目標數字 → 彈出輸入框 → 輸入新值 → Enter 確認
+- 系統自動推算月目標（×4）與季目標（×13），達成率即時重算
+
+**方式二：目標模擬器同步**
+- 在目標模擬器選擇指標、平台、基期與成長率 → 按確認
+- 系統自動計算週/月/季目標並同步至週報追蹤，頁面自動跳轉
+
+**目前目標設定值（Demo）：**
+
+| 平台 | 負責人 | 週觸及目標 | 週追蹤目標 |
+|------|--------|-----------|-----------|
+| Facebook | Clara Chang | 27,500 | 138 |
+| Instagram | Mike Chen | 7,500 | 88 |
+
+**達成率顯示規則：**
+- 🟢 綠色：≥ 100%（達標）
+- 🟡 橘色：80–99%（接近）
+- 🔴 紅色：< 80%（未達）
+
+**差距分析**：月目標未達時，自動計算「距離月目標還差 X，剩餘 N 週需每週 Y」。
+
+**Pace Projection**：以已完成週數推算季末預估達成率。
 
 ### 2.4 月 UU（Unique Users）整合計畫
 
@@ -104,14 +133,15 @@ MINCHU 品牌目前同時經營 Facebook 粉絲專頁與 Instagram 帳號，需�
 
 > ⚠️ **Demo 模式說明**：目前使用 2025 歷史數據示範操作流程，正式版將以最新月份實際數據為基期，向未來推算目標。
 
-**Step 2 — 確認儲存（Phase 2 寫入 Supabase）**
+**Step 2 — 確認同步**
 
-- 點擊「確認此目標設定」，系統將成長率參數（指標、基期、係數）寫入 `goals` 表
-- 確認後影響的頁面：
-  - **負責人目標**：週/月/季目標自動依成長率帶入，目標軌跡圖更新
-  - **總覽**：KPI 卡片新增「vs 目標」達成率顯示
-  - **成長趨勢**：趨勢線旁疊加目標參考線
-  - **月度明細**：表格新增目標值與達成率欄位
+- 點擊「確認此目標設定」，系統根據模擬結果即時更新 GOALS：
+  - 週目標 = 下個月目標值 ÷ 4
+  - 月目標 = 基期值 × (1 + 成長率)
+  - 季目標 = 月目標 × 3
+- **即時連動**：週報追蹤頁面的目標行、達成率、月進度條、差距分析全部自動重算
+- 頁面自動跳轉至週報追蹤，使用者可立即驗證新目標的合理性
+- Phase 2 正式版：確認後將成長率參數寫入 Supabase `goals` 表，所有頁面即時更新
 
 **目標計算邏輯：**
 
@@ -182,6 +212,18 @@ CREATE TABLE post_categories (
 - 發文時間分析：星期幾 × 時段的成效熱力圖
 - 單篇 Top N 排行：依觸及或互動排序的最佳貼文
 
+### 2.7 資料來源標籤系統
+
+儀表板中所有數據欄位均標註資料來源，幫助使用者理解每筆數據的取得方式與可信度：
+
+| 標籤 | 顏色 | 意義 | 範例 |
+|------|------|------|------|
+| 自動 | 藍色 | Meta API 自動擷取 | 自然觸及、新增追蹤、互動數 |
+| 手動 | 橘色 | 需人工輸入或維護 | 貼文分類、週目標設定、Line 數據 |
+| 計算 | 紫色 | 由其他欄位推導計算 | 點擊率（連結點擊 ÷ 觸及）、達成率 |
+
+Phase 2 正式版中，「自動」標籤的欄位將由 Supabase Edge Functions 定時從 Meta API 寫入；「手動」標籤的欄位由使用者在儀表板介面上操作；「計算」標籤的欄位由前端或 SQL computed column 產生。
+
 ---
 
 ## 3. 架構設計與部署建議
@@ -203,11 +245,15 @@ CREATE TABLE post_categories (
 
 ### 3.2 三階段漸進式開發
 
-#### Phase 1：靜態儀表板（已完成）
+#### Phase 1：靜態儀表板（已完成，v2 優化版）
 
-- 手動彙整歷史數據（截圖 + Google Sheets）
-- 自包含 HTML + Chart.js 儀表板，6 個頁籤、16 個圖表
-- 篩選器、KPI 卡片、目標追蹤均已實作
+- 整合 8 張內部管理報表，精簡為 5 個頁籤（總覽、月度明細、週報追蹤、貼文分析、目標模擬器）
+- 自包含 HTML + Chart.js v4.5.1，零依賴部署
+- 資料來源標籤系統（自動/手動/計算）標註所有欄位
+- 目標 inline 編輯 + 模擬器雙向連動
+- 貼文分析月份收合、Top 5 平台切換、分組式篩選器
+- 舊版 9 頁籤儀表板保留為 v1 archive 供團隊參考
+- 部署於 Vercel（GitHub 自動部署），landing page 提供 v2 / v1 / 文件入口
 
 #### Phase 2：API 自動化接入
 
@@ -232,6 +278,11 @@ CREATE TABLE post_categories (
 | `monthly_summary` | year, month, platform, total_reach, uu, new_followers | 月度彙總數據（含 UU） |
 | `goals` | year, platform, pic, weekly_target, monthly_target, quarterly_target | 目標設定 |
 | `follower_snapshots` | date, platform, follower_count | 粉絲數快照（每日記錄） |
+| `posts` | platform, post_id, message, published_at, organic_reach, total_engagement, link_clicks, category_id, raw_insights | 貼文層級數據 |
+| `post_categories` | name, color, sort_order | 貼文分類（人工標記） |
+| `weekly_metrics` | year, week, platform, reach, new_followers, engagement | 週報追蹤數據 |
+
+> ⚠️ **Multi-workspace**：以上所有表均需加入 `workspace_id` 欄位，並設定 RLS policy 按 workspace 隔離。從 Phase 2 第一天就設計進去。
 
 ---
 
@@ -398,7 +449,7 @@ CREATE TABLE post_categories (
 | 部署 | Vercel | Next.js 同公司產品，原生整合；git push 即部署；免費額度足夠內部使用 |
 | 認證（選配） | Supabase Auth | 若需限制團隊登入，Supabase Auth + Next.js middleware 可快速實現 |
 
-> **Phase 1 → Phase 2 遷移注意**：現有 HTML 檔案中的資料結構（`YEARLY_DATA`、`REACH_SUMMARY`、`PIC_DATA`、`GOALS`）可直接轉為 Supabase 資料表結構或 API 回傳格式。Chart.js 圖表需以 Recharts 元件重寫。
+> **Phase 1 → Phase 2 遷移注意**：現有 HTML 檔案中的資料結構（`YEARLY_FANS`、`MONTHLY_DATA`、`WEEKLY_DATA`、`GOALS`、`POST_DATA`、`POST_CATEGORIES`）可直接對應至 Supabase 資料表結構。Chart.js 圖表需以 Recharts 元件重寫。目標 inline 編輯與模擬器連動邏輯可保留，改為呼叫 Supabase API 讀寫。
 
 ---
 
@@ -416,6 +467,19 @@ CREATE TABLE post_categories (
 - 所有資料表加 `workspace_id` 欄位，RLS policy 按 workspace 隔離
 - 前端提供 workspace 切換器，切換後所有頁面資料即時更新
 - **建議從 Phase 2 第一天就設計進去**，後面加比重構容易
+
+**Phase 1 → Phase 2 資料結構對應：**
+
+| Phase 1 前端常數 | Phase 2 Supabase 表 | 說明 |
+|------------------|---------------------|------|
+| `YEARLY_FANS` | `follower_snapshots` | 歷年粉絲數快照 |
+| `MONTHLY_DATA` | `monthly_summary` | 月度彙總數據 |
+| `WEEKLY_DATA` | `weekly_metrics` | 週報追蹤數據 |
+| `GOALS` | `goals` | 目標設定（含成長率參數） |
+| `POST_DATA` | `posts` | 貼文層級數據 |
+| `POST_CATEGORIES` | `post_categories` | 分類選項 |
+
+遷移時，前端從 `const` 改為呼叫 Supabase REST API 或 Next.js Server Component 取得資料，資料結構基本相容。
 
 ### 9.3 Meta API OAuth 自助串接
 
