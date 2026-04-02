@@ -906,7 +906,7 @@ class Dashboard {
                     <div class="progress-track"><div class="progress-fill ${ytdReachPct >= timePct ? 'green' : ytdReachPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdReachPct, 100)}%"></div></div>
                     <span class="progress-label">${ytdReachPct}%</span>
                 </div>
-                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）</div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
             </div>
             <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
                 <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計新增追蹤 <span class="badge-src badge-calc">計算</span></div>
@@ -915,7 +915,7 @@ class Dashboard {
                     <div class="progress-track"><div class="progress-fill ${ytdFollowPct >= timePct ? 'green' : ytdFollowPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdFollowPct, 100)}%"></div></div>
                     <span class="progress-label">${ytdFollowPct}%</span>
                 </div>
-                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）</div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
             </div>
         </div>`;
 
@@ -1403,7 +1403,7 @@ class Dashboard {
                         <div class="progress-track"><div class="progress-fill ${progressColor(fbReachPct)}" style="width:${Math.min(fbReachPct, 100)}%"></div></div>
                         <span class="progress-label">${fbReachPct}%</span>
                     </div>
-                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbReachGoal)}</strong></div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbReachGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.fb.weekly.reach)} × 4</span></div>
                     ${fbReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
                 <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
@@ -1413,7 +1413,7 @@ class Dashboard {
                         <div class="progress-track"><div class="progress-fill ${progressColor(fbFollowPct)}" style="width:${Math.min(fbFollowPct, 100)}%"></div></div>
                         <span class="progress-label">${fbFollowPct}%</span>
                     </div>
-                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbFollowGoal)}</strong></div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbFollowGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.fb.weekly.followers)} × 4</span></div>
                     ${fbFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
             </div>
@@ -1462,7 +1462,7 @@ class Dashboard {
                         <div class="progress-track"><div class="progress-fill ${progressColor(igReachPct)}" style="width:${Math.min(igReachPct, 100)}%"></div></div>
                         <span class="progress-label">${igReachPct}%</span>
                     </div>
-                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igReachGoal)}</strong></div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igReachGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.ig.weekly.reach)} × 4</span></div>
                     ${igReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
                 <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
@@ -1472,7 +1472,7 @@ class Dashboard {
                         <div class="progress-track"><div class="progress-fill ${progressColor(igFollowPct)}" style="width:${Math.min(igFollowPct, 100)}%"></div></div>
                         <span class="progress-label">${igFollowPct}%</span>
                     </div>
-                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igFollowGoal)}</strong></div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igFollowGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.ig.weekly.followers)} × 4</span></div>
                     ${igFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
             </div>
