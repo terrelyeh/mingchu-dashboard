@@ -734,6 +734,7 @@ class Dashboard {
         this.charts = {};
         this.monthlyFilters = { year: 2025, platform: 'all', view: 'monthly', yoy: false };
         this.postFilters = { platform: 'all', category: 'all', sortBy: 'date' };
+        this.goalSource = { label: '預設值', time: null };
         this.init();
     }
 
@@ -1375,7 +1376,7 @@ class Dashboard {
                 </tr></thead>
                 <tbody>
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
-                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
+                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
 
         // Order: current month → future weeks → older months
         const dataMonths = monthGroups.filter(k => k !== '_future').reverse();
@@ -1433,7 +1434,7 @@ class Dashboard {
                 </tr></thead>
                 <tbody>
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="ig" data-metric="reach">${this.fmt(GOALS.ig.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="ig" data-metric="followers">${this.fmt(GOALS.ig.weekly.followers)}</span></td><td>--</td><td>--</td></tr>
-                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
+                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(178,133,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#b28500' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
 
         // Reverse order: newest month first, future weeks last
         // Order: current month → future weeks → older months
@@ -1581,8 +1582,13 @@ class Dashboard {
                 GOALS[platform].weekly[metric] = newVal;
                 GOALS[platform].monthly[metric] = newVal * 4;
                 GOALS[platform].q1[metric] = newVal * 13;
+                // Sync annual goal: weekly × 4 × 12
+                GOALS.annual_2026[metric] = newVal * 4 * 12;
+                // Track goal source
+                this.goalSource = { label: '手動編輯', time: new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) };
             }
             this.renderWeeklyTracking();
+            this.renderOverview();
         };
 
         input.addEventListener('blur', commit);
@@ -2048,13 +2054,21 @@ class Dashboard {
         if (platform === 'all' || platform === 'fb') updatePlatformGoals('fb');
         if (platform === 'all' || platform === 'ig') updatePlatformGoals('ig');
 
-        // Re-render weekly tracking to reflect new goals
+        // Update annual goal: sum of 12 monthly projected targets
+        const annualTarget = Array.from({length: 12}, (_, i) => Math.round(baseValue * Math.pow(1 + growthRate, i + 1))).reduce((a, b) => a + b, 0);
+        GOALS.annual_2026[goalKey] = annualTarget;
+
+        // Track goal source
+        this.goalSource = { label: '模擬器設定', time: new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) };
+
+        // Re-render weekly tracking + overview to reflect new goals
         this.renderWeeklyTracking();
+        this.renderOverview();
 
         // Show confirmation with details
         const platLabel = platform === 'all' ? 'FB + IG' : platform.toUpperCase();
         const metricLabel = isReach ? '觸及' : '追蹤';
-        alert(`✅ 目標已更新！\n\n平台：${platLabel}｜指標：${metricLabel}\n週目標：${weeklyTarget.toLocaleString()}\n月目標：${monthlyTarget.toLocaleString()}\n季目標：${quarterlyTarget.toLocaleString()}\n\n週報追蹤已同步更新。Phase 2 正式版將儲存至 Supabase。`);
+        alert(`✅ 目標已更新！\n\n平台：${platLabel}｜指標：${metricLabel}\n週目標：${weeklyTarget.toLocaleString()}\n月目標：${monthlyTarget.toLocaleString()}\n季目標：${quarterlyTarget.toLocaleString()}\n年度目標：${annualTarget.toLocaleString()}\n\n週報追蹤 + 總覽 YTD 已同步更新。Phase 2 正式版將儲存至 Supabase。`);
 
         // Switch to weekly tab so user can see the updated goals
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
