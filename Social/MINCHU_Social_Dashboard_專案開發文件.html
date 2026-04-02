@@ -336,10 +336,10 @@
       <thead><tr><th>頁籤名稱</th><th>功能說明</th></tr></thead>
       <tbody>
         <tr><td><strong>總覽</strong></td><td>年度 KPI 卡片（粉絲總數、本月觸及、新增追蹤、互動）、歷年粉絲成長趨勢圖（FB/IG/合計，hover 顯示全年對比 tooltip）</td></tr>
-        <tr><td><strong>月度明細</strong></td><td>年份/平台篩選器、表格/圖表切換、月度數據含自然觸及/廣告觸及/新粉絲/UU（待接入），資料來源標籤（自動/手動/計算）</td></tr>
-        <tr><td><strong>週報追蹤</strong></td><td>FB/IG 分開的週報表格，含<strong>週目標（可 inline 點擊編輯）</strong>、每週達成率（綠/橘/紅三色）、月/季目標摘要行、月進度條、差距分析（剩餘 N 週需每週 X）、季度 pace projection。目標與「目標模擬器」雙向連動。Line 數據區。未來 4 週自動產生待填行。</td></tr>
+        <tr><td><strong>月度明細</strong></td><td>年份/平台篩選器（分組式 UI）、表格/圖表切換、月度數據含自然觸及/廣告觸及/總觸及/月 UU（FB 標「自動」、IG 標「近似」、全平台隱藏因不可跨平台加總）/新粉絲/互動/連結點擊/月成長率，資料來源標籤（自動/手動/計算）。YoY 比較、季度小計、年度合計。</td></tr>
+        <tr><td><strong>週報追蹤</strong></td><td>FB/IG 分開的週報表格，含<strong>週目標（可 inline 點擊編輯）</strong>、每週達成率（綠/橘/紅三色）、月/季目標摘要行。<strong>月份收合分組</strong>（最新月份在上、金色高亮，舊月份收合）、未來 4 週自動產生待填行。<strong>並排進度卡片</strong>（當月累計 vs 目標，差距分析）、季度 pace projection。底部月度彙總表。目標與「目標模擬器」雙向連動。Line 數據區。</td></tr>
         <tr><td><strong>貼文分析</strong></td><td>Top 5 貼文卡片（可切換全部/FB/IG）、篩選器（平台/分類/排序，分組式 UI）、排序選項含「月份」可收合分組（顯示月匯總：篇數、總觸及、總互動、篇均觸及）、批次分類、分類成效比較圖。平台欄位以彩色標籤區分（FB 藍/IG 粉）。</td></tr>
-        <tr><td><strong>目標模擬器</strong></td><td>選擇指標/平台/基期，拖動成長率滑桿，即時預覽 12 個月目標軌跡。確認後<strong>即時同步更新 GOALS</strong>，週報追蹤的週/月/季目標與達成率自動重新計算並跳轉。Phase 2 寫入 Supabase。</td></tr>
+        <tr><td><strong>目標模擬器</strong></td><td>選擇指標/平台/基期（分組式篩選器），拖動成長率滑桿或選預設情境。圖表即時預覽 12 個月目標軌跡。結果區顯示<strong>週/月/季目標三卡片</strong>（週目標為核心同步值，金色高亮），含推導公式。確認後即時同步至週報追蹤。</td></tr>
       </tbody>
     </table>
     </div>
@@ -423,6 +423,15 @@
       <strong>重要提醒</strong>
       UU 的取得必須使用 Meta API 的 <code>period=month</code> 參數，由伺服器端去重計算，<strong>絕對不可</strong>用每日數據加總替代。每日加總會嚴重高估實際人數。
     </div>
+    <div class="card" style="margin-top:12px;">
+      <p><strong>Phase 1 Demo 實作狀態：</strong></p>
+      <ul>
+        <li>月度明細表格已新增「月 UU」欄位</li>
+        <li>選擇 FB 時顯示「自動」標籤，值為「待接入」（Phase 2 使用 <code>period=month</code> API）</li>
+        <li>選擇 IG 時顯示「近似」標籤（IG API 僅支援每日級別，無法取得跨日去重月 UU）</li>
+        <li>選擇全部平台時隱藏 UU 欄位（FB + IG 的 UU 不可跨平台加總）</li>
+      </ul>
+    </div>
 
     <h3 id="sec2-5">2.5 目標模擬器模組</h3>
     <div class="card">
@@ -447,6 +456,14 @@
         </li>
         <li><strong>即時連動</strong>：週報追蹤頁面的目標行、達成率、月進度條、差距分析全部自動重算</li>
         <li>頁面自動跳轉至週報追蹤，使用者可立即驗證新目標的合理性</li>
+        <li><strong>結果區三卡片顯示</strong>：
+          <ul>
+            <li>週目標（金色高亮）= 月目標 ÷ 4（確認後同步至週報追蹤的值）</li>
+            <li>月目標 = 基期值 × (1 + 成長率)</li>
+            <li>季目標 = 月目標 × 3</li>
+          </ul>
+        </li>
+        <li>下方補充顯示第 12 個月目標值與年度累計目標</li>
         <li>Phase 2 正式版：確認後將成長率參數寫入 Supabase <code>goals</code> 表，所有頁面即時更新</li>
       </ul>
     </div>
