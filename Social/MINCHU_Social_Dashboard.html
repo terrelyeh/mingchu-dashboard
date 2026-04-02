@@ -293,6 +293,14 @@
         .target-row td { font-weight: 700; color: var(--positive); font-size: 15px; }
         .target-row td:first-child { font-size: 13px; }
         .goal-source-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
+        .editable-goal { cursor: pointer; border-bottom: 2px dashed var(--positive); padding-bottom: 1px; transition: background 0.15s; }
+        .editable-goal:hover { background: rgba(0,184,148,0.15); border-radius: 4px; }
+        .goal-edit-input { width: 90px; font-size: 15px; font-weight: 700; color: var(--positive); border: 2px solid var(--positive); border-radius: 4px; padding: 2px 6px; text-align: right; background: #fff; }
+        .month-group-header { background: #f0f2f5 !important; cursor: pointer; user-select: none; }
+        .month-group-header td { font-weight: 700; color: var(--text-primary); font-size: 14px; padding: 10px 12px !important; }
+        .month-group-header:hover { background: #e5e7eb !important; }
+        .month-group-header .month-toggle { display: inline-block; width: 18px; transition: transform 0.2s; }
+        .month-group-header .month-stats { font-weight: 400; font-size: 12px; color: var(--text-secondary); margin-left: 12px; }
 
         /* Post Analysis */
         .top-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
@@ -1220,8 +1228,8 @@ class Dashboard {
                     <th>達成率</th>
                 </tr></thead>
                 <tbody>
-                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td>${this.fmt(GOALS.fb.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.fb.weekly.followers)}</td><td>--</td></tr>
-                <tr><td colspan="5" class="goal-source-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
+                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
 
         const fbWeeklyReachGoal = GOALS.fb.weekly.reach;
         const fbWeeklyFollowGoal = GOALS.fb.weekly.followers;
@@ -1285,8 +1293,8 @@ class Dashboard {
                     <th>互動數 <span class="badge-src badge-auto">自動</span></th>
                 </tr></thead>
                 <tbody>
-                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td>${this.fmt(GOALS.ig.weekly.reach)}</td><td>--</td><td>${this.fmt(GOALS.ig.weekly.followers)}</td><td>--</td><td>--</td></tr>
-                <tr><td colspan="6" class="goal-source-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="ig" data-metric="reach">${this.fmt(GOALS.ig.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="ig" data-metric="followers">${this.fmt(GOALS.ig.weekly.followers)}</span></td><td>--</td><td>--</td></tr>
+                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
 
         recentWeeks.forEach(w => {
             const isFuture = w._future;
@@ -1354,6 +1362,41 @@ class Dashboard {
         html += `</tbody></table></div></div>`;
 
         panel.innerHTML = html;
+
+        // Bind click-to-edit on goal cells
+        panel.querySelectorAll('.editable-goal').forEach(span => {
+            span.title = '點擊編輯目標';
+            span.addEventListener('click', () => this.startGoalEdit(span));
+        });
+    }
+
+    startGoalEdit(span) {
+        const platform = span.dataset.platform;
+        const metric = span.dataset.metric;
+        const currentVal = GOALS[platform].weekly[metric];
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'goal-edit-input';
+        input.value = currentVal;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const commit = () => {
+            const newVal = parseInt(input.value);
+            if (!isNaN(newVal) && newVal > 0) {
+                GOALS[platform].weekly[metric] = newVal;
+                GOALS[platform].monthly[metric] = newVal * 4;
+                GOALS[platform].q1[metric] = newVal * 13;
+            }
+            this.renderWeeklyTracking();
+        };
+
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { input.blur(); }
+            if (e.key === 'Escape') { this.renderWeeklyTracking(); }
+        });
     }
 
     // =============================
@@ -1368,7 +1411,7 @@ class Dashboard {
             `<option value="${v}" ${f.platform === v ? 'selected' : ''}>${l}</option>`).join('');
         const catOpts = [['all', '全部分類']].concat(POST_CATEGORIES.map(c => [c.name, c.name])).map(([v, l]) =>
             `<option value="${v}" ${f.category === v ? 'selected' : ''}>${l}</option>`).join('');
-        const sortOpts = [['reach', '觸及數'], ['engagement', '互動數'], ['date', '日期']].map(([v, l]) =>
+        const sortOpts = [['reach', '觸及數'], ['engagement', '互動數'], ['date', '日期'], ['month', '月份']].map(([v, l]) =>
             `<option value="${v}" ${f.sortBy === v ? 'selected' : ''}>${l}</option>`).join('');
 
         let filtered = [...POST_DATA];
@@ -1422,25 +1465,13 @@ class Dashboard {
                 </tr></thead><tbody>`;
 
         let currentWeek = null;
-        // For weekly grouping, first sort by date for display
-        const displayPosts = f.sortBy === 'date' ? filtered : filtered;
-        // Actually, we need to render week headers for date-sorted; for other sorts, just show flat
         const dateSorted = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
+        const postsToShow = (f.sortBy === 'date' || f.sortBy === 'month') ? dateSorted : filtered;
 
-        const postsToShow = f.sortBy === 'date' ? dateSorted : filtered;
-
-        postsToShow.forEach((p, idx) => {
-            // Week header
-            if (f.sortBy === 'date' && p.week_label && p.week_label !== currentWeek) {
-                currentWeek = p.week_label;
-                const weekPosts = POST_DATA.filter(pp => pp.week_label === currentWeek || (currentWeek && dateSorted.slice(idx).find(x => x.week_label === currentWeek)));
-                html += `<tr class="week-header-row"><td colspan="10">${p.week_label}${p.week_total_reach ? '  |  觸及 ' + this.fmt(p.week_total_reach) + '  |  追蹤 ' + (p.week_followers_delta !== null ? (p.week_followers_delta >= 0 ? '+' : '') + p.week_followers_delta : '--') : ''}</td></tr>`;
-            }
-
+        const renderPostRow = (p, idx) => {
             const catObj = POST_CATEGORIES.find(c => c.name === p.category);
             const catHTML = catObj ? `<span class="category-tag" style="background:${catObj.color}">${catObj.name}</span>` : (p.category || '<span class="val-null">未分類</span>');
-
-            html += `<tr>
+            return `<tr>
                 <td><input type="checkbox" class="post-check" data-idx="${idx}"></td>
                 <td>${p.date}</td>
                 <td>${p.weekday}</td>
@@ -1452,7 +1483,38 @@ class Dashboard {
                 <td>${this.fmt(p.link_clicks)}</td>
                 <td>${p.click_rate !== null ? p.click_rate.toFixed(2) + '%' : this.fmt(null)}</td>
             </tr>`;
-        });
+        };
+
+        if (f.sortBy === 'month') {
+            // Group by month
+            const monthGroups = {};
+            postsToShow.forEach((p, idx) => {
+                const monthKey = p.date.substring(0, 7); // "2025/08" etc.
+                if (!monthGroups[monthKey]) monthGroups[monthKey] = [];
+                monthGroups[monthKey].push({ post: p, idx });
+            });
+            // Sort months descending (newest first)
+            const sortedMonths = Object.keys(monthGroups).sort().reverse();
+            sortedMonths.forEach(monthKey => {
+                const posts = monthGroups[monthKey];
+                const totalReach = posts.reduce((s, x) => s + (x.post.organic_reach || 0), 0);
+                const totalEng = posts.reduce((s, x) => s + (x.post.engagement || 0), 0);
+                const [y, m] = monthKey.split('/');
+                const label = `${y} 年 ${parseInt(m)} 月`;
+                html += `<tr class="month-group-header" data-month="${monthKey}">
+                    <td colspan="10"><span class="month-toggle">▼</span>${label}<span class="month-stats">${posts.length} 篇　|　觸及 ${this.fmt(totalReach)}　|　互動 ${this.fmt(totalEng)}　|　篇均觸及 ${this.fmt(Math.round(totalReach / posts.length))}</span></td>
+                </tr>`;
+                posts.forEach(x => { html += renderPostRow(x.post, x.idx).replace('<tr>', `<tr class="month-row" data-month="${monthKey}">`); });
+            });
+        } else {
+            postsToShow.forEach((p, idx) => {
+                if (f.sortBy === 'date' && p.week_label && p.week_label !== currentWeek) {
+                    currentWeek = p.week_label;
+                    html += `<tr class="week-header-row"><td colspan="10">${p.week_label}${p.week_total_reach ? '  |  觸及 ' + this.fmt(p.week_total_reach) + '  |  追蹤 ' + (p.week_followers_delta !== null ? (p.week_followers_delta >= 0 ? '+' : '') + p.week_followers_delta : '--') : ''}</td></tr>`;
+                }
+                html += renderPostRow(p, idx);
+            });
+        }
 
         html += `</tbody></table></div></div>`;
 
@@ -1480,6 +1542,18 @@ class Dashboard {
         // Select all checkbox
         document.getElementById('batchSelectAll').addEventListener('change', e => {
             document.querySelectorAll('.post-check').forEach(cb => cb.checked = e.target.checked);
+        });
+
+        // Month group toggle (collapse/expand)
+        document.querySelectorAll('.month-group-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const month = header.dataset.month;
+                const rows = document.querySelectorAll(`.month-row[data-month="${month}"]`);
+                const toggle = header.querySelector('.month-toggle');
+                const isHidden = rows[0] && rows[0].style.display === 'none';
+                rows.forEach(r => r.style.display = isHidden ? '' : 'none');
+                toggle.textContent = isHidden ? '▼' : '▶';
+            });
         });
 
         // Category chart
