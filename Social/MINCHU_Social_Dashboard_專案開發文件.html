@@ -289,6 +289,11 @@
   <a href="#sec9-3" class="sub">9.3 Meta OAuth</a>
   <a href="#sec9-4" class="sub">9.4 廣告成效</a>
   <a href="#sec9-5" class="sub">9.5 互動率趨勢</a>
+  <a href="#sec10">10. Phase 2 啟動 Checklist</a>
+  <a href="#sec10-1" class="sub">10.1 需取得的資料與權限</a>
+  <a href="#sec10-2" class="sub">10.2 歷史資料匯入計畫</a>
+  <a href="#sec10-3" class="sub">10.3 開工步驟</a>
+  <a href="#sec10-4" class="sub">10.4 API 串接後可反向產生 Sheets</a>
   <a href="#appendix">附錄</a>
 </nav>
 
@@ -945,6 +950,106 @@
         <li><strong>Reels / Stories 分類</strong>：貼文分析新增「格式」維度，比較短影音 vs 圖文成效</li>
         <li><strong>導流追蹤</strong>：GA4 API 串接，追蹤社群→網站轉換（需 UTM，優先級較低）</li>
       </ul>
+    </div>
+  </section>
+
+  <!-- ═══ 10. Phase 2 啟動 Checklist ═══ -->
+  <section>
+    <h2 id="sec10">10. Phase 2 啟動 Checklist</h2>
+
+    <h3 id="sec10-1">10.1 需向社群管理者取得的資料與權限</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>項目</th><th>負責人</th><th>說明</th><th>狀態</th></tr></thead>
+      <tbody>
+        <tr><td>Facebook 粉專管理員權限</td><td>Clara Chang</td><td>需為粉專管理員才能建立 Meta App + OAuth 授權</td><td>☐</td></tr>
+        <tr><td>Instagram 商業帳號確認</td><td>Mike Chen</td><td>確認 IG 商業帳號已連結至 FB 粉專（API 從 FB 端存取 IG）</td><td>☐</td></tr>
+        <tr><td>Meta Business Suite 存取</td><td>Clara / Mike</td><td>確認開發者能進入 Business Suite 看到兩個帳號</td><td>☐</td></tr>
+        <tr><td>廣告帳號 ID (Ad Account)</td><td>Clara / Mike</td><td>抓取廣告成效所需，格式為 <code>act_XXXXXXX</code></td><td>☐</td></tr>
+        <tr><td>歷史 Google Sheets 完整版</td><td>Clara / Mike</td><td>8 張報表原始檔（含 2019 至今完整歷史數據），用於一次性匯入</td><td>☐</td></tr>
+        <tr><td>目標數字確認</td><td>主管</td><td>確認週/月/季目標是否沿用 Demo 值或需調整</td><td>☐</td></tr>
+        <tr><td>GA4 存取權限（選配）</td><td>—</td><td>未來導流追蹤需要，非 Phase 2 必要</td><td>☐</td></tr>
+        <tr><td>Line Official Account 後台（選配）</td><td>—</td><td>如需自動抓 Line 數據，否則持續手動輸入</td><td>☐</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="sec10-2">10.2 歷史資料匯入計畫</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>資料類型</th><th>來源</th><th>匯入方式</th><th>匯入後是否持續需要 Sheets</th></tr></thead>
+      <tbody>
+        <tr><td>2019–2025 歷年粉絲數</td><td><code>年累積數字</code> Sheets</td><td>一次性匯入 <code>follower_snapshots</code></td><td>否，API 接管</td></tr>
+        <tr><td>2024–2025 月度數據</td><td><code>月重點數字</code> / <code>FB</code> / <code>IG</code> Sheets</td><td>一次性匯入 <code>monthly_summary</code></td><td>否，API 接管</td></tr>
+        <tr><td>2025/11 前 impressions</td><td>歷史 Sheets</td><td>一次性匯入，需標記為舊指標</td><td>否，已棄用</td></tr>
+        <tr><td>已分類的歷史貼文</td><td><code>FB｜自然觸及</code> / <code>IG｜自然觸及</code> Sheets</td><td>一次性匯入 <code>posts</code> + <code>post_categories</code></td><td>否，之後在儀表板操作</td></tr>
+        <tr><td>週報歷史數據</td><td><code>月數字管理</code> Sheets</td><td>一次性匯入 <code>weekly_metrics</code></td><td>否，API 接管</td></tr>
+        <tr><td>Line 數據</td><td>Sheets / 手動</td><td>匯入後持續手動輸入</td><td><strong>是</strong>（除非串接 Line API）</td></tr>
+        <tr><td>目標設定</td><td>主管確認</td><td>手動設定至 <code>goals</code> 表</td><td>否，之後在儀表板模擬器操作</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-info">
+      <strong>匯入完成後，Google Sheets 可以退役。</strong>唯一例外是 Line 數據（Meta API 抓不到），除非另外串接 Line Messaging API。
+    </div>
+
+    <h3 id="sec10-3">10.3 開工步驟</h3>
+    <div class="card">
+      <p><strong>Step 1:</strong> 取得 FB/IG 管理員權限 + 收齊歷史 Sheets</p>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 2:</strong> 建立 Supabase 專案</p>
+      <ul>
+        <li>建立 DB schema（<code>monthly_summary</code>, <code>weekly_metrics</code>, <code>posts</code>, <code>post_categories</code>, <code>goals</code>, <code>follower_snapshots</code>）</li>
+        <li>所有表加 <code>workspace_id</code>（Multi-workspace 從第一天設計）</li>
+        <li>設定 RLS policy</li>
+      </ul>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 3:</strong> 歷史資料匯入</p>
+      <ul>
+        <li>Sheets CSV → Supabase import</li>
+        <li>驗證匯入數據與 Sheets 一致</li>
+      </ul>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 4:</strong> Meta App 建立 + OAuth</p>
+      <ul>
+        <li>在 Meta for Developers 建立 App</li>
+        <li>設定 OAuth redirect URI</li>
+        <li>取得長期 Page Access Token（60 天自動續期）</li>
+      </ul>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 5:</strong> Edge Functions 開發</p>
+      <ul>
+        <li>每日指標擷取（reach, engagement, new_followers）</li>
+        <li>粉絲數快照（follower_count）</li>
+        <li>月 UU 擷取（FB only, <code>period=month</code>, 每月 2 號）</li>
+        <li>貼文自動擷取（posts + insights）</li>
+        <li>Token 自動續期</li>
+      </ul>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 6:</strong> Next.js 前端開發</p>
+      <ul>
+        <li>遷移 5 個頁籤至 React 元件</li>
+        <li>Chart.js → Recharts</li>
+        <li>Supabase Auth（Google Social Login + 白名單）</li>
+        <li>前端常數 → Supabase REST API / Server Components</li>
+      </ul>
+      <p style="text-align:center;">↓</p>
+      <p><strong>Step 7:</strong> 驗證 &amp; 上線</p>
+      <ul>
+        <li>儀表板 vs Sheets 數據比對</li>
+        <li>團隊試用回饋</li>
+        <li>正式切換，Sheets 退役</li>
+      </ul>
+    </div>
+
+    <h3 id="sec10-4">10.4 API 串接後可反向產生 Sheets</h3>
+    <div class="card">
+      <p>如果團隊過渡期仍需要 Google Sheets：</p>
+      <ul>
+        <li><strong>方案 A</strong>：Supabase → CSV 手動匯出（簡單，按需操作）</li>
+        <li><strong>方案 B</strong>：Edge Function → Google Sheets API 自動同步（定時寫回，需額外開發）</li>
+      </ul>
+      <p>建議優先級：先讓儀表板完全取代 Sheets，過渡期用方案 A，確認團隊適應後不再需要回寫。</p>
     </div>
   </section>
 

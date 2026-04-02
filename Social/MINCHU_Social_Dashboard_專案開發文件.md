@@ -27,7 +27,8 @@
 7. [開發時程與優先級](#7-開發時程與優先級)
 8. [技術決策與選型理由](#8-技術決策與選型理由)
 9. [Phase 2 功能藍圖](#9-phase-2-功能藍圖)
-10. [附錄](#附錄)
+10. [Phase 2 啟動 Checklist](#10-phase-2-啟動-checklist)
+11. [附錄](#附錄)
 
 ---
 
@@ -533,6 +534,85 @@ Phase 2 正式版中，「自動」標籤的欄位將由 Supabase Edge Functions
 - **指標**：社群來源的網站造訪數、跳出率、轉換率
 - **前提**：需在貼文連結中加入 UTM 參數
 - **優先級較低**，待核心功能穩定後再評估
+
+---
+
+## 10. Phase 2 啟動 Checklist
+
+### 10.1 需向社群管理者取得的資料與權限
+
+| 項目 | 負責人 | 說明 | 狀態 |
+|------|--------|------|------|
+| Facebook 粉專管理員權限 | Clara Chang | 需為粉專管理員才能建立 Meta App + OAuth 授權 | ☐ |
+| Instagram 商業帳號確認 | Mike Chen | 確認 IG 商業帳號已連結至 FB 粉專（API 從 FB 端存取 IG） | ☐ |
+| Meta Business Suite 存取 | Clara / Mike | 確認開發者能進入 Business Suite 看到兩個帳號 | ☐ |
+| 廣告帳號 ID (Ad Account) | Clara / Mike | 抓取廣告成效所需，格式為 `act_XXXXXXX` | ☐ |
+| 歷史 Google Sheets 完整版 | Clara / Mike | 8 張報表原始檔（含 2019 至今完整歷史數據），用於一次性匯入 | ☐ |
+| 目標數字確認 | 主管 | 確認週/月/季目標是否沿用 Demo 值或需調整 | ☐ |
+| GA4 存取權限（選配） | — | 未來導流追蹤需要，非 Phase 2 必要 | ☐ |
+| Line Official Account 後台（選配） | — | 如需自動抓 Line 數據，否則持續手動輸入 | ☐ |
+
+### 10.2 歷史資料匯入計畫
+
+| 資料類型 | 來源 | 匯入方式 | 匯入後是否持續需要 Sheets |
+|----------|------|---------|-------------------------|
+| 2019–2025 歷年粉絲數 | `年累積數字` Sheets | 一次性匯入 `follower_snapshots` | 否，API 接管 |
+| 2024–2025 月度數據 | `月重點數字` / `FB` / `IG` Sheets | 一次性匯入 `monthly_summary` | 否，API 接管 |
+| 2025/11 前 impressions | 歷史 Sheets | 一次性匯入，需標記為舊指標 | 否，已棄用 |
+| 已分類的歷史貼文 | `FB｜自然觸及` / `IG｜自然觸及` Sheets | 一次性匯入 `posts` + `post_categories` | 否，之後在儀表板操作 |
+| 週報歷史數據 | `月數字管理` Sheets | 一次性匯入 `weekly_metrics` | 否，API 接管 |
+| Line 數據 | Sheets / 手動 | 匯入後持續手動輸入 | **是**（除非串接 Line API） |
+| 目標設定 | 主管確認 | 手動設定至 `goals` 表 | 否，之後在儀表板模擬器操作 |
+
+> **匯入完成後，Google Sheets 可以退役。** 唯一例外是 Line 數據（Meta API 抓不到），除非另外串接 Line Messaging API。
+
+### 10.3 開工步驟
+
+```
+Step 1: 取得 FB/IG 管理員權限 + 收齊歷史 Sheets
+        ↓
+Step 2: 建立 Supabase 專案
+        - 建立 DB schema（monthly_summary, weekly_metrics, posts,
+          post_categories, goals, follower_snapshots）
+        - 所有表加 workspace_id（Multi-workspace 從第一天設計）
+        - 設定 RLS policy
+        ↓
+Step 3: 歷史資料匯入
+        - Sheets CSV → Supabase import
+        - 驗證匯入數據與 Sheets 一致
+        ↓
+Step 4: Meta App 建立 + OAuth
+        - 在 Meta for Developers 建立 App
+        - 設定 OAuth redirect URI
+        - 取得長期 Page Access Token（60 天自動續期）
+        ↓
+Step 5: Edge Functions 開發
+        - 每日指標擷取（reach, engagement, new_followers）
+        - 粉絲數快照（follower_count）
+        - 月 UU 擷取（FB only, period=month, 每月 2 號）
+        - 貼文自動擷取（posts + insights）
+        - Token 自動續期
+        ↓
+Step 6: Next.js 前端開發
+        - 遷移 5 個頁籤至 React 元件
+        - Chart.js → Recharts
+        - Supabase Auth（Google Social Login + 白名單）
+        - 前端常數 → Supabase REST API / Server Components
+        ↓
+Step 7: 驗證 & 上線
+        - 儀表板 vs Sheets 數據比對
+        - 團隊試用回饋
+        - 正式切換，Sheets 退役
+```
+
+### 10.4 API 串接後可反向產生 Sheets
+
+如果團隊過渡期仍需要 Google Sheets：
+
+- **方案 A**：Supabase → CSV 手動匯出（簡單，按需操作）
+- **方案 B**：Edge Function → Google Sheets API 自動同步（定時寫回，需額外開發）
+
+建議優先級：先讓儀表板完全取代 Sheets，過渡期用方案 A，確認團隊適應後不再需要回寫。
 
 ---
 
