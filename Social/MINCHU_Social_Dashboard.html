@@ -349,6 +349,16 @@
             font-weight: 600;
             color: #fff;
         }
+        .platform-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .platform-fb { background: rgba(24,119,242,0.12); color: #1877F2; }
+        .platform-ig { background: rgba(225,48,108,0.12); color: #E1306C; }
         .week-header-row {
             background: #edf2f7 !important;
             border-left: 3px solid var(--total-color);
@@ -876,7 +886,25 @@ class Dashboard {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } } },
+                interaction: { mode: 'index', intersect: false },
+                plugins: { tooltip: {
+                    mode: 'index', intersect: false,
+                    callbacks: {
+                        title: items => items[0].label + ' 年',
+                        label: ctx => {
+                            const d = YEARLY_FANS[ctx.dataIndex];
+                            const prevD = ctx.dataIndex > 0 ? YEARLY_FANS[ctx.dataIndex - 1] : null;
+                            let val = ctx.parsed.y.toLocaleString();
+                            if (prevD) {
+                                const prevVal = ctx.dataset.label === 'FB' ? prevD.fb : ctx.dataset.label === 'IG' ? prevD.ig : prevD.total;
+                                const diff = ctx.parsed.y - prevVal;
+                                const pct = prevVal > 0 ? ((diff / prevVal) * 100).toFixed(1) : '--';
+                                val += `  (+${diff.toLocaleString()}, ${pct}%)`;
+                            }
+                            return `${ctx.dataset.label}: ${val}`;
+                        }
+                    }
+                } },
                 scales: {
                     y: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v / 1000) + 'K' : v } },
                 }
@@ -1085,8 +1113,36 @@ class Dashboard {
 
         // Get the most recent weeks for display (2026 data)
         const weeks2026 = WEEKLY_DATA.filter(w => w.year === 2026);
-        // Get the most recent ~8 weeks for the current view
-        const recentWeeks = weeks2026.slice(-8);
+
+        // Auto-generate future weeks from the last known week
+        const lastWeek = weeks2026[weeks2026.length - 1];
+        const lastWeekNum = lastWeek ? parseInt(lastWeek.week.replace('W', '')) : 0;
+        const lastDateParts = lastWeek && lastWeek.dateRange ? lastWeek.dateRange.split('-') : null;
+        let nextMonday = null;
+        if (lastDateParts) {
+            // Parse the end date of last week and add 1 day to get next Monday
+            const [endM, endD] = lastDateParts[1].split('/').map(Number);
+            nextMonday = new Date(2026, endM - 1, endD + 1);
+        }
+        const futureWeeks = [];
+        if (nextMonday) {
+            for (let i = 1; i <= 4; i++) {
+                const mon = new Date(nextMonday);
+                mon.setDate(mon.getDate() + (i - 1) * 7);
+                const sun = new Date(mon);
+                sun.setDate(sun.getDate() + 6);
+                const pad = n => String(n).padStart(2, '0');
+                const dr = `${pad(mon.getMonth() + 1)}/${pad(mon.getDate())}-${pad(sun.getMonth() + 1)}/${pad(sun.getDate())}`;
+                futureWeeks.push({
+                    week: `W${lastWeekNum + i}`, dateRange: dr, year: 2026,
+                    fb_reach: null, fb_followers: null, ig_reach: null, ig_followers: null,
+                    ig_engagement: null, line_opens: null, line_new: null, _future: true
+                });
+            }
+        }
+        const allWeeks = [...weeks2026, ...futureWeeks];
+        // Show last 8 data weeks + future weeks
+        const recentWeeks = allWeeks.slice(-12);
 
         // Current month accumulation (use March 2026 as example - most recent full month with weekly data)
         const marchWeeks = weeks2026.filter(w => {
@@ -1163,8 +1219,9 @@ class Dashboard {
                 <tr class="target-row"><td>週目標</td><td>${this.fmt(GOALS.fb.weekly.reach)}</td><td>${this.fmt(GOALS.fb.weekly.followers)}</td></tr>`;
 
         recentWeeks.forEach(w => {
-            html += `<tr>
-                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}</td>
+            const isFuture = w._future;
+            html += `<tr${isFuture ? ' style="opacity:0.45; font-style:italic;"' : ''}>
+                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}${isFuture ? ' <span style="font-size:10px; color:var(--text-secondary);">待填</span>' : ''}</td>
                 <td>${this.fmt(w.fb_reach)}</td>
                 <td>${this.fmt(w.fb_followers)}</td>
             </tr>`;
@@ -1218,8 +1275,9 @@ class Dashboard {
                 <tr class="target-row"><td>週目標</td><td>${this.fmt(GOALS.ig.weekly.reach)}</td><td>${this.fmt(GOALS.ig.weekly.followers)}</td><td>--</td></tr>`;
 
         recentWeeks.forEach(w => {
-            html += `<tr>
-                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}</td>
+            const isFuture = w._future;
+            html += `<tr${isFuture ? ' style="opacity:0.45; font-style:italic;"' : ''}>
+                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}${isFuture ? ' <span style="font-size:10px; color:var(--text-secondary);">待填</span>' : ''}</td>
                 <td>${this.fmt(w.ig_reach)}</td>
                 <td>${this.fmt(w.ig_followers)}</td>
                 <td>${this.fmt(w.ig_engagement)}</td>
@@ -1312,7 +1370,7 @@ class Dashboard {
             html += `<div class="top-post-card">
                 <div class="top-post-rank">${i + 1}</div>
                 <div class="top-post-title">${p.title}</div>
-                <div class="top-post-meta">${p.date} | ${p.platform}${p.category ? ' | ' + p.category : ''}</div>
+                <div class="top-post-meta">${p.date} | <span class="platform-tag ${p.platform === 'FB' ? 'platform-fb' : 'platform-ig'}" style="font-size:10px;padding:1px 6px;">${p.platform}</span>${p.category ? ' | ' + p.category : ''}</div>
                 <div class="top-post-reach">${this.fmt(p.organic_reach)}</div>
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">互動 ${this.fmt(p.engagement)}</div>
             </div>`;
@@ -1368,7 +1426,7 @@ class Dashboard {
                 <td><input type="checkbox" class="post-check" data-idx="${idx}"></td>
                 <td>${p.date}</td>
                 <td>${p.weekday}</td>
-                <td>${p.platform}</td>
+                <td><span class="platform-tag ${p.platform === 'FB' ? 'platform-fb' : 'platform-ig'}">${p.platform}</span></td>
                 <td style="text-align:left; max-width:200px;">${p.title}</td>
                 <td>${catHTML}</td>
                 <td>${this.fmt(p.organic_reach)}</td>
