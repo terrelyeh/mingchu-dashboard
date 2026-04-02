@@ -1788,45 +1788,43 @@ class Dashboard {
         let html = `<div class="card">
             <div class="card-title">目標模擬器</div>
             <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
-                選擇指標與基期，調整月成長率模擬未來 12 個月目標軌跡。
-                基期數據 <span class="badge-src badge-auto">自動</span>，目標設定 <span class="badge-src badge-manual">手動</span>
+                選擇指標與基期，調整月成長率模擬未來 12 個月目標軌跡。確認後將同步更新週報追蹤的目標與達成率。
             </p>
-            <div class="sim-controls">
-                <div>
-                    <div class="sim-group">
-                        <label>模擬指標</label>
-                        <select id="simMetric">${metricOpts}</select>
-                    </div>
-                    <div class="sim-group">
-                        <label>平台</label>
-                        <select id="simPlatform">
-                            <option value="all">全部（FB + IG）</option>
-                            <option value="fb">Facebook</option>
-                            <option value="ig">Instagram</option>
-                        </select>
-                    </div>
-                    <div class="sim-group">
-                        <label>基期</label>
-                        <select id="simBase">${baseOpts}</select>
-                    </div>
+            <div class="filter-bar" style="margin-bottom:16px;">
+                <div class="filter-group">
+                    <label>指標</label>
+                    <select id="simMetric">${metricOpts}</select>
                 </div>
-                <div>
-                    <div class="sim-group">
-                        <label>月成長率：<span id="simRateLabel">5.0%</span></label>
-                        <input type="range" id="simRate" min="0.5" max="30" step="0.5" value="5">
-                    </div>
-                    <div class="sim-presets">
-                        <button data-rate="2">保守 (2%)</button>
-                        <button data-rate="5">穩健 (5%)</button>
-                        <button data-rate="10">積極 (10%)</button>
-                        <button data-rate="15">衝刺 (15%)</button>
-                        <button data-rate="20">爆發 (20%)</button>
-                    </div>
+                <div class="filter-group">
+                    <label>平台</label>
+                    <select id="simPlatform">
+                        <option value="all">全部（FB + IG）</option>
+                        <option value="fb">Facebook</option>
+                        <option value="ig">Instagram</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>基期 <span class="badge-src badge-auto">自動</span></label>
+                    <select id="simBase">${baseOpts}</select>
                 </div>
             </div>
-            <div class="chart-container" style="height:350px; margin-top:16px;"><canvas id="chartSimulator"></canvas></div>
+            <div style="background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <label style="font-size:13px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">月成長率 <span class="badge-src badge-manual">手動</span></label>
+                    <input type="range" id="simRate" min="0.5" max="30" step="0.5" value="5" style="flex:1; min-width:200px;">
+                    <span id="simRateLabel" style="font-size:20px; font-weight:700; color:var(--text-primary); min-width:60px;">5.0%</span>
+                </div>
+                <div class="sim-presets" style="margin-top:10px;">
+                    <button data-rate="2">保守 (2%)</button>
+                    <button data-rate="5">穩健 (5%)</button>
+                    <button data-rate="10">積極 (10%)</button>
+                    <button data-rate="15">衝刺 (15%)</button>
+                    <button data-rate="20">爆發 (20%)</button>
+                </div>
+            </div>
+            <div class="chart-container" style="height:350px;"><canvas id="chartSimulator"></canvas></div>
             <div class="sim-result" id="simResult"></div>
-            <button class="confirm-btn" id="simConfirm">確認此目標設定</button>
+            <button class="confirm-btn" id="simConfirm">確認此目標設定 → 同步至週報追蹤</button>
         </div>`;
 
         panel.innerHTML = html;
