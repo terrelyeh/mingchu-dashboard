@@ -1335,7 +1335,10 @@ class Dashboard {
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
                 <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
 
-        monthGroups.forEach(monthKey => {
+        // Reverse order: newest month first, future weeks last
+        const sortedFbMonths = monthGroups.filter(k => k !== '_future').reverse();
+        if (monthMap.has('_future')) sortedFbMonths.push('_future');
+        sortedFbMonths.forEach(monthKey => {
             const weeks = monthMap.get(monthKey);
             html += renderMonthHeader(monthKey, weeks, 'fb', 5);
             weeks.forEach(w => { html += renderFbWeekRow(w, monthKey); });
@@ -1397,7 +1400,10 @@ class Dashboard {
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="ig" data-metric="reach">${this.fmt(GOALS.ig.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="ig" data-metric="followers">${this.fmt(GOALS.ig.weekly.followers)}</span></td><td>--</td><td>--</td></tr>
                 <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
 
-        monthGroups.forEach(monthKey => {
+        // Reverse order: newest month first, future weeks last
+        const sortedIgMonths = monthGroups.filter(k => k !== '_future').reverse();
+        if (monthMap.has('_future')) sortedIgMonths.push('_future');
+        sortedIgMonths.forEach(monthKey => {
             const weeks = monthMap.get(monthKey);
             html += renderMonthHeader(monthKey, weeks, 'ig', 6);
             weeks.forEach(w => { html += renderIgWeekRow(w, monthKey); });
@@ -1438,6 +1444,44 @@ class Dashboard {
 
         html += `<div class="pace-projection">目前 Q1 進度 ${igQ1PacePct}%，按此速度預估季末達成 ${igQ1ProjectedPct}%（預估 ${this.fmt(igQ1Projected)} / 目標 ${this.fmt(GOALS.ig.q1.reach)}）</div>`;
         html += `</div>`;
+
+        // Monthly Summary Table
+        const monthlySummary = monthGroups.filter(k => k !== '_future' && k !== 'unknown').reverse().map(monthKey => {
+            const weeks = monthMap.get(monthKey);
+            const monthNum = parseInt(monthKey);
+            return {
+                label: `${monthNum}月`,
+                fbReach: weeks.reduce((s, w) => s + (w.fb_reach || 0), 0),
+                fbFollowers: weeks.reduce((s, w) => s + (w.fb_followers || 0), 0),
+                igReach: weeks.reduce((s, w) => s + (w.ig_reach || 0), 0),
+                igFollowers: weeks.reduce((s, w) => s + (w.ig_followers || 0), 0),
+                weekCount: weeks.length,
+            };
+        });
+
+        html += `<div class="card">
+            <h4 style="font-size:14px; font-weight:600; margin-bottom:8px;">月度彙總 <span class="badge-src badge-calc">計算</span></h4>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th>月份</th>
+                    <th>FB 觸及</th>
+                    <th>FB 追蹤</th>
+                    <th>IG 觸及</th>
+                    <th>IG 追蹤</th>
+                    <th>週數</th>
+                </tr></thead><tbody>`;
+        monthlySummary.forEach(m => {
+            const isCurrent = m.label === currentMonth;
+            html += `<tr${isCurrent ? ' style="font-weight:600; background:#fffbeb;"' : ''}>
+                <td>${m.label}${isCurrent ? ' 📍' : ''}</td>
+                <td>${this.fmt(m.fbReach)}</td>
+                <td>${this.fmt(m.fbFollowers)}</td>
+                <td>${this.fmt(m.igReach)}</td>
+                <td>${this.fmt(m.igFollowers)}</td>
+                <td>${m.weekCount}</td>
+            </tr>`;
+        });
+        html += `</tbody></table></div></div>`;
 
         // Line Section
         const lineWeeks = WEEKLY_DATA.filter(w => w.line_opens !== null && w.line_opens !== undefined);
