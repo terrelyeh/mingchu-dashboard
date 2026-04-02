@@ -1,7 +1,4 @@
 {
-  "projectSettings": {
-    "framework": null
-  },
   "headers": [
     {
       "source": "/(.*)",
