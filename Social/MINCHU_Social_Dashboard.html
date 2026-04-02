@@ -1309,8 +1309,10 @@ class Dashboard {
             const totalReach = weeks.reduce((s, w) => s + (platform === 'fb' ? (w.fb_reach || 0) : (w.ig_reach || 0)), 0);
             const totalFollow = weeks.reduce((s, w) => s + (platform === 'fb' ? (w.fb_followers || 0) : (w.ig_followers || 0)), 0);
             const expanded = expandedMonths.has(monthKey);
-            return `<tr class="month-group-header" data-weekly-toggle="${platform}-${monthKey}">
-                <td colspan="${colSpan}"><span class="month-toggle">${expanded ? '▼' : '▶'}</span>${label}<span class="month-stats">${weeks.length} 週　|　觸及 ${this.fmt(totalReach)}　|　追蹤 +${this.fmt(totalFollow)}</span></td>
+            const isCurrent = monthNum === currentMonthNum;
+            const headerStyle = isCurrent ? ' style="background:#fff8e1 !important; border-left:4px solid #b28500;"' : '';
+            return `<tr class="month-group-header" data-weekly-toggle="${platform}-${monthKey}"${headerStyle}>
+                <td colspan="${colSpan}"><span class="month-toggle">${expanded ? '▼' : '▶'}</span>${label}${isCurrent ? ' 📍' : ''}<span class="month-stats">${weeks.length} 週　|　觸及 ${this.fmt(totalReach)}　|　追蹤 +${this.fmt(totalFollow)}</span></td>
             </tr>`;
         };
 
@@ -1335,9 +1337,12 @@ class Dashboard {
                 <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
                 <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤</td></tr>`;
 
-        // Reverse order: newest month first, future weeks last
-        const sortedFbMonths = monthGroups.filter(k => k !== '_future').reverse();
-        if (monthMap.has('_future')) sortedFbMonths.push('_future');
+        // Order: current month → future weeks → older months
+        const dataMonths = monthGroups.filter(k => k !== '_future').reverse();
+        const sortedFbMonths = [];
+        if (dataMonths.length > 0) sortedFbMonths.push(dataMonths[0]); // current month
+        if (monthMap.has('_future')) sortedFbMonths.push('_future');    // future weeks
+        sortedFbMonths.push(...dataMonths.slice(1));                    // older months
         sortedFbMonths.forEach(monthKey => {
             const weeks = monthMap.get(monthKey);
             html += renderMonthHeader(monthKey, weeks, 'fb', 5);
@@ -1391,8 +1396,12 @@ class Dashboard {
                 <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤</td></tr>`;
 
         // Reverse order: newest month first, future weeks last
-        const sortedIgMonths = monthGroups.filter(k => k !== '_future').reverse();
+        // Order: current month → future weeks → older months
+        const igDataMonths = monthGroups.filter(k => k !== '_future').reverse();
+        const sortedIgMonths = [];
+        if (igDataMonths.length > 0) sortedIgMonths.push(igDataMonths[0]);
         if (monthMap.has('_future')) sortedIgMonths.push('_future');
+        sortedIgMonths.push(...igDataMonths.slice(1));
         sortedIgMonths.forEach(monthKey => {
             const weeks = monthMap.get(monthKey);
             html += renderMonthHeader(monthKey, weeks, 'ig', 6);
