@@ -309,7 +309,7 @@
         .month-group-header .month-stats { font-weight: 400; font-size: 12px; color: var(--text-secondary); margin-left: 12px; }
 
         /* Post Analysis */
-        .top-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+        .top-posts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
         .top-post-card {
             background: var(--bg-card);
             border-radius: 8px;
@@ -848,6 +848,24 @@ class Dashboard {
         const totalEng = this.safeAdd(fbCurr?.engagement, igCurr?.engagement);
         const prevEng = this.safeAdd(fbPrev?.engagement, igPrev?.engagement);
 
+        // YTD (Year-to-Date) calculations for 2026
+        let ytdReach = 0, ytdFollowers = 0, ytdMonths = 0;
+        for (let m = 0; m < 12; m++) {
+            const fb = MONTHLY_DATA.fb[2026] ? MONTHLY_DATA.fb[2026][m] : null;
+            const ig = MONTHLY_DATA.ig[2026] ? MONTHLY_DATA.ig[2026][m] : null;
+            if (fb || ig) {
+                ytdReach += (fb?.total || 0) + (ig?.total || 0);
+                ytdFollowers += (fb?.followers || 0) + (ig?.followers || 0);
+                ytdMonths++;
+            }
+        }
+        const annualReachGoal = GOALS.annual_2026.reach;
+        const annualFollowGoal = GOALS.annual_2026.followers;
+        const ytdReachPct = annualReachGoal > 0 ? Math.round(ytdReach / annualReachGoal * 100) : 0;
+        const ytdFollowPct = annualFollowGoal > 0 ? Math.round(ytdFollowers / annualFollowGoal * 100) : 0;
+        // Time progress: how far through the year are we?
+        const timePct = Math.round(ytdMonths / 12 * 100);
+
         const kpiHTML = `
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -878,7 +896,29 @@ class Dashboard {
             </div>
         </div>`;
 
-        panel.innerHTML = kpiHTML + `
+        const ytdHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+            <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計觸及 <span class="badge-src badge-calc">計算</span></div>
+                <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(ytdReach)}</div>
+                <div class="progress-row" style="margin:8px 0 4px;">
+                    <div class="progress-track"><div class="progress-fill ${ytdReachPct >= timePct ? 'green' : ytdReachPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdReachPct, 100)}%"></div></div>
+                    <span class="progress-label">${ytdReachPct}%</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）</div>
+            </div>
+            <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計新增追蹤 <span class="badge-src badge-calc">計算</span></div>
+                <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(ytdFollowers)}</div>
+                <div class="progress-row" style="margin:8px 0 4px;">
+                    <div class="progress-track"><div class="progress-fill ${ytdFollowPct >= timePct ? 'green' : ytdFollowPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdFollowPct, 100)}%"></div></div>
+                    <span class="progress-label">${ytdFollowPct}%</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）</div>
+            </div>
+        </div>`;
+
+        panel.innerHTML = kpiHTML + ytdHTML + `
         <div class="card" style="margin-top:var(--gap)">
             <div class="card-title">歷年粉絲成長趨勢</div>
             <div class="chart-container"><canvas id="chartFanGrowth"></canvas></div>
@@ -1594,7 +1634,7 @@ class Dashboard {
                 <div class="top-post-title">${p.title}</div>
                 <div class="top-post-meta">${p.date} | <span class="platform-tag ${p.platform === 'FB' ? 'platform-fb' : 'platform-ig'}" style="font-size:10px;padding:1px 6px;">${p.platform}</span>${p.category ? ' | ' + p.category : ''}</div>
                 <div class="top-post-reach">${this.fmt(p.organic_reach)}</div>
-                <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">互動 ${this.fmt(p.engagement)}</div>
+                <div style="font-size:13px; color:var(--text-primary); margin-top:6px; font-weight:600;">互動 ${this.fmt(p.engagement)}</div>
             </div>`;
         });
         html += `</div></div>`;
