@@ -1345,40 +1345,30 @@ class Dashboard {
         });
 
         html += `</tbody></table></div>
-            <div style="margin-top:12px;">
-                <div class="card-title">${currentMonth}目標進度 — 自然觸及</div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
-                    <span style="font-size:20px; font-weight:700;">${this.fmt(fbMonthReach)}</span>
-                    <span style="font-size:14px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbReachGoal)}</strong></span>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 自然觸及</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(fbMonthReach)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(fbReachPct)}" style="width:${Math.min(fbReachPct, 100)}%"></div></div>
+                        <span class="progress-label">${fbReachPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbReachGoal)}</strong></div>
+                    ${fbReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
-                <div class="progress-row">
-                    <div class="progress-track"><div class="progress-fill ${progressColor(fbReachPct)}" style="width:${Math.min(fbReachPct, 100)}%"></div></div>
-                    <span class="progress-label">${fbReachPct}%</span>
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 新增追蹤</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(fbMonthFollowers)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(fbFollowPct)}" style="width:${Math.min(fbFollowPct, 100)}%"></div></div>
+                        <span class="progress-label">${fbFollowPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbFollowGoal)}</strong></div>
+                    ${fbFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
             </div>
-            <div style="margin-top:8px;">
-                <div class="card-title">${currentMonth}目標進度 — 新增追蹤</div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
-                    <span style="font-size:20px; font-weight:700;">${this.fmt(fbMonthFollowers)}</span>
-                    <span style="font-size:14px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbFollowGoal)}</strong></span>
-                </div>
-                <div class="progress-row">
-                    <div class="progress-track"><div class="progress-fill ${progressColor(fbFollowPct)}" style="width:${Math.min(fbFollowPct, 100)}%"></div></div>
-                    <span class="progress-label">${fbFollowPct}%</span>
-                </div>
-            </div>`;
-
-        if (fbReachGap > 0) {
-            html += `<div class="gap-analysis">距離月目標還差 ${this.fmt(fbReachGap)}，剩餘 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbReachGap / remainWeeks))}</div>`;
-        } else {
-            html += `<div class="gap-analysis" style="border-left-color:var(--positive); background:#e6f9f1;">本月自然觸及目標已達成</div>`;
-        }
-        if (fbFollowGap > 0) {
-            html += `<div class="gap-analysis">追蹤數距離月目標還差 ${this.fmt(fbFollowGap)}，剩餘 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbFollowGap / remainWeeks))}</div>`;
-        }
-
-        html += `<div class="pace-projection">目前 Q1 進度 ${fbQ1PacePct}%，按此速度預估季末達成 ${fbQ1ProjectedPct}%（預估 ${this.fmt(fbQ1Projected)} / 目標 ${this.fmt(GOALS.fb.q1.reach)}）</div>`;
-        html += `</div>`;
+            <div class="pace-projection">目前 Q1 進度 ${fbQ1PacePct}%，按此速度預估季末達成 ${fbQ1ProjectedPct}%（預估 ${this.fmt(fbQ1Projected)} / 目標 ${this.fmt(GOALS.fb.q1.reach)}）</div>
+        </div>`;
 
         // IG Section
         html += `<div class="card">
@@ -1410,40 +1400,30 @@ class Dashboard {
         });
 
         html += `</tbody></table></div>
-            <div style="margin-top:12px;">
-                <div class="card-title">${currentMonth}目標進度 — 自然觸及</div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
-                    <span style="font-size:20px; font-weight:700;">${this.fmt(igMonthReach)}</span>
-                    <span style="font-size:14px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igReachGoal)}</strong></span>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 自然觸及</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(igMonthReach)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(igReachPct)}" style="width:${Math.min(igReachPct, 100)}%"></div></div>
+                        <span class="progress-label">${igReachPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igReachGoal)}</strong></div>
+                    ${igReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
-                <div class="progress-row">
-                    <div class="progress-track"><div class="progress-fill ${progressColor(igReachPct)}" style="width:${Math.min(igReachPct, 100)}%"></div></div>
-                    <span class="progress-label">${igReachPct}%</span>
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 新增追蹤</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(igMonthFollowers)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(igFollowPct)}" style="width:${Math.min(igFollowPct, 100)}%"></div></div>
+                        <span class="progress-label">${igFollowPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igFollowGoal)}</strong></div>
+                    ${igFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
                 </div>
             </div>
-            <div style="margin-top:8px;">
-                <div class="card-title">${currentMonth}目標進度 — 新增追蹤</div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
-                    <span style="font-size:20px; font-weight:700;">${this.fmt(igMonthFollowers)}</span>
-                    <span style="font-size:14px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igFollowGoal)}</strong></span>
-                </div>
-                <div class="progress-row">
-                    <div class="progress-track"><div class="progress-fill ${progressColor(igFollowPct)}" style="width:${Math.min(igFollowPct, 100)}%"></div></div>
-                    <span class="progress-label">${igFollowPct}%</span>
-                </div>
-            </div>`;
-
-        if (igReachGap > 0) {
-            html += `<div class="gap-analysis">距離月目標還差 ${this.fmt(igReachGap)}，剩餘 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igReachGap / remainWeeks))}</div>`;
-        } else {
-            html += `<div class="gap-analysis" style="border-left-color:var(--positive); background:#e6f9f1;">本月自然觸及目標已達成</div>`;
-        }
-        if (igFollowGap > 0) {
-            html += `<div class="gap-analysis">追蹤數距離月目標還差 ${this.fmt(igFollowGap)}，剩餘 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igFollowGap / remainWeeks))}</div>`;
-        }
-
-        html += `<div class="pace-projection">目前 Q1 進度 ${igQ1PacePct}%，按此速度預估季末達成 ${igQ1ProjectedPct}%（預估 ${this.fmt(igQ1Projected)} / 目標 ${this.fmt(GOALS.ig.q1.reach)}）</div>`;
-        html += `</div>`;
+            <div class="pace-projection">目前 Q1 進度 ${igQ1PacePct}%，按此速度預估季末達成 ${igQ1ProjectedPct}%（預估 ${this.fmt(igQ1Projected)} / 目標 ${this.fmt(GOALS.ig.q1.reach)}）</div>
+        </div>`;
 
         // Monthly Summary Table
         const monthlySummary = monthGroups.filter(k => k !== '_future' && k !== 'unknown').reverse().map(monthKey => {
