@@ -925,11 +925,61 @@ class Dashboard {
             </div>
         </div>`;
 
+        // Build yearly growth table
+        let yearlyTableHTML = '<div class="table-wrap" id="yearlyTable" style="display:none;"><table><thead><tr>' +
+            '<th>年份</th>' +
+            '<th>FB</th><th>FB 成長數</th><th>FB 成長率</th>' +
+            '<th>IG</th><th>IG 成長數</th><th>IG 成長率</th>' +
+            '<th>總粉絲數</th><th>總成長數</th><th>總成長率</th>' +
+            '</tr></thead><tbody>';
+        YEARLY_FANS.forEach((d, i) => {
+            const prev = i > 0 ? YEARLY_FANS[i - 1] : null;
+            const fbGrow = prev ? d.fb - prev.fb : null;
+            const fbRate = prev && prev.fb > 0 ? Math.round((d.fb - prev.fb) / prev.fb * 100) : null;
+            const igGrow = prev ? d.ig - prev.ig : null;
+            const igRate = prev && prev.ig > 0 ? Math.round((d.ig - prev.ig) / prev.ig * 100) : null;
+            const totalGrow = prev ? d.total - prev.total : null;
+            const totalRate = prev && prev.total > 0 ? Math.round((d.total - prev.total) / prev.total * 100) : null;
+            yearlyTableHTML += `<tr>
+                <td><strong>${d.year}</strong></td>
+                <td>${this.fmt(d.fb)}</td>
+                <td>${fbGrow != null ? this.fmt(fbGrow) : '--'}</td>
+                <td>${fbRate != null ? `<span style="color:${fbRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${fbRate}%</span>` : '--'}</td>
+                <td>${this.fmt(d.ig)}</td>
+                <td>${igGrow != null ? this.fmt(igGrow) : '--'}</td>
+                <td>${igRate != null ? `<span style="color:${igRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${igRate}%</span>` : '--'}</td>
+                <td><strong>${this.fmt(d.total)}</strong></td>
+                <td>${totalGrow != null ? this.fmt(totalGrow) : '--'}</td>
+                <td>${totalRate != null ? `<span style="color:${totalRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${totalRate}%</span>` : '--'}</td>
+            </tr>`;
+        });
+        yearlyTableHTML += '</tbody></table></div>';
+
         panel.innerHTML = kpiHTML + ytdHTML + `
         <div class="card" style="margin-top:var(--gap)">
-            <div class="card-title">歷年粉絲成長趨勢</div>
-            <div class="chart-container"><canvas id="chartFanGrowth"></canvas></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="card-title" style="margin:0;">歷年粉絲成長趨勢</div>
+                <div style="display:flex; gap:4px;">
+                    <button class="yearlyViewBtn active" data-yv="chart" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:var(--text-primary); color:#fff; cursor:pointer; font-size:12px; font-weight:600;">圖表</button>
+                    <button class="yearlyViewBtn" data-yv="table" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); cursor:pointer; font-size:12px; font-weight:600;">表格</button>
+                </div>
+            </div>
+            <div id="yearlyChart" class="chart-container"><canvas id="chartFanGrowth"></canvas></div>
+            ${yearlyTableHTML}
         </div>`;
+
+        // Bind view toggle
+        document.querySelectorAll('.yearlyViewBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const isChart = btn.dataset.yv === 'chart';
+                document.getElementById('yearlyChart').style.display = isChart ? '' : 'none';
+                document.getElementById('yearlyTable').style.display = isChart ? 'none' : '';
+                document.querySelectorAll('.yearlyViewBtn').forEach(b => {
+                    b.style.background = b === btn ? 'var(--text-primary)' : 'var(--bg-card)';
+                    b.style.color = b === btn ? '#fff' : '';
+                });
+            });
+        });
 
         this.renderFanGrowthChart();
     }
