@@ -942,12 +942,21 @@ class Dashboard {
             `<option value="${v}" ${f.platform === v ? 'selected' : ''}>${l}</option>`).join('');
 
         let html = `<div class="card"><div class="filter-bar">
-            <label>年份</label><select id="mdYear">${yearOpts}</select>
-            <label>平台</label><select id="mdPlatform">${platOpts}</select>
-            <label>檢視</label>
-            <button class="mdView ${f.view === 'monthly' ? 'active' : ''}" data-v="monthly">月度</button>
-            <button class="mdView ${f.view === 'quarterly' ? 'active' : ''}" data-v="quarterly">季度</button>
-            <button id="mdYoY" class="${f.yoy ? 'active' : ''}">YoY 比較</button>
+            <div class="filter-group">
+                <label>年份</label><select id="mdYear">${yearOpts}</select>
+            </div>
+            <div class="filter-group">
+                <label>平台</label><select id="mdPlatform">${platOpts}</select>
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-group">
+                <label>檢視</label>
+                <button class="mdView ${f.view === 'monthly' ? 'active' : ''}" data-v="monthly">月度</button>
+                <button class="mdView ${f.view === 'quarterly' ? 'active' : ''}" data-v="quarterly">季度</button>
+            </div>
+            <div class="filter-group">
+                <button id="mdYoY" class="${f.yoy ? 'active' : ''}">YoY 比較</button>
+            </div>
         </div>`;
 
         // Table
@@ -1485,10 +1494,10 @@ class Dashboard {
             <div class="table-wrap"><table>
                 <thead><tr>
                     <th style="width:30px;"></th>
-                    <th>日期</th>
+                    <th>日期 <span class="badge-src badge-auto">自動</span></th>
                     <th>星期</th>
                     <th>平台</th>
-                    <th>貼文主題</th>
+                    <th>貼文主題 <span class="badge-src badge-auto">自動</span></th>
                     <th>分類 <span class="badge-src badge-manual">手動</span></th>
                     <th>自然觸及 <span class="badge-src badge-auto">自動</span></th>
                     <th>總互動 <span class="badge-src badge-auto">自動</span></th>
