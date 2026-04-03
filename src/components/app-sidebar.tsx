@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { WorkspaceSwitcher } from "@/components/workspace-switcher"
 import { NavUser } from "@/components/nav-user"
 import { useWorkspace } from "@/lib/workspace-context"
+import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
   SidebarContent,
@@ -27,10 +29,12 @@ import {
   TargetIcon,
   SettingsIcon,
   ActivityIcon,
+  DollarSignIcon,
 } from "lucide-react"
 
 const navItems = [
   { title: "總覽", url: "/dashboard", icon: LayoutDashboardIcon },
+  { title: "營收追蹤", url: "/dashboard/revenue", icon: DollarSignIcon },
   { title: "月度明細", url: "/dashboard/monthly", icon: CalendarIcon },
   { title: "週報追蹤", url: "/dashboard/weekly", icon: ClipboardListIcon },
   { title: "貼文分析", url: "/dashboard/posts", icon: FileTextIcon },
@@ -44,13 +48,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { workspaces, activeWorkspace, setActiveWorkspaceId, addWorkspace } =
     useWorkspace()
 
-  const handleCreate = () => {
+  // Fetch real user info
+  const [user, setUser] = useState({ name: "使用者", email: "", avatar: "" })
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (u) {
+        setUser({
+          name: u.user_metadata?.full_name ?? u.email?.split("@")[0] ?? "使用者",
+          email: u.email ?? "",
+          avatar: u.user_metadata?.avatar_url ?? "",
+        })
+      }
+    })
+  }, [])
+
+  const handleCreate = async () => {
     const name = prompt("Workspace 名稱：")
-    if (!name) return
-    // TODO: call Supabase to create workspace
-    // For now, create a temp local one
-    const id = crypto.randomUUID()
-    addWorkspace({ id, name })
+    if (!name?.trim()) return
+
+    const { createClient } = await import("@/lib/supabase/client")
+    const supabase = createClient()
+
+    // 1. Create workspace
+    const { data, error } = await supabase
+      .from("workspaces")
+      .insert({ name: name.trim() })
+      .select("id, name, description")
+      .single()
+
+    if (error) {
+      alert(`建立失敗：${error.message}`)
+      return
+    }
+
+    if (data) {
+      // 2. Auto-join as admin
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from("workspace_members").insert({
+          workspace_id: data.id,
+          user_id: user.id,
+          role: "admin",
+        })
+      }
+      addWorkspace(data)
+    }
   }
 
   return (
@@ -89,13 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={{
-            name: "使用者",
-            email: "user@example.com",
-            avatar: "",
-          }}
-        />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
