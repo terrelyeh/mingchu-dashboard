@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINCHU 社群媒體儀表板</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #e0e1dd;
+            --bg-card: #ffffff;
+            --bg-header: #333333;
+            --brand-gold: #c99700;
+            --text-primary: #333333;
+            --text-secondary: #6c757d;
+            --text-on-dark: #ffffff;
+            --fb-color: #1877F2;
+            --ig-color: #E1306C;
+            --total-color: #6C5CE7;
+            --positive: #00b894;
+            --negative: #d63031;
+            --goal-color: #c99700;
+            --gap: 16px;
+            --radius: 12px;
+            --border: #d5d6d2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--gap);
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: var(--text-on-dark);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+        .header-left p { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+        .header-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .badge-demo { background: #fdcb6e; color: #1a1a2e; }
+        .header-fans {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 6px;
+        }
+        .header-fans span { font-weight: 600; }
+        .header-right { text-align: right; font-size: 13px; opacity: 0.8; }
+
+        /* Data Source Badges */
+        .badge-src {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 4px;
+            vertical-align: middle;
+            line-height: 1.6;
+        }
+        .badge-auto { background: #00b894; color: #fff; }
+        .badge-manual { background: #fdcb6e; color: #2C3345; }
+        .badge-calc { background: #74b9ff; color: #2C3345; }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 6px;
+            margin-bottom: var(--gap);
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { background: var(--bg-primary); color: var(--text-primary); }
+        .tab-btn.active { background: var(--brand-gold); color: #fff; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: var(--gap);
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--gap);
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--total-color);
+        }
+        .kpi-card.fb { border-left-color: var(--fb-color); }
+        .kpi-card.ig { border-left-color: var(--ig-color); }
+        .kpi-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+        .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+        .kpi-change {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 6px;
+            margin-right: 6px;
+        }
+        .kpi-change.up { background: #e6f9f1; color: var(--positive); }
+        .kpi-change.down { background: #fde8e8; color: var(--negative); }
+        .kpi-change.neutral { background: #f0f2f5; color: var(--text-secondary); }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: var(--gap);
+        }
+        .filter-bar select, .filter-bar button {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .filter-bar button.active {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
+        }
+        .filter-bar label { font-size: 13px; color: var(--text-secondary); }
+        .filter-group { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f8f9fa; border-radius: 8px; }
+        .filter-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+        .filter-divider { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+        .top5-plat-btn { padding: 3px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: all 0.15s; }
+        .top5-plat-btn.active { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+        .top5-plat-btn:hover:not(.active) { border-color: var(--text-secondary); }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        table th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+        table th:first-child { text-align: left; }
+        table td {
+            padding: 9px 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+        table td:first-child { text-align: left; font-weight: 500; }
+        table tr:hover { background: #f8f9fa; }
+        .quarter-row {
+            background: #f0f2f5 !important;
+            border-left: 3px solid var(--total-color);
+            font-weight: 600;
+        }
+        .quarter-row td { border-bottom: 2px solid var(--border); }
+        .annual-row {
+            background: #e8ecf1 !important;
+            font-weight: 700;
+            border-left: 3px solid var(--text-primary);
+        }
+        .annual-row td { border-bottom: 2px solid var(--text-primary); }
+        .val-pos { color: var(--positive); }
+        .val-neg { color: var(--negative); }
+        .val-null { color: var(--text-secondary); font-style: italic; font-size: 12px; }
+        .trend-warn { color: #e17055; margin-left: 3px; font-size: 11px; cursor: help; }
+
+        /* YoY columns */
+        .yoy-col { background: #fef9e7; }
+
+        /* Progress Bar */
+        .progress-track {
+            background: #e9ecef;
+            border-radius: 6px;
+            height: 10px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+        .progress-fill.green { background: var(--positive); }
+        .progress-fill.yellow { background: #fdcb6e; }
+        .progress-fill.red { background: var(--negative); }
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        .progress-label { font-size: 12px; min-width: 50px; text-align: right; font-weight: 600; }
+
+        /* Weekly Tracking Sections */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        .section-header h3 { font-size: 16px; font-weight: 700; }
+        .section-header .platform-badge {
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .section-header .platform-badge.fb { background: var(--fb-color); }
+        .section-header .platform-badge.ig { background: var(--ig-color); }
+        .owner-name { font-size: 13px; color: var(--text-secondary); }
+        .gap-analysis {
+            background: #fef9e7;
+            border-left: 3px solid var(--goal-color);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .pace-projection {
+            background: #e8f4fd;
+            border-left: 3px solid #74b9ff;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .target-row { background: #e6f9f1 !important; border-left: 4px solid var(--positive); }
+        .target-row td { font-weight: 700; color: var(--positive); font-size: 15px; }
+        .target-row td:first-child { font-size: 13px; }
+        .goal-source-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
+        .editable-goal { cursor: pointer; border-bottom: 2px dashed var(--positive); padding-bottom: 1px; transition: background 0.15s; }
+        .editable-goal:hover { background: rgba(0,184,148,0.15); border-radius: 4px; }
+        .goal-edit-input { width: 90px; font-size: 15px; font-weight: 700; color: var(--positive); border: 2px solid var(--positive); border-radius: 4px; padding: 2px 6px; text-align: right; background: #fff; }
+        .month-group-header { background: #f0f2f5 !important; cursor: pointer; user-select: none; }
+        .month-group-header td { font-weight: 700; color: var(--text-primary); font-size: 14px; padding: 10px 12px !important; }
+        .month-group-header:hover { background: #e5e7eb !important; }
+        .month-group-header .month-toggle { display: inline-block; width: 18px; transition: transform 0.2s; }
+        .month-group-header .month-stats { font-weight: 400; font-size: 12px; color: var(--text-secondary); margin-left: 12px; }
+
+        /* Post Analysis */
+        .top-posts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .top-post-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        .top-post-rank {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: 26px;
+            height: 26px;
+            background: var(--total-color);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .top-post-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .top-post-meta { font-size: 12px; color: var(--text-secondary); }
+        .top-post-reach { font-size: 18px; font-weight: 700; color: var(--total-color); }
+        .batch-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .batch-actions select, .batch-actions button {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .batch-actions button {
+            background: var(--total-color);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+        }
+        .category-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .platform-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .platform-fb { background: rgba(24,119,242,0.12); color: #1877F2; }
+        .platform-ig { background: rgba(225,48,108,0.12); color: #E1306C; }
+        .week-header-row {
+            background: #edf2f7 !important;
+            border-left: 3px solid var(--total-color);
+        }
+        .week-header-row td { font-weight: 600; color: var(--text-primary); }
+
+        /* Simulator */
+        .sim-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap);
+        }
+        .sim-group { margin-bottom: 16px; }
+        .sim-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .sim-group select, .sim-group input[type="range"] { width: 100%; }
+        .sim-presets { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .sim-presets button {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .sim-presets button:hover { background: var(--total-color); color: #fff; border-color: var(--total-color); }
+        .sim-result {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .sim-result .big { font-size: 36px; font-weight: 700; color: var(--total-color); }
+        .confirm-btn {
+            display: block;
+            margin: 16px auto 0;
+            padding: 12px 32px;
+            background: var(--positive);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .confirm-btn:hover { opacity: 0.9; }
+
+        /* Chart Container */
+        .chart-container { position: relative; height: 400px; }
+
+        /* Line mini-section */
+        .line-section {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: var(--gap);
+        }
+        .line-section h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .sim-controls { grid-template-columns: 1fr; }
+            .dashboard-header { flex-direction: column; text-align: center; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-left" style="display:flex; align-items:center; gap:16px;">
+            <div>
+            <h1><span style="font-weight:900; letter-spacing:1px;">MINGCHU</span> 社群媒體儀表板 <span class="header-badge badge-demo">Phase 1 Demo</span></h1>
+            <div class="header-fans">
+                <div>FB 粉絲：<span>29,762</span></div>
+                <div>IG 粉絲：<span>15,270</span></div>
+            </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="headerDate"></div>
+            <div style="font-size:12px; opacity:0.6; margin-top:2px;">資料來源：Meta Graph API + 手動輸入</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="overview">總覽</button>
+        <button class="tab-btn" data-tab="monthly">月度明細</button>
+        <button class="tab-btn" data-tab="weekly">週報追蹤</button>
+        <button class="tab-btn" data-tab="posts">貼文分析</button>
+        <button class="tab-btn" data-tab="simulator">目標模擬器</button>
+    </div>
+
+    <!-- Tab 1: Overview -->
+    <div id="tab-overview" class="tab-panel active"></div>
+
+    <!-- Tab 2: Monthly Detail -->
+    <div id="tab-monthly" class="tab-panel"></div>
+
+    <!-- Tab 3: Weekly Tracking -->
+    <div id="tab-weekly" class="tab-panel"></div>
+
+    <!-- Tab 4: Post Analysis -->
+    <div id="tab-posts" class="tab-panel"></div>
+
+    <!-- Tab 5: Goal Simulator -->
+    <div id="tab-simulator" class="tab-panel"></div>
+</div>
+
+<script>
+// ===========================
+// DATA CONSTANTS
+// ===========================
+
+const YEARLY_FANS = [
+    { year: 2019, fb: 4000, ig: 0, total: 4000 },
+    { year: 2020, fb: 8000, ig: 2000, total: 10000 },
+    { year: 2021, fb: 10000, ig: 5000, total: 15000 },
+    { year: 2022, fb: 15000, ig: 8000, total: 23000 },
+    { year: 2023, fb: 18000, ig: 9000, total: 27000 },
+    { year: 2024, fb: 24000, ig: 11000, total: 35000 },
+    { year: 2025, fb: 32000, ig: 18000, total: 50000 },
+];
+
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+const MONTHLY_DATA = {
+    fb: {
+        2024: [
+            { organic: 50308, ad: 60428, total: 110736, followers: 196, engagement: 2037, clicks: 1053 },
+            { organic: 89086, ad: 220143, total: 309229, followers: 345, engagement: 3180, clicks: 2510 },
+            { organic: 195283, ad: 56351, total: 246115, followers: 952, engagement: 5179, clicks: 490 },
+            { organic: 108920, ad: 213206, total: 322050, followers: 343, engagement: 2714, clicks: 1011 },
+            { organic: 115984, ad: 60694, total: 177434, followers: 304, engagement: 3644, clicks: 163 },
+            { organic: 126875, ad: 100979, total: 218460, followers: 243, engagement: 5241, clicks: 873 },
+            { organic: 88599, ad: 94558, total: 182887, followers: 201, engagement: 2607, clicks: 429 },
+            { organic: 110909, ad: 15751, total: 124817, followers: 202, engagement: 3160, clicks: 229 },
+            { organic: 78738, ad: 135894, total: 212863, followers: 215, engagement: 2708, clicks: 884 },
+            { organic: 661471, ad: 384433, total: 992757, followers: 2724, engagement: 12053, clicks: 2300 },
+            { organic: 64436, ad: 89705, total: 147993, followers: 883, engagement: 2893, clicks: 1500 },
+            { organic: 79248, ad: 135556, total: 203095, followers: 712, engagement: 4350, clicks: 1800 },
+        ],
+        2025: [
+            { organic: 38577, ad: 85338, total: 120544, followers: 561, engagement: 2632, clicks: 570 },
+            { organic: 117132, ad: 211318, total: 321632, followers: 910, engagement: 4342, clicks: 1210 },
+            { organic: 90598, ad: 324277, total: 397800, followers: 1036, engagement: 5173, clicks: 1659 },
+            { organic: 63411, ad: 49575, total: 105520, followers: 218, engagement: 4520, clicks: 710 },
+            { organic: 89236, ad: 43815, total: 125206, followers: 212, engagement: 4292, clicks: 1808 },
+            { organic: 67133, ad: 197698, total: 259434, followers: 203, engagement: 3590, clicks: 616 },
+            { organic: 77081, ad: 426941, total: 486009, followers: 309, engagement: 4904, clicks: 1168 },
+            { organic: 62068, ad: 324654, total: 379100, followers: 667, engagement: 2582, clicks: 486 },
+            { organic: 342646, ad: 65035, total: 480784, followers: 1507, engagement: null, clicks: null },
+            { organic: 64031, ad: 238865, total: 285957, followers: 468, engagement: null, clicks: null },
+            { organic: 232969, ad: 635616, total: 868585, followers: 763, engagement: null, clicks: null },
+            { organic: 69670, ad: 86235, total: 155886, followers: 56, engagement: null, clicks: null },
+        ],
+        2026: [
+            { organic: 308475, ad: 232166, total: 540641, followers: 1161, engagement: null, clicks: null },
+            { organic: 277231, ad: 147604, total: 424835, followers: 389, engagement: null, clicks: null },
+            null, null, null, null, null, null, null, null, null, null,
+        ],
+    },
+    ig: {
+        2024: [
+            { organic: 6562, ad: 1512, total: 8074, followers: 158, engagement: null, clicks: null },
+            { organic: 6082, ad: 30593, total: 36675, followers: 79, engagement: null, clicks: null },
+            { organic: 7427, ad: 26563, total: 33990, followers: 95, engagement: null, clicks: null },
+            { organic: 8062, ad: 44934, total: 52996, followers: 188, engagement: null, clicks: null },
+            { organic: 9995, ad: 35227, total: 45222, followers: 108, engagement: null, clicks: null },
+            { organic: 19573, ad: 58377, total: 77950, followers: 65, engagement: null, clicks: null },
+            { organic: 18116, ad: 21550, total: 39666, followers: 125, engagement: null, clicks: null },
+            { organic: 23723, ad: 8772, total: 32495, followers: 322, engagement: null, clicks: null },
+            { organic: 30092, ad: 21197, total: 51289, followers: 361, engagement: null, clicks: null },
+            { organic: 44020, ad: 48560, total: 92580, followers: 458, engagement: null, clicks: null },
+            { organic: 44094, ad: 19989, total: 64083, followers: 362, engagement: null, clicks: null },
+            { organic: 28349, ad: 45365, total: 73714, followers: 450, engagement: null, clicks: null },
+        ],
+        2025: [
+            { organic: 27950, ad: 35120, total: 63070, followers: 539, engagement: null, clicks: null },
+            { organic: 41317, ad: 22835, total: 64152, followers: 710, engagement: null, clicks: null },
+            { organic: 39014, ad: 71125, total: 110139, followers: 860, engagement: null, clicks: null },
+            { organic: 36604, ad: 74924, total: 111528, followers: 658, engagement: null, clicks: null },
+            { organic: 36834, ad: 54906, total: 91740, followers: 529, engagement: null, clicks: null },
+            { organic: 25921, ad: 87501, total: 113422, followers: 171, engagement: null, clicks: null },
+            { organic: 99259, ad: 48238, total: 138825, followers: 1114, engagement: null, clicks: null },
+            { organic: 50614, ad: 86524, total: 132795, followers: 578, engagement: null, clicks: null },
+            { organic: 94116, ad: 64995, total: 156172, followers: 809, engagement: null, clicks: null },
+            { organic: 41592, ad: 108190, total: 145128, followers: 364, engagement: null, clicks: null },
+            { organic: 490659, ad: 104022, total: 594681, followers: 676, engagement: null, clicks: null },
+            { organic: 185038, ad: 25750, total: 210780, followers: 109, engagement: null, clicks: null },
+        ],
+        2026: [
+            { organic: 379072, ad: 64301, total: 443373, followers: 594, engagement: null, clicks: null },
+            { organic: 214597, ad: 16605, total: 231202, followers: 262, engagement: null, clicks: null },
+            null, null, null, null, null, null, null, null, null, null,
+        ],
+    }
+};
+
+const WEEKLY_DATA = [
+    { week: 'W25', dateRange: '', fb_reach: 26778, fb_followers: 49, ig_reach: 3230, ig_followers: 17, ig_engagement: null, line_opens: 1068, line_new: 1 },
+    { week: 'W26', dateRange: '', fb_reach: 65696, fb_followers: 139, ig_reach: 10230, ig_followers: 23, ig_engagement: null, line_opens: 973, line_new: 7 },
+    { week: 'W27', dateRange: '', fb_reach: 26866, fb_followers: 44, ig_reach: 8287, ig_followers: 28, ig_engagement: null, line_opens: 1024, line_new: 6 },
+    { week: 'W28', dateRange: '07/05-07/11', fb_reach: 15718, fb_followers: 72, ig_reach: 6267, ig_followers: 21, ig_engagement: null, line_opens: 924, line_new: 13 },
+    { week: 'W29', dateRange: '07/12-07/18', fb_reach: 21891, fb_followers: 44, ig_reach: 4496, ig_followers: 25, ig_engagement: null, line_opens: 831, line_new: 6 },
+    { week: 'W30', dateRange: '07/19-07/25', fb_reach: 32209, fb_followers: 29, ig_reach: 8957, ig_followers: 23, ig_engagement: null, line_opens: 741, line_new: -1 },
+    { week: 'W31', dateRange: '07/26-08/01', fb_reach: 27495, fb_followers: 40, ig_reach: 4221, ig_followers: 41, ig_engagement: null, line_opens: 800, line_new: 2 },
+    { week: 'W32', dateRange: '08/02-08/08', fb_reach: 18218, fb_followers: 30, ig_reach: 4478, ig_followers: 54, ig_engagement: null, line_opens: 706, line_new: 6 },
+    { week: 'W33', dateRange: '08/09-08/15', fb_reach: 11704, fb_followers: 22, ig_reach: 6301, ig_followers: 14, ig_engagement: null, line_opens: 876, line_new: 5 },
+    { week: 'W34', dateRange: '08/16-08/22', fb_reach: 19094, fb_followers: 38, ig_reach: 6469, ig_followers: 102, ig_engagement: null, line_opens: 851, line_new: 10 },
+    { week: 'W35', dateRange: '08/23-08/29', fb_reach: 65331, fb_followers: 74, ig_reach: 14584, ig_followers: 126, ig_engagement: null, line_opens: 797, line_new: 5 },
+    { week: 'W36', dateRange: '08/30-09/05', fb_reach: 37231, fb_followers: 79, ig_reach: 10437, ig_followers: 27, ig_engagement: null, line_opens: 826, line_new: 7 },
+    { week: 'W37', dateRange: '09/06-09/12', fb_reach: 24035, fb_followers: 58, ig_reach: 5523, ig_followers: 18, ig_engagement: null, line_opens: 856, line_new: 0 },
+    { week: 'W38', dateRange: '09/13-09/19', fb_reach: 21450, fb_followers: 55, ig_reach: 10243, ig_followers: 28, ig_engagement: null, line_opens: 840, line_new: -1 },
+    { week: 'W39', dateRange: '09/20-09/26', fb_reach: 16225, fb_followers: 46, ig_reach: 11425, ig_followers: 254, ig_engagement: null, line_opens: 821, line_new: 3 },
+    { week: 'W40', dateRange: '09/27-10/03', fb_reach: 34073, fb_followers: 99, ig_reach: 11417, ig_followers: 65, ig_engagement: null, line_opens: 858, line_new: 9 },
+    { week: 'W41', dateRange: '10/04-10/10', fb_reach: 26788, fb_followers: 128, ig_reach: 13607, ig_followers: 60, ig_engagement: null, line_opens: 839, line_new: 25 },
+    { week: 'W42', dateRange: '10/11-10/17', fb_reach: 587377, fb_followers: 2176, ig_reach: 17180, ig_followers: 40, ig_engagement: null, line_opens: 855, line_new: 21 },
+    { week: 'W46', dateRange: '11/15-11/21', fb_reach: 19049, fb_followers: 295, ig_reach: 19895, ig_followers: 103, ig_engagement: null, line_opens: 952, line_new: 13 },
+    { week: 'W49', dateRange: '12/06-12/12', fb_reach: 27373, fb_followers: 171, ig_reach: 9241, ig_followers: 92, ig_engagement: null, line_opens: 881, line_new: 14 },
+    { week: 'W50', dateRange: '12/13-12/19', fb_reach: 16816, fb_followers: 107, ig_reach: 9326, ig_followers: 95, ig_engagement: null, line_opens: 938, line_new: 3 },
+    { week: 'W51', dateRange: '12/20-12/26', fb_reach: 25526, fb_followers: 112, ig_reach: 8590, ig_followers: 113, ig_engagement: null, line_opens: 924, line_new: 0 },
+    // 2026
+    { week: 'W01', dateRange: '12/27-01/02', fb_reach: 30007, fb_followers: 128, ig_reach: 11241, ig_followers: 99, ig_engagement: null, line_opens: 915, line_new: 0, year: 2026 },
+    { week: 'W02', dateRange: '01/03-01/09', fb_reach: 11897, fb_followers: 224, ig_reach: 8485, ig_followers: 137, ig_engagement: null, line_opens: 854, line_new: 1, year: 2026 },
+    { week: 'W03', dateRange: '01/10-01/16', fb_reach: 11957, fb_followers: 110, ig_reach: 7916, ig_followers: 82, ig_engagement: null, line_opens: 946, line_new: 4, year: 2026 },
+    { week: 'W04', dateRange: '01/17-01/23', fb_reach: 11878, fb_followers: 135, ig_reach: 12696, ig_followers: 139, ig_engagement: null, line_opens: 927, line_new: 2, year: 2026 },
+    { week: 'W05', dateRange: '01/24-01/30', fb_reach: 10750, fb_followers: 81, ig_reach: 10741, ig_followers: 139, ig_engagement: null, line_opens: 954, line_new: 7, year: 2026 },
+    { week: 'W06', dateRange: '01/31-02/06', fb_reach: 12759, fb_followers: 70, ig_reach: 10042, ig_followers: 44, ig_engagement: null, line_opens: 638, line_new: 1, year: 2026 },
+    { week: 'W07', dateRange: '02/07-02/13', fb_reach: 72086, fb_followers: 274, ig_reach: 18240, ig_followers: 210, ig_engagement: null, line_opens: 952, line_new: 2, year: 2026 },
+    { week: 'W08', dateRange: '02/14-02/20', fb_reach: 28107, fb_followers: 249, ig_reach: 12543, ig_followers: 158, ig_engagement: null, line_opens: 963, line_new: 5, year: 2026 },
+    { week: 'W09', dateRange: '02/21-02/27', fb_reach: 32736, fb_followers: 309, ig_reach: 15976, ig_followers: 282, ig_engagement: null, line_opens: 970, line_new: 6, year: 2026 },
+    { week: 'W10', dateRange: '02/28-03/06', fb_reach: 20855, fb_followers: 278, ig_reach: 10829, ig_followers: 199, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W11', dateRange: '03/07-03/13', fb_reach: 22020, fb_followers: 146, ig_reach: 7583, ig_followers: 244, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W12', dateRange: '03/14-03/20', fb_reach: 41065, fb_followers: 340, ig_reach: 13581, ig_followers: 236, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W13', dateRange: '03/21-03/27', fb_reach: 39042, fb_followers: 304, ig_reach: 18426, ig_followers: 197, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W14', dateRange: '03/28-04/03', fb_reach: 37079, fb_followers: 159, ig_reach: 15031, ig_followers: 127, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W15', dateRange: '04/04-04/10', fb_reach: 14593, fb_followers: 39, ig_reach: 8870, ig_followers: 136, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W16', dateRange: '04/11-04/17', fb_reach: 18668, fb_followers: 26, ig_reach: 11680, ig_followers: 168, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W17', dateRange: '04/18-04/24', fb_reach: 26435, fb_followers: 70, ig_reach: 10500, ig_followers: 139, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W19', dateRange: '05/02-05/08', fb_reach: 32539, fb_followers: 81, ig_reach: 14123, ig_followers: 123, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W20', dateRange: '05/09-05/15', fb_reach: 13743, fb_followers: 3, ig_reach: 11438, ig_followers: 171, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W21', dateRange: '05/16-05/22', fb_reach: 21448, fb_followers: 61, ig_reach: 11947, ig_followers: 138, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W22', dateRange: '05/23-05/29', fb_reach: 31157, fb_followers: 57, ig_reach: 12838, ig_followers: 70, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W23', dateRange: '05/30-06/05', fb_reach: 34795, fb_followers: 58, ig_reach: 8052, ig_followers: 22, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W24', dateRange: '06/06-06/12', fb_reach: 22823, fb_followers: 59, ig_reach: 8895, ig_followers: 22, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W25', dateRange: '06/13-06/19', fb_reach: 15666, fb_followers: 32, ig_reach: 8362, ig_followers: 9, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W26', dateRange: '06/20-06/26', fb_reach: 15000, fb_followers: 16, ig_reach: 13568, ig_followers: 34, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W27', dateRange: '06/27-07/03', fb_reach: 32486, fb_followers: 50, ig_reach: 10343, ig_followers: 97, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W28', dateRange: '07/04-07/10', fb_reach: 22127, fb_followers: 52, ig_reach: 23923, ig_followers: 136, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W29', dateRange: '07/11-07/17', fb_reach: 30204, fb_followers: 80, ig_reach: 25042, ig_followers: 101, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W30', dateRange: '07/18-07/24', fb_reach: 12541, fb_followers: 38, ig_reach: 40434, ig_followers: 334, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W31', dateRange: '07/25-07/31', fb_reach: 15384, fb_followers: 22, ig_reach: 30200, ig_followers: 385, ig_engagement: null, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W32', dateRange: '08/01-08/07', fb_reach: 13815, fb_followers: 74, ig_reach: 16165, ig_followers: 106, ig_engagement: 713, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W33', dateRange: '08/08-08/14', fb_reach: 15949, fb_followers: 173, ig_reach: 15420, ig_followers: 60, ig_engagement: 906, line_opens: null, line_new: null, year: 2026 },
+    { week: 'W34', dateRange: '08/15-08/21', fb_reach: 30500, fb_followers: 182, ig_reach: 22270, ig_followers: 163, ig_engagement: 1386, line_opens: null, line_new: null, year: 2026 },
+];
+
+const GOALS = {
+    fb: {
+        q1: { reach: 330000, followers: 1650 },
+        weekly: { reach: 27500, followers: 138 },
+        monthly: { reach: 110000, followers: 550 },
+        q3: { reach: 241758, followers: 1500 },
+        q3_weekly: { reach: 20147, followers: 130 },
+        q3_monthly: { reach: 80586, followers: 500 },
+    },
+    ig: {
+        q1: { reach: 90000, followers: 1050 },
+        weekly: { reach: 7500, followers: 88 },
+        monthly: { reach: 30000, followers: 350 },
+    },
+    annual_2026: { reach: 1638000, followers: 7500 }
+};
+
+const POST_CATEGORIES = [
+    { id: 'c1', name: '2B 採訪報導', color: '#6C5CE7' },
+    { id: 'c2', name: '2C 餐飲食事', color: '#00b894' },
+    { id: 'c3', name: '2B 產業動態', color: '#0984e3' },
+    { id: 'c4', name: '品牌聚焦', color: '#fdcb6e' },
+];
+
+const POST_DATA = [
+    // W35 (08/23-08/29) FB posts
+    { date: '2025/08/23', weekday: '六', platform: 'FB', title: '秋季新品發表會回顧', category: null, organic_reach: 18540, reach_w1: null, reach_w2: null, engagement: 845, link_clicks: 120, click_rate: 0.65, week_label: 'W35 (08/23-08/29)', week_total_reach: 65331, week_total_engagement: null, week_followers_delta: 74 },
+    { date: '2025/08/25', weekday: '一', platform: 'FB', title: '產業趨勢分析：2025下半年展望', category: null, organic_reach: 22450, reach_w1: null, reach_w2: null, engagement: 1120, link_clicks: 210, click_rate: 0.94, week_label: null },
+    { date: '2025/08/27', weekday: '三', platform: 'FB', title: '客戶成功案例分享', category: null, organic_reach: 14200, reach_w1: null, reach_w2: null, engagement: 680, link_clicks: 95, click_rate: 0.67, week_label: null },
+    { date: '2025/08/29', weekday: '五', platform: 'FB', title: '品牌十週年感謝回饋', category: null, organic_reach: 10141, reach_w1: null, reach_w2: null, engagement: 520, link_clicks: 45, click_rate: 0.44, week_label: null },
+    // W35 IG posts
+    { date: '2025/08/24', weekday: '日', platform: 'IG', title: '美食推薦：隱藏版餐廳特搜', category: '2C 餐飲食事', organic_reach: 4820, reach_w1: null, reach_w2: null, engagement: 380, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/08/26', weekday: '二', platform: 'IG', title: '產業專訪：永續食材供應鏈', category: '2B 採訪報導', organic_reach: 3650, reach_w1: null, reach_w2: null, engagement: 245, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/08/28', weekday: '四', platform: 'IG', title: '品牌故事：從產地到餐桌', category: '品牌聚焦', organic_reach: 6114, reach_w1: null, reach_w2: null, engagement: 510, link_clicks: null, click_rate: null, week_label: null },
+    // W36 (08/30-09/05)
+    { date: '2025/08/30', weekday: '六', platform: 'FB', title: '九月活動預告', category: null, organic_reach: 12300, reach_w1: null, reach_w2: null, engagement: 560, link_clicks: 88, click_rate: 0.72, week_label: 'W36 (08/30-09/05)', week_total_reach: 37231, week_total_engagement: null, week_followers_delta: 79 },
+    { date: '2025/09/01', weekday: '一', platform: 'FB', title: '食品安全新法規解讀', category: null, organic_reach: 15800, reach_w1: null, reach_w2: null, engagement: 920, link_clicks: 175, click_rate: 1.11, week_label: null },
+    { date: '2025/09/03', weekday: '三', platform: 'FB', title: '合作夥伴聯名企劃', category: null, organic_reach: 9131, reach_w1: null, reach_w2: null, engagement: 410, link_clicks: 62, click_rate: 0.68, week_label: null },
+    { date: '2025/09/01', weekday: '一', platform: 'IG', title: '秋季限定菜色推薦', category: '2C 餐飲食事', organic_reach: 3800, reach_w1: null, reach_w2: null, engagement: 290, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/03', weekday: '三', platform: 'IG', title: '餐飲業數位轉型趨勢', category: '2B 產業動態', organic_reach: 4200, reach_w1: null, reach_w2: null, engagement: 310, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/05', weekday: '五', platform: 'IG', title: '主廚專訪：創意料理哲學', category: '2B 採訪報導', organic_reach: 2437, reach_w1: null, reach_w2: null, engagement: 195, link_clicks: null, click_rate: null, week_label: null },
+    // W37 (09/06-09/12)
+    { date: '2025/09/06', weekday: '六', platform: 'FB', title: '秋季食材指南', category: null, organic_reach: 8200, reach_w1: null, reach_w2: null, engagement: 480, link_clicks: 70, click_rate: 0.85, week_label: 'W37 (09/06-09/12)', week_total_reach: 24035, week_total_engagement: null, week_followers_delta: 58 },
+    { date: '2025/09/08', weekday: '一', platform: 'FB', title: '產業論壇精華回顧', category: null, organic_reach: 9600, reach_w1: null, reach_w2: null, engagement: 650, link_clicks: 130, click_rate: 1.35, week_label: null },
+    { date: '2025/09/10', weekday: '三', platform: 'FB', title: '員工故事：品管部門的一天', category: null, organic_reach: 6235, reach_w1: null, reach_w2: null, engagement: 320, link_clicks: 42, click_rate: 0.67, week_label: null },
+    { date: '2025/09/07', weekday: '日', platform: 'IG', title: '週末美食地圖', category: '2C 餐飲食事', organic_reach: 2100, reach_w1: null, reach_w2: null, engagement: 180, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/09', weekday: '二', platform: 'IG', title: '品牌理念：永續餐飲', category: '品牌聚焦', organic_reach: 1850, reach_w1: null, reach_w2: null, engagement: 140, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/11', weekday: '四', platform: 'IG', title: '供應鏈深度報導', category: '2B 產業動態', organic_reach: 1573, reach_w1: null, reach_w2: null, engagement: 115, link_clicks: null, click_rate: null, week_label: null },
+    // W38 (09/13-09/19)
+    { date: '2025/09/13', weekday: '六', platform: 'FB', title: '中秋特別企劃', category: null, organic_reach: 7800, reach_w1: null, reach_w2: null, engagement: 540, link_clicks: 85, click_rate: 1.09, week_label: 'W38 (09/13-09/19)', week_total_reach: 21450, week_total_engagement: null, week_followers_delta: 55 },
+    { date: '2025/09/15', weekday: '一', platform: 'FB', title: '新據點開幕預告', category: null, organic_reach: 8500, reach_w1: null, reach_w2: null, engagement: 620, link_clicks: 150, click_rate: 1.76, week_label: null },
+    { date: '2025/09/17', weekday: '三', platform: 'FB', title: '食安檢驗報告公開', category: null, organic_reach: 5150, reach_w1: null, reach_w2: null, engagement: 280, link_clicks: 38, click_rate: 0.74, week_label: null },
+    { date: '2025/09/14', weekday: '日', platform: 'IG', title: '中秋節慶美食特輯', category: '2C 餐飲食事', organic_reach: 4500, reach_w1: null, reach_w2: null, engagement: 380, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/16', weekday: '二', platform: 'IG', title: '食品業國際展會採訪', category: '2B 採訪報導', organic_reach: 3200, reach_w1: null, reach_w2: null, engagement: 210, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/18', weekday: '四', platform: 'IG', title: '永續包裝新趨勢', category: '2B 產業動態', organic_reach: 2543, reach_w1: null, reach_w2: null, engagement: 165, link_clicks: null, click_rate: null, week_label: null },
+    // W39 (09/20-09/26)
+    { date: '2025/09/20', weekday: '六', platform: 'FB', title: '社群粉絲感謝祭', category: null, organic_reach: 5800, reach_w1: null, reach_w2: null, engagement: 410, link_clicks: 60, click_rate: 1.03, week_label: 'W39 (09/20-09/26)', week_total_reach: 16225, week_total_engagement: null, week_followers_delta: 46 },
+    { date: '2025/09/22', weekday: '一', platform: 'FB', title: '秋冬新品搶先看', category: null, organic_reach: 6200, reach_w1: null, reach_w2: null, engagement: 480, link_clicks: 95, click_rate: 1.53, week_label: null },
+    { date: '2025/09/24', weekday: '三', platform: 'FB', title: '品牌永續報告書發佈', category: null, organic_reach: 4225, reach_w1: null, reach_w2: null, engagement: 250, link_clicks: 35, click_rate: 0.83, week_label: null },
+    { date: '2025/09/21', weekday: '日', platform: 'IG', title: '秋日限定甜點推薦', category: '2C 餐飲食事', organic_reach: 3800, reach_w1: null, reach_w2: null, engagement: 320, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/23', weekday: '二', platform: 'IG', title: '食農教育推廣計畫', category: '品牌聚焦', organic_reach: 4200, reach_w1: null, reach_w2: null, engagement: 280, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/25', weekday: '四', platform: 'IG', title: '產業動態：食品科技新創', category: '2B 產業動態', organic_reach: 3425, reach_w1: null, reach_w2: null, engagement: 220, link_clicks: null, click_rate: null, week_label: null },
+    // W40 (09/27-10/03)
+    { date: '2025/09/27', weekday: '六', platform: 'FB', title: '國慶連假活動搶先報', category: null, organic_reach: 11500, reach_w1: null, reach_w2: null, engagement: 780, link_clicks: 140, click_rate: 1.22, week_label: 'W40 (09/27-10/03)', week_total_reach: 34073, week_total_engagement: null, week_followers_delta: 99 },
+    { date: '2025/09/29', weekday: '一', platform: 'FB', title: '供應商實地訪查紀錄', category: null, organic_reach: 13200, reach_w1: null, reach_w2: null, engagement: 920, link_clicks: 180, click_rate: 1.36, week_label: null },
+    { date: '2025/10/01', weekday: '三', platform: 'FB', title: '十月新品上市', category: null, organic_reach: 9373, reach_w1: null, reach_w2: null, engagement: 560, link_clicks: 95, click_rate: 1.01, week_label: null },
+    { date: '2025/09/28', weekday: '日', platform: 'IG', title: '秋遊美食攻略', category: '2C 餐飲食事', organic_reach: 4200, reach_w1: null, reach_w2: null, engagement: 350, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/09/30', weekday: '二', platform: 'IG', title: '餐飲業者專訪系列', category: '2B 採訪報導', organic_reach: 3800, reach_w1: null, reach_w2: null, engagement: 260, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/10/02', weekday: '四', platform: 'IG', title: '品牌十年里程碑', category: '品牌聚焦', organic_reach: 3417, reach_w1: null, reach_w2: null, engagement: 290, link_clicks: null, click_rate: null, week_label: null },
+    // W41 (10/04-10/10)
+    { date: '2025/10/04', weekday: '六', platform: 'FB', title: '國慶特別優惠', category: null, organic_reach: 9200, reach_w1: null, reach_w2: null, engagement: 680, link_clicks: 120, click_rate: 1.30, week_label: 'W41 (10/04-10/10)', week_total_reach: 26788, week_total_engagement: null, week_followers_delta: 128 },
+    { date: '2025/10/06', weekday: '一', platform: 'FB', title: '產業高峰會邀請', category: null, organic_reach: 10500, reach_w1: null, reach_w2: null, engagement: 850, link_clicks: 165, click_rate: 1.57, week_label: null },
+    { date: '2025/10/08', weekday: '三', platform: 'FB', title: '員工健康促進計畫', category: null, organic_reach: 7088, reach_w1: null, reach_w2: null, engagement: 390, link_clicks: 55, click_rate: 0.78, week_label: null },
+    { date: '2025/10/05', weekday: '日', platform: 'IG', title: '秋季暖心料理合集', category: '2C 餐飲食事', organic_reach: 5200, reach_w1: null, reach_w2: null, engagement: 420, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/10/07', weekday: '二', platform: 'IG', title: '食品產業數據報告', category: '2B 產業動態', organic_reach: 4800, reach_w1: null, reach_w2: null, engagement: 310, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/10/09', weekday: '四', platform: 'IG', title: '品牌聯名合作揭曉', category: '品牌聚焦', organic_reach: 3607, reach_w1: null, reach_w2: null, engagement: 280, link_clicks: null, click_rate: null, week_label: null },
+    // W42 (10/11-10/17) - the viral week
+    { date: '2025/10/11', weekday: '六', platform: 'FB', title: '【爆紅】品牌故事紀錄片首播', category: null, organic_reach: 485000, reach_w1: null, reach_w2: null, engagement: 8500, link_clicks: 1800, click_rate: 0.37, week_label: 'W42 (10/11-10/17)', week_total_reach: 587377, week_total_engagement: null, week_followers_delta: 2176 },
+    { date: '2025/10/13', weekday: '一', platform: 'FB', title: '紀錄片幕後花絮', category: null, organic_reach: 62000, reach_w1: null, reach_w2: null, engagement: 2100, link_clicks: 350, click_rate: 0.56, week_label: null },
+    { date: '2025/10/15', weekday: '三', platform: 'FB', title: '粉絲回饋大感謝', category: null, organic_reach: 40377, reach_w1: null, reach_w2: null, engagement: 1500, link_clicks: 200, click_rate: 0.50, week_label: null },
+    { date: '2025/10/12', weekday: '日', platform: 'IG', title: '紀錄片精彩片段', category: '品牌聚焦', organic_reach: 7500, reach_w1: null, reach_w2: null, engagement: 620, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/10/14', weekday: '二', platform: 'IG', title: '明星主廚獨家專訪', category: '2B 採訪報導', organic_reach: 5800, reach_w1: null, reach_w2: null, engagement: 480, link_clicks: null, click_rate: null, week_label: null },
+    { date: '2025/10/16', weekday: '四', platform: 'IG', title: '限定美食快閃活動', category: '2C 餐飲食事', organic_reach: 3880, reach_w1: null, reach_w2: null, engagement: 310, link_clicks: null, click_rate: null, week_label: null },
+];
+
+
+// ===========================
+// DASHBOARD CLASS
+// ===========================
+
+class Dashboard {
+    constructor() {
+        this.charts = {};
+        this.monthlyFilters = { year: 2025, platform: 'all', view: 'monthly', yoy: false };
+        this.postFilters = { platform: 'all', category: 'all', sortBy: 'date' };
+        this.goalSource = { label: '預設值', time: null };
+        this.init();
+    }
+
+    init() {
+        this.setupDate();
+        this.setupTabs();
+        this.renderOverview();
+        this.renderMonthlyDetail();
+        this.renderWeeklyTracking();
+        this.renderPostAnalysis();
+        this.renderSimulator();
+    }
+
+    setupDate() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        document.getElementById('headerDate').textContent = `${y}/${m}/${d}`;
+    }
+
+    setupTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+    }
+
+    // Utility functions
+    fmt(n) {
+        if (n === null || n === undefined) return '<span class="val-null" title="待接入">--</span>';
+        return n.toLocaleString('zh-TW');
+    }
+
+    fmtPct(n) {
+        if (n === null || n === undefined) return '<span class="val-null" title="待接入">--</span>';
+        const cls = n > 0 ? 'val-pos' : n < 0 ? 'val-neg' : '';
+        const sign = n > 0 ? '+' : '';
+        return `<span class="${cls}">${sign}${n.toFixed(1)}%</span>`;
+    }
+
+    pctClass(n) {
+        if (n === null || n === undefined) return 'neutral';
+        return n > 0 ? 'up' : n < 0 ? 'down' : 'neutral';
+    }
+
+    safeAdd(...vals) {
+        const valid = vals.filter(v => v !== null && v !== undefined);
+        if (valid.length === 0) return null;
+        return valid.reduce((a, b) => a + b, 0);
+    }
+
+    getMoM(data, monthIdx) {
+        if (monthIdx === 0) return null;
+        const curr = data[monthIdx];
+        const prev = data[monthIdx - 1];
+        if (!curr || !prev) return null;
+        if (prev.total === 0) return null;
+        return ((curr.total - prev.total) / prev.total) * 100;
+    }
+
+    getMonthData(platform, year, month) {
+        if (platform === 'all') {
+            const fb = MONTHLY_DATA.fb[year] ? MONTHLY_DATA.fb[year][month] : null;
+            const ig = MONTHLY_DATA.ig[year] ? MONTHLY_DATA.ig[year][month] : null;
+            if (!fb && !ig) return null;
+            return {
+                organic: this.safeAdd(fb?.organic, ig?.organic),
+                ad: this.safeAdd(fb?.ad, ig?.ad),
+                total: this.safeAdd(fb?.total, ig?.total),
+                followers: this.safeAdd(fb?.followers, ig?.followers),
+                engagement: this.safeAdd(fb?.engagement, ig?.engagement),
+                clicks: platform === 'ig' ? null : this.safeAdd(fb?.clicks, ig?.clicks),
+                uu: null, // UU 不可跨平台加總，全平台模式下不顯示
+            };
+        }
+        const src = MONTHLY_DATA[platform];
+        if (!src || !src[year]) return null;
+        return src[year][month];
+    }
+
+    // =============================
+    // TAB 1: OVERVIEW
+    // =============================
+    renderOverview() {
+        const panel = document.getElementById('tab-overview');
+
+        // Current month KPIs (latest available: 2026 Feb for both platforms)
+        const fbCurr = MONTHLY_DATA.fb[2026][1]; // Feb 2026
+        const igCurr = MONTHLY_DATA.ig[2026][1];
+        const fbPrev = MONTHLY_DATA.fb[2026][0]; // Jan 2026
+        const igPrev = MONTHLY_DATA.ig[2026][0];
+        const fbYoY = MONTHLY_DATA.fb[2025][1]; // Feb 2025
+        const igYoY = MONTHLY_DATA.ig[2025][1];
+
+        const totalReach = this.safeAdd(fbCurr?.total, igCurr?.total);
+        const prevReach = this.safeAdd(fbPrev?.total, igPrev?.total);
+        const yoyReach = this.safeAdd(fbYoY?.total, igYoY?.total);
+        const momReach = prevReach ? ((totalReach - prevReach) / prevReach * 100) : null;
+        const yoyReachPct = yoyReach ? ((totalReach - yoyReach) / yoyReach * 100) : null;
+
+        const totalFollowers = this.safeAdd(fbCurr?.followers, igCurr?.followers);
+        const prevFollowers = this.safeAdd(fbPrev?.followers, igPrev?.followers);
+        const yoyFollowers = this.safeAdd(fbYoY?.followers, igYoY?.followers);
+        const momFollowers = prevFollowers ? ((totalFollowers - prevFollowers) / prevFollowers * 100) : null;
+        const yoyFollowersPct = yoyFollowers ? ((totalFollowers - yoyFollowers) / yoyFollowers * 100) : null;
+
+        const totalEng = this.safeAdd(fbCurr?.engagement, igCurr?.engagement);
+        const prevEng = this.safeAdd(fbPrev?.engagement, igPrev?.engagement);
+
+        // YTD (Year-to-Date) calculations for 2026
+        let ytdReach = 0, ytdFollowers = 0, ytdMonths = 0;
+        for (let m = 0; m < 12; m++) {
+            const fb = MONTHLY_DATA.fb[2026] ? MONTHLY_DATA.fb[2026][m] : null;
+            const ig = MONTHLY_DATA.ig[2026] ? MONTHLY_DATA.ig[2026][m] : null;
+            if (fb || ig) {
+                ytdReach += (fb?.total || 0) + (ig?.total || 0);
+                ytdFollowers += (fb?.followers || 0) + (ig?.followers || 0);
+                ytdMonths++;
+            }
+        }
+        const annualReachGoal = GOALS.annual_2026.reach;
+        const annualFollowGoal = GOALS.annual_2026.followers;
+        const ytdReachPct = annualReachGoal > 0 ? Math.round(ytdReach / annualReachGoal * 100) : 0;
+        const ytdFollowPct = annualFollowGoal > 0 ? Math.round(ytdFollowers / annualFollowGoal * 100) : 0;
+        // Time progress: how far through the year are we?
+        const timePct = Math.round(ytdMonths / 12 * 100);
+
+        const kpiHTML = `
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">粉絲總數（FB + IG） <span class="badge-src badge-calc">計算</span></div>
+                <div class="kpi-value">45,032</div>
+                <div><span class="kpi-change up">FB 29,762</span><span class="kpi-change" style="background:#fce4ec; color:#E1306C;">IG 15,270</span></div>
+            </div>
+            <div class="kpi-card fb">
+                <div class="kpi-label">本月觸及（2026/02） <span class="badge-src badge-calc">計算</span></div>
+                <div class="kpi-value">${this.fmt(totalReach)}</div>
+                <div>
+                    <span class="kpi-change ${this.pctClass(momReach)}">MoM ${momReach !== null ? (momReach > 0 ? '+' : '') + momReach.toFixed(1) + '%' : '--'}</span>
+                    <span class="kpi-change ${this.pctClass(yoyReachPct)}">YoY ${yoyReachPct !== null ? (yoyReachPct > 0 ? '+' : '') + yoyReachPct.toFixed(1) + '%' : '--'}</span>
+                </div>
+            </div>
+            <div class="kpi-card ig">
+                <div class="kpi-label">本月新增追蹤 <span class="badge-src badge-calc">計算</span></div>
+                <div class="kpi-value">${this.fmt(totalFollowers)}</div>
+                <div>
+                    <span class="kpi-change ${this.pctClass(momFollowers)}">MoM ${momFollowers !== null ? (momFollowers > 0 ? '+' : '') + momFollowers.toFixed(1) + '%' : '--'}</span>
+                    <span class="kpi-change ${this.pctClass(yoyFollowersPct)}">YoY ${yoyFollowersPct !== null ? (yoyFollowersPct > 0 ? '+' : '') + yoyFollowersPct.toFixed(1) + '%' : '--'}</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">本月互動 <span class="badge-src badge-calc">計算</span></div>
+                <div class="kpi-value">${this.fmt(totalEng)}</div>
+                <div><span class="kpi-change neutral">待接入完整數據</span></div>
+            </div>
+        </div>`;
+
+        const ytdHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+            <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計觸及 <span class="badge-src badge-calc">計算</span></div>
+                <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(ytdReach)}</div>
+                <div class="progress-row" style="margin:8px 0 4px;">
+                    <div class="progress-track"><div class="progress-fill ${ytdReachPct >= timePct ? 'green' : ytdReachPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdReachPct, 100)}%"></div></div>
+                    <span class="progress-label">${ytdReachPct}%</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualReachGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
+            </div>
+            <div style="background:var(--bg-card); border-radius:12px; padding:16px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">2026 年度累計新增追蹤 <span class="badge-src badge-calc">計算</span></div>
+                <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(ytdFollowers)}</div>
+                <div class="progress-row" style="margin:8px 0 4px;">
+                    <div class="progress-track"><div class="progress-fill ${ytdFollowPct >= timePct ? 'green' : ytdFollowPct >= timePct * 0.8 ? 'yellow' : 'red'}" style="width:${Math.min(ytdFollowPct, 100)}%"></div></div>
+                    <span class="progress-label">${ytdFollowPct}%</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);">年度目標 <strong style="color:var(--text-primary);">${this.fmt(annualFollowGoal)}</strong>　|　時間進度 ${timePct}%（${ytdMonths}/12 月）　|　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600; font-size:10px;">目標來源：${this.goalSource.label}</span></div>
+            </div>
+        </div>`;
+
+        // Build yearly growth table
+        let yearlyTableHTML = '<div class="table-wrap" id="yearlyTable" style="display:none;"><table><thead><tr>' +
+            '<th>年份</th>' +
+            '<th>FB</th><th>FB 成長數</th><th>FB 成長率</th>' +
+            '<th>IG</th><th>IG 成長數</th><th>IG 成長率</th>' +
+            '<th>總粉絲數</th><th>總成長數</th><th>總成長率</th>' +
+            '</tr></thead><tbody>';
+        YEARLY_FANS.forEach((d, i) => {
+            const prev = i > 0 ? YEARLY_FANS[i - 1] : null;
+            const fbGrow = prev ? d.fb - prev.fb : null;
+            const fbRate = prev && prev.fb > 0 ? Math.round((d.fb - prev.fb) / prev.fb * 100) : null;
+            const igGrow = prev ? d.ig - prev.ig : null;
+            const igRate = prev && prev.ig > 0 ? Math.round((d.ig - prev.ig) / prev.ig * 100) : null;
+            const totalGrow = prev ? d.total - prev.total : null;
+            const totalRate = prev && prev.total > 0 ? Math.round((d.total - prev.total) / prev.total * 100) : null;
+            yearlyTableHTML += `<tr>
+                <td><strong>${d.year}</strong></td>
+                <td>${this.fmt(d.fb)}</td>
+                <td>${fbGrow != null ? this.fmt(fbGrow) : '--'}</td>
+                <td>${fbRate != null ? `<span style="color:${fbRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${fbRate}%</span>` : '--'}</td>
+                <td>${this.fmt(d.ig)}</td>
+                <td>${igGrow != null ? this.fmt(igGrow) : '--'}</td>
+                <td>${igRate != null ? `<span style="color:${igRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${igRate}%</span>` : '--'}</td>
+                <td><strong>${this.fmt(d.total)}</strong></td>
+                <td>${totalGrow != null ? this.fmt(totalGrow) : '--'}</td>
+                <td>${totalRate != null ? `<span style="color:${totalRate >= 0 ? 'var(--positive)' : 'var(--negative)'};font-weight:600;">${totalRate}%</span>` : '--'}</td>
+            </tr>`;
+        });
+        yearlyTableHTML += '</tbody></table></div>';
+
+        panel.innerHTML = kpiHTML + ytdHTML + `
+        <div class="card" style="margin-top:var(--gap)">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="card-title" style="margin:0;">歷年粉絲成長趨勢</div>
+                <div style="display:flex; gap:4px;">
+                    <button class="yearlyViewBtn active" data-yv="chart" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:var(--text-primary); color:#fff; cursor:pointer; font-size:12px; font-weight:600;">圖表</button>
+                    <button class="yearlyViewBtn" data-yv="table" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); cursor:pointer; font-size:12px; font-weight:600;">表格</button>
+                </div>
+            </div>
+            <div id="yearlyChart" class="chart-container"><canvas id="chartFanGrowth"></canvas></div>
+            ${yearlyTableHTML}
+        </div>`;
+
+        // Bind view toggle
+        document.querySelectorAll('.yearlyViewBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const isChart = btn.dataset.yv === 'chart';
+                document.getElementById('yearlyChart').style.display = isChart ? '' : 'none';
+                document.getElementById('yearlyTable').style.display = isChart ? 'none' : '';
+                document.querySelectorAll('.yearlyViewBtn').forEach(b => {
+                    b.style.background = b === btn ? 'var(--text-primary)' : 'var(--bg-card)';
+                    b.style.color = b === btn ? '#fff' : '';
+                });
+            });
+        });
+
+        this.renderFanGrowthChart();
+    }
+
+    renderFanGrowthChart() {
+        const ctx = document.getElementById('chartFanGrowth').getContext('2d');
+        if (this.charts.fanGrowth) this.charts.fanGrowth.destroy();
+        this.charts.fanGrowth = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: YEARLY_FANS.map(d => d.year),
+                datasets: [
+                    { label: 'FB', data: YEARLY_FANS.map(d => d.fb), borderColor: '#1877F2', backgroundColor: 'rgba(24,119,242,0.08)', fill: true, tension: 0.3, pointRadius: 4 },
+                    { label: 'IG', data: YEARLY_FANS.map(d => d.ig), borderColor: '#E1306C', backgroundColor: 'rgba(225,48,108,0.08)', fill: true, tension: 0.3, pointRadius: 4 },
+                    { label: '合計', data: YEARLY_FANS.map(d => d.total), borderColor: '#6C5CE7', backgroundColor: 'rgba(108,92,231,0.08)', fill: true, tension: 0.3, pointRadius: 4, borderWidth: 3 },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { tooltip: {
+                    mode: 'index', intersect: false,
+                    callbacks: {
+                        title: items => items[0].label + ' 年',
+                        label: ctx => {
+                            const d = YEARLY_FANS[ctx.dataIndex];
+                            const prevD = ctx.dataIndex > 0 ? YEARLY_FANS[ctx.dataIndex - 1] : null;
+                            let val = ctx.parsed.y.toLocaleString();
+                            if (prevD) {
+                                const prevVal = ctx.dataset.label === 'FB' ? prevD.fb : ctx.dataset.label === 'IG' ? prevD.ig : prevD.total;
+                                const diff = ctx.parsed.y - prevVal;
+                                const pct = prevVal > 0 ? ((diff / prevVal) * 100).toFixed(1) : '--';
+                                val += `  (+${diff.toLocaleString()}, ${pct}%)`;
+                            }
+                            return `${ctx.dataset.label}: ${val}`;
+                        }
+                    }
+                } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v / 1000) + 'K' : v } },
+                }
+            }
+        });
+    }
+
+    // =============================
+    // TAB 2: MONTHLY DETAIL
+    // =============================
+    renderMonthlyDetail() {
+        const panel = document.getElementById('tab-monthly');
+        const f = this.monthlyFilters;
+
+        // Filter bar
+        const yearOpts = [2024, 2025, 2026].map(y => `<option value="${y}" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('');
+        const platOpts = [['all', '全部'], ['fb', 'FB'], ['ig', 'IG']].map(([v, l]) =>
+            `<option value="${v}" ${f.platform === v ? 'selected' : ''}>${l}</option>`).join('');
+
+        let html = `<div class="card"><div class="filter-bar">
+            <div class="filter-group">
+                <label>年份</label><select id="mdYear">${yearOpts}</select>
+            </div>
+            <div class="filter-group">
+                <label>平台</label><select id="mdPlatform">${platOpts}</select>
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-group">
+                <label>檢視</label>
+                <button class="mdView ${f.view === 'monthly' ? 'active' : ''}" data-v="monthly">月度</button>
+                <button class="mdView ${f.view === 'quarterly' ? 'active' : ''}" data-v="quarterly">季度</button>
+            </div>
+            <div class="filter-group">
+                <button id="mdYoY" class="${f.yoy ? 'active' : ''}">YoY 比較</button>
+            </div>
+        </div>`;
+
+        // Table
+        const showClicks = f.platform !== 'ig';
+        const uuLabel = f.platform === 'ig' ? '月 UU <span class="badge-src badge-auto" style="background:rgba(225,48,108,0.12);color:#E1306C;">近似</span>'
+            : f.platform === 'all' ? '月 UU <span class="badge-src badge-auto">自動</span>'
+            : '月 UU <span class="badge-src badge-auto">自動</span>';
+        const showUU = f.platform !== 'all'; // UU 不可跨平台加總
+        html += `<div class="table-wrap"><table>
+        <thead><tr>
+            <th>月份</th>
+            <th>自然觸及 <span class="badge-src badge-auto">自動</span></th>
+            <th>廣告觸及 <span class="badge-src badge-auto">自動</span></th>
+            <th>總觸及 <span class="badge-src badge-calc">計算</span></th>
+            ${showUU ? `<th>${uuLabel}</th>` : ''}
+            <th>新增淨追蹤 <span class="badge-src badge-auto">自動</span></th>
+            <th>互動數 <span class="badge-src badge-auto">自動</span></th>
+            ${showClicks ? '<th>連結點擊 <span class="badge-src badge-auto">自動</span></th>' : ''}
+            <th>月成長率 <span class="badge-src badge-calc">計算</span></th>
+            ${f.yoy ? '<th class="yoy-col">去年同期觸及</th><th class="yoy-col">YoY%</th>' : ''}
+        </tr></thead><tbody>`;
+
+        const yearData = [];
+        for (let m = 0; m < 12; m++) {
+            yearData.push(this.getMonthData(f.platform, f.year, m));
+        }
+
+        let annualTotals = { organic: 0, ad: 0, total: 0, followers: 0, engagement: 0, clicks: 0, hasData: false };
+
+        // Check consecutive drops for trend warning
+        const checkConsecutiveDrops = (metric) => {
+            const drops = [];
+            for (let m = 1; m < 12; m++) {
+                if (yearData[m] && yearData[m - 1] && yearData[m][metric] !== null && yearData[m - 1][metric] !== null) {
+                    drops.push(yearData[m][metric] < yearData[m - 1][metric]);
+                } else {
+                    drops.push(false);
+                }
+            }
+            const warnings = new Set();
+            for (let i = 2; i < drops.length; i++) {
+                if (drops[i] && drops[i - 1] && drops[i - 2]) {
+                    warnings.add(i + 1); // month index (0-based: the third drop month)
+                }
+            }
+            return warnings;
+        };
+        const reachWarnings = checkConsecutiveDrops('total');
+
+        for (let m = 0; m < 12; m++) {
+            const d = yearData[m];
+            if (!d) {
+                if (f.view !== 'quarterly') {
+                    const emptyCols = (showClicks ? 6 : 5) + (showUU ? 1 : 0) + (f.yoy ? 2 : 0);
+                    html += `<tr><td>${MONTHS[m]}</td><td colspan="${emptyCols}" class="val-null" style="text-align:center;">尚無資料</td></tr>`;
+                }
+            } else {
+                annualTotals.hasData = true;
+                annualTotals.organic += d.organic || 0;
+                annualTotals.ad += d.ad || 0;
+                annualTotals.total += d.total || 0;
+                annualTotals.followers += d.followers || 0;
+                annualTotals.engagement += d.engagement || 0;
+                annualTotals.clicks += d.clicks || 0;
+
+                const mom = m > 0 && yearData[m - 1] && yearData[m - 1].total
+                    ? ((d.total - yearData[m - 1].total) / yearData[m - 1].total * 100) : null;
+                const warn = reachWarnings.has(m) ? '<span class="trend-warn" title="連續3個月下降">&#9888;</span>' : '';
+
+                let yoyHTML = '';
+                if (f.yoy) {
+                    const prevYear = f.year - 1;
+                    const prevD = this.getMonthData(f.platform, prevYear, m);
+                    const yoyPct = prevD && prevD.total && d.total ? ((d.total - prevD.total) / prevD.total * 100) : null;
+                    yoyHTML = `<td class="yoy-col">${prevD ? this.fmt(prevD.total) : this.fmt(null)}</td><td class="yoy-col">${this.fmtPct(yoyPct)}</td>`;
+                }
+
+                const uuDisplay = showUU ? `<td>${d.uu != null ? this.fmt(d.uu) : '<span class="val-null">待接入</span>'}</td>` : '';
+                if (f.view !== 'quarterly') {
+                html += `<tr>
+                    <td>${MONTHS[m]}</td>
+                    <td>${this.fmt(d.organic)}</td>
+                    <td>${this.fmt(d.ad)}</td>
+                    <td>${this.fmt(d.total)}${warn}</td>
+                    ${uuDisplay}
+                    <td>${this.fmt(d.followers)}</td>
+                    <td>${this.fmt(d.engagement)}</td>
+                    ${showClicks ? `<td>${this.fmt(d.clicks)}</td>` : ''}
+                    <td>${this.fmtPct(mom)}</td>
+                    ${yoyHTML}
+                </tr>`;
+                } // end if not quarterly
+            }
+
+            // Quarterly subtotals
+            if ((m + 1) % 3 === 0) {
+                const qIdx = Math.floor(m / 3);
+                const qLabel = `Q${qIdx + 1}`;
+                let qOrg = 0, qAd = 0, qTotal = 0, qFollow = 0, qEng = 0, qClicks = 0, qHas = false;
+                for (let qi = m - 2; qi <= m; qi++) {
+                    if (yearData[qi]) {
+                        qHas = true;
+                        qOrg += yearData[qi].organic || 0;
+                        qAd += yearData[qi].ad || 0;
+                        qTotal += yearData[qi].total || 0;
+                        qFollow += yearData[qi].followers || 0;
+                        qEng += yearData[qi].engagement || 0;
+                        qClicks += yearData[qi].clicks || 0;
+                    }
+                }
+
+                // QoQ growth
+                let qoq = null;
+                if (qIdx > 0) {
+                    let prevQTotal = 0, prevQHas = false;
+                    for (let qi = m - 5; qi <= m - 3; qi++) {
+                        if (qi >= 0 && yearData[qi]) { prevQTotal += yearData[qi].total || 0; prevQHas = true; }
+                    }
+                    if (prevQHas && prevQTotal > 0 && qHas) qoq = ((qTotal - prevQTotal) / prevQTotal * 100);
+                }
+
+                if (qHas) {
+                    let qYoYHTML = '';
+                    if (f.yoy) {
+                        const prevYear = f.year - 1;
+                        let prevQTotal = 0, prevQHas2 = false;
+                        for (let qi = m - 2; qi <= m; qi++) {
+                            const pd = this.getMonthData(f.platform, prevYear, qi);
+                            if (pd) { prevQTotal += pd.total || 0; prevQHas2 = true; }
+                        }
+                        const yoyPct = prevQHas2 && prevQTotal > 0 ? ((qTotal - prevQTotal) / prevQTotal * 100) : null;
+                        qYoYHTML = `<td class="yoy-col">${prevQHas2 ? this.fmt(prevQTotal) : this.fmt(null)}</td><td class="yoy-col">${this.fmtPct(yoyPct)}</td>`;
+                    }
+                    html += `<tr class="quarter-row">
+                        <td>${qLabel} 小計</td>
+                        <td>${this.fmt(qOrg)}</td>
+                        <td>${this.fmt(qAd)}</td>
+                        <td>${this.fmt(qTotal)}</td>
+                        ${showUU ? '<td class="val-null">--</td>' : ''}
+                        <td>${this.fmt(qFollow)}</td>
+                        <td>${this.fmt(qEng || null)}</td>
+                        ${showClicks ? `<td>${this.fmt(qClicks || null)}</td>` : ''}
+                        <td>${this.fmtPct(qoq)}</td>
+                        ${qYoYHTML}
+                    </tr>`;
+                }
+            }
+        }
+
+        // Annual total row
+        if (annualTotals.hasData) {
+            let annYoYHTML = '';
+            if (f.yoy) {
+                const prevYear = f.year - 1;
+                let prevAnnTotal = 0, prevHas = false;
+                for (let m = 0; m < 12; m++) {
+                    const pd = this.getMonthData(f.platform, prevYear, m);
+                    if (pd) { prevAnnTotal += pd.total || 0; prevHas = true; }
+                }
+                const yoyPct = prevHas && prevAnnTotal > 0 ? ((annualTotals.total - prevAnnTotal) / prevAnnTotal * 100) : null;
+                annYoYHTML = `<td class="yoy-col">${prevHas ? this.fmt(prevAnnTotal) : this.fmt(null)}</td><td class="yoy-col">${this.fmtPct(yoyPct)}</td>`;
+            }
+            html += `<tr class="annual-row">
+                <td>年度合計</td>
+                <td>${this.fmt(annualTotals.organic)}</td>
+                <td>${this.fmt(annualTotals.ad)}</td>
+                <td>${this.fmt(annualTotals.total)}</td>
+                ${showUU ? '<td class="val-null">--</td>' : ''}
+                <td>${this.fmt(annualTotals.followers)}</td>
+                <td>${this.fmt(annualTotals.engagement || null)}</td>
+                ${showClicks ? `<td>${this.fmt(annualTotals.clicks || null)}</td>` : ''}
+                <td></td>
+                ${annYoYHTML}
+            </tr>`;
+        }
+
+        html += `</tbody></table></div></div>`;
+        panel.innerHTML = html;
+
+        // Bind filter events
+        document.getElementById('mdYear').addEventListener('change', e => { this.monthlyFilters.year = parseInt(e.target.value); this.renderMonthlyDetail(); });
+        document.getElementById('mdPlatform').addEventListener('change', e => { this.monthlyFilters.platform = e.target.value; this.renderMonthlyDetail(); });
+        document.querySelectorAll('.mdView').forEach(btn => {
+            btn.addEventListener('click', e => { this.monthlyFilters.view = e.target.dataset.v; this.renderMonthlyDetail(); });
+        });
+        document.getElementById('mdYoY').addEventListener('click', () => { this.monthlyFilters.yoy = !this.monthlyFilters.yoy; this.renderMonthlyDetail(); });
+    }
+
+    // =============================
+    // TAB 3: WEEKLY TRACKING
+    // =============================
+    renderWeeklyTracking() {
+        const panel = document.getElementById('tab-weekly');
+
+        // Get all 2026 weeks
+        const weeks2026 = WEEKLY_DATA.filter(w => w.year === 2026);
+
+        // Auto-generate future weeks from the last known week
+        const lastWeek = weeks2026[weeks2026.length - 1];
+        const lastWeekNum = lastWeek ? parseInt(lastWeek.week.replace('W', '')) : 0;
+        const lastDateParts = lastWeek && lastWeek.dateRange ? lastWeek.dateRange.split('-') : null;
+        let nextMonday = null;
+        if (lastDateParts) {
+            const [endM, endD] = lastDateParts[1].split('/').map(Number);
+            nextMonday = new Date(2026, endM - 1, endD + 1);
+        }
+        const futureWeeks = [];
+        if (nextMonday) {
+            for (let i = 1; i <= 4; i++) {
+                const mon = new Date(nextMonday);
+                mon.setDate(mon.getDate() + (i - 1) * 7);
+                const sun = new Date(mon);
+                sun.setDate(sun.getDate() + 6);
+                const pad = n => String(n).padStart(2, '0');
+                const dr = `${pad(mon.getMonth() + 1)}/${pad(mon.getDate())}-${pad(sun.getMonth() + 1)}/${pad(sun.getDate())}`;
+                futureWeeks.push({
+                    week: `W${lastWeekNum + i}`, dateRange: dr, year: 2026,
+                    fb_reach: null, fb_followers: null, ig_reach: null, ig_followers: null,
+                    ig_engagement: null, line_opens: null, line_new: null, _future: true
+                });
+            }
+        }
+        const allWeeks = [...weeks2026, ...futureWeeks];
+
+        // Helper: extract month number from dateRange start date (e.g. "08/15-08/21" → 8)
+        const getMonthFromRange = (dr) => {
+            if (!dr) return null;
+            const startPart = dr.split('-')[0]; // "08/15"
+            return parseInt(startPart.split('/')[0]);
+        };
+
+        // Dynamic current month detection: use last data week's dateRange
+        const lastDataWeek = weeks2026[weeks2026.length - 1];
+        const currentMonthNum = lastDataWeek ? getMonthFromRange(lastDataWeek.dateRange) : 1;
+        const currentMonth = `${currentMonthNum}月`;
+
+        // Filter weeks belonging to the current month (by start date)
+        const currentMonthWeeks = weeks2026.filter(w => getMonthFromRange(w.dateRange) === currentMonthNum);
+
+        // Calculate monthly totals for the current tracking period
+        let fbMonthReach = 0, fbMonthFollowers = 0, igMonthReach = 0, igMonthFollowers = 0;
+        const weeksInMonth = currentMonthWeeks.length;
+        currentMonthWeeks.forEach(w => {
+            fbMonthReach += w.fb_reach || 0;
+            fbMonthFollowers += w.fb_followers || 0;
+            igMonthReach += w.ig_reach || 0;
+            igMonthFollowers += w.ig_followers || 0;
+        });
+
+        const fbReachGoal = GOALS.fb.monthly.reach;
+        const fbFollowGoal = GOALS.fb.monthly.followers;
+        const igReachGoal = GOALS.ig.monthly.reach;
+        const igFollowGoal = GOALS.ig.monthly.followers;
+
+        const fbReachPct = Math.round(fbMonthReach / fbReachGoal * 100);
+        const fbFollowPct = Math.round(fbMonthFollowers / fbFollowGoal * 100);
+        const igReachPct = Math.round(igMonthReach / igReachGoal * 100);
+        const igFollowPct = Math.round(igMonthFollowers / igFollowGoal * 100);
+
+        const progressColor = pct => pct >= 100 ? 'green' : pct >= 80 ? 'yellow' : 'red';
+
+        // Gap analysis
+        const fbReachGap = fbReachGoal - fbMonthReach;
+        const fbFollowGap = fbFollowGoal - fbMonthFollowers;
+        const igReachGap = igReachGoal - igMonthReach;
+        const igFollowGap = igFollowGoal - igMonthFollowers;
+        const remainWeeks = Math.max(1, 4 - weeksInMonth);
+
+        // Q1 pace projection
+        const q1Weeks2026 = weeks2026.filter(w => {
+            const num = parseInt(w.week.replace('W', ''));
+            return num >= 1 && num <= 13;
+        });
+        let fbQ1Reach = 0, igQ1Reach = 0, fbQ1Follow = 0, igQ1Follow = 0;
+        q1Weeks2026.forEach(w => {
+            fbQ1Reach += w.fb_reach || 0;
+            igQ1Reach += w.ig_reach || 0;
+            fbQ1Follow += w.fb_followers || 0;
+            igQ1Follow += w.ig_followers || 0;
+        });
+        const q1WeeksElapsed = q1Weeks2026.length;
+        const fbQ1PacePct = GOALS.fb.q1.reach > 0 ? Math.round(fbQ1Reach / GOALS.fb.q1.reach * 100) : 0;
+        const fbQ1Projected = q1WeeksElapsed > 0 ? Math.round(fbQ1Reach / q1WeeksElapsed * 13) : 0;
+        const fbQ1ProjectedPct = GOALS.fb.q1.reach > 0 ? Math.round(fbQ1Projected / GOALS.fb.q1.reach * 100) : 0;
+        const igQ1PacePct = GOALS.ig.q1.reach > 0 ? Math.round(igQ1Reach / GOALS.ig.q1.reach * 100) : 0;
+        const igQ1Projected = q1WeeksElapsed > 0 ? Math.round(igQ1Reach / q1WeeksElapsed * 13) : 0;
+        const igQ1ProjectedPct = GOALS.ig.q1.reach > 0 ? Math.round(igQ1Projected / GOALS.ig.q1.reach * 100) : 0;
+
+        // Group all weeks by month for collapse/expand
+        const monthGroups = [];
+        const monthMap = new Map();
+        allWeeks.forEach(w => {
+            const m = getMonthFromRange(w.dateRange);
+            const key = w._future ? '_future' : (m || 'unknown');
+            if (!monthMap.has(key)) {
+                monthMap.set(key, []);
+                monthGroups.push(key);
+            }
+            monthMap.get(key).push(w);
+        });
+
+        // Determine which months should be expanded by default
+        // Current month (most recent data month) + future weeks
+        const expandedMonths = new Set([currentMonthNum, '_future']);
+
+        // Helper: render week rows for FB table
+        const fbWeeklyReachGoal = GOALS.fb.weekly.reach;
+        const fbWeeklyFollowGoal = GOALS.fb.weekly.followers;
+        const renderFbWeekRow = (w, monthKey) => {
+            const isFuture = w._future;
+            const fbReachRate = w.fb_reach != null ? Math.round(w.fb_reach / fbWeeklyReachGoal * 100) : null;
+            const fbFollowRate = w.fb_followers != null ? Math.round(w.fb_followers / fbWeeklyFollowGoal * 100) : null;
+            const collapsed = !expandedMonths.has(monthKey);
+            const styles = [];
+            if (isFuture) styles.push('opacity:0.45', 'font-style:italic');
+            if (collapsed) styles.push('display:none');
+            return `<tr class="weekly-month-row" data-weekly-month="fb-${monthKey}"${styles.length ? ` style="${styles.join(';')}"` : ''}>
+                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}${isFuture ? ' <span style="font-size:10px; color:var(--text-secondary);">待填</span>' : ''}</td>
+                <td>${this.fmt(w.fb_reach)}</td>
+                <td>${fbReachRate != null ? `<span style="color:${fbReachRate >= 100 ? 'var(--positive)' : fbReachRate >= 80 ? '#e67e22' : 'var(--negative)'};font-weight:600;">${fbReachRate}%</span>` : '--'}</td>
+                <td>${this.fmt(w.fb_followers)}</td>
+                <td>${fbFollowRate != null ? `<span style="color:${fbFollowRate >= 100 ? 'var(--positive)' : fbFollowRate >= 80 ? '#e67e22' : 'var(--negative)'};font-weight:600;">${fbFollowRate}%</span>` : '--'}</td>
+            </tr>`;
+        };
+
+        // Helper: render week rows for IG table
+        const renderIgWeekRow = (w, monthKey) => {
+            const isFuture = w._future;
+            const igReachRate = w.ig_reach != null ? Math.round(w.ig_reach / GOALS.ig.weekly.reach * 100) : null;
+            const igFollowRate = w.ig_followers != null ? Math.round(w.ig_followers / GOALS.ig.weekly.followers * 100) : null;
+            const collapsed = !expandedMonths.has(monthKey);
+            const styles = [];
+            if (isFuture) styles.push('opacity:0.45', 'font-style:italic');
+            if (collapsed) styles.push('display:none');
+            return `<tr class="weekly-month-row" data-weekly-month="ig-${monthKey}"${styles.length ? ` style="${styles.join(';')}"` : ''}>
+                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}${isFuture ? ' <span style="font-size:10px; color:var(--text-secondary);">待填</span>' : ''}</td>
+                <td>${this.fmt(w.ig_reach)}</td>
+                <td>${igReachRate != null ? `<span style="color:${igReachRate >= 100 ? 'var(--positive)' : igReachRate >= 80 ? '#e67e22' : 'var(--negative)'};font-weight:600;">${igReachRate}%</span>` : '--'}</td>
+                <td>${this.fmt(w.ig_followers)}</td>
+                <td>${igFollowRate != null ? `<span style="color:${igFollowRate >= 100 ? 'var(--positive)' : igFollowRate >= 80 ? '#e67e22' : 'var(--negative)'};font-weight:600;">${igFollowRate}%</span>` : '--'}</td>
+                <td>${this.fmt(w.ig_engagement)}</td>
+            </tr>`;
+        };
+
+        // Helper: render month group header
+        const renderMonthHeader = (monthKey, weeks, platform, colSpan) => {
+            if (monthKey === '_future') {
+                return `<tr class="month-group-header" data-weekly-toggle="${platform}-${monthKey}">
+                    <td colspan="${colSpan}"><span class="month-toggle">▼</span>未來週次（待填）<span class="month-stats">${weeks.length} 週</span></td>
+                </tr>`;
+            }
+            const monthNum = parseInt(monthKey);
+            const label = `2026 年 ${monthNum} 月`;
+            const totalReach = weeks.reduce((s, w) => s + (platform === 'fb' ? (w.fb_reach || 0) : (w.ig_reach || 0)), 0);
+            const totalFollow = weeks.reduce((s, w) => s + (platform === 'fb' ? (w.fb_followers || 0) : (w.ig_followers || 0)), 0);
+            const expanded = expandedMonths.has(monthKey);
+            const isCurrent = monthNum === currentMonthNum;
+            const headerStyle = isCurrent ? ' style="background:#fff8e1 !important; border-left:4px solid #c99700;"' : '';
+            return `<tr class="month-group-header" data-weekly-toggle="${platform}-${monthKey}"${headerStyle}>
+                <td colspan="${colSpan}"><span class="month-toggle">${expanded ? '▼' : '▶'}</span>${label}${isCurrent ? ' 📍' : ''}<span class="month-stats">${weeks.length} 週　|　觸及 ${this.fmt(totalReach)}　|　追蹤 +${this.fmt(totalFollow)}</span></td>
+            </tr>`;
+        };
+
+        let html = '';
+
+        // FB Section
+        html += `<div class="card">
+            <div class="section-header">
+                <span class="platform-badge fb">FB</span>
+                <h3>Facebook</h3>
+                <span class="owner-name">負責人：Clara Chang</span>
+            </div>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th>週次</th>
+                    <th>自然觸及 <span class="badge-src badge-auto">自動</span></th>
+                    <th>達成率 <span class="badge-src badge-calc">計算</span></th>
+                    <th>新增淨追蹤 <span class="badge-src badge-auto">自動</span></th>
+                    <th>達成率 <span class="badge-src badge-calc">計算</span></th>
+                </tr></thead>
+                <tbody>
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="fb" data-metric="reach">${this.fmt(GOALS.fb.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="fb" data-metric="followers">${this.fmt(GOALS.fb.weekly.followers)}</span></td><td>--</td></tr>
+                <tr><td colspan="5" class="goal-source-note" id="fb-goal-note">月目標 ${this.fmt(GOALS.fb.monthly.reach)} 觸及 / ${this.fmt(GOALS.fb.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.fb.q1.reach)} 觸及 / ${this.fmt(GOALS.fb.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
+
+        // Order: current month → future weeks → older months
+        const dataMonths = monthGroups.filter(k => k !== '_future').reverse();
+        const sortedFbMonths = [];
+        if (dataMonths.length > 0) sortedFbMonths.push(dataMonths[0]); // current month
+        if (monthMap.has('_future')) sortedFbMonths.push('_future');    // future weeks
+        sortedFbMonths.push(...dataMonths.slice(1));                    // older months
+        sortedFbMonths.forEach(monthKey => {
+            const weeks = monthMap.get(monthKey);
+            html += renderMonthHeader(monthKey, weeks, 'fb', 5);
+            weeks.forEach(w => { html += renderFbWeekRow(w, monthKey); });
+        });
+
+        html += `</tbody></table></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 自然觸及</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(fbMonthReach)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(fbReachPct)}" style="width:${Math.min(fbReachPct, 100)}%"></div></div>
+                        <span class="progress-label">${fbReachPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbReachGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.fb.weekly.reach)} × 4</span></div>
+                    ${fbReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
+                </div>
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 新增追蹤</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(fbMonthFollowers)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(fbFollowPct)}" style="width:${Math.min(fbFollowPct, 100)}%"></div></div>
+                        <span class="progress-label">${fbFollowPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(fbFollowGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.fb.weekly.followers)} × 4</span></div>
+                    ${fbFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(fbFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(fbFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
+                </div>
+            </div>
+            <div class="pace-projection">目前 Q1 進度 ${fbQ1PacePct}%，按此速度預估季末達成 ${fbQ1ProjectedPct}%（預估 ${this.fmt(fbQ1Projected)} / 目標 ${this.fmt(GOALS.fb.q1.reach)}）</div>
+        </div>`;
+
+        // IG Section
+        html += `<div class="card">
+            <div class="section-header">
+                <span class="platform-badge ig">IG</span>
+                <h3>Instagram</h3>
+                <span class="owner-name">負責人：Mike Chen</span>
+            </div>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th>週次</th>
+                    <th>自然觸及 <span class="badge-src badge-auto">自動</span></th>
+                    <th>達成率 <span class="badge-src badge-calc">計算</span></th>
+                    <th>新增淨追蹤 <span class="badge-src badge-auto">自動</span></th>
+                    <th>達成率 <span class="badge-src badge-calc">計算</span></th>
+                    <th>互動數 <span class="badge-src badge-auto">自動</span></th>
+                </tr></thead>
+                <tbody>
+                <tr class="target-row"><td>🎯 週目標 <span class="badge-src badge-manual">手動</span></td><td><span class="editable-goal" data-platform="ig" data-metric="reach">${this.fmt(GOALS.ig.weekly.reach)}</span></td><td>--</td><td><span class="editable-goal" data-platform="ig" data-metric="followers">${this.fmt(GOALS.ig.weekly.followers)}</span></td><td>--</td><td>--</td></tr>
+                <tr><td colspan="6" class="goal-source-note" id="ig-goal-note">月目標 ${this.fmt(GOALS.ig.monthly.reach)} 觸及 / ${this.fmt(GOALS.ig.monthly.followers)} 追蹤　｜　季目標 ${this.fmt(GOALS.ig.q1.reach)} 觸及 / ${this.fmt(GOALS.ig.q1.followers)} 追蹤　｜　年度目標 ${this.fmt(GOALS.annual_2026.reach)} 觸及 / ${this.fmt(GOALS.annual_2026.followers)} 追蹤　｜　<span style="background:${this.goalSource.label === '模擬器設定' ? 'rgba(201,151,0,0.12)' : this.goalSource.label === '手動編輯' ? 'rgba(108,92,231,0.12)' : 'rgba(108,117,125,0.12)'}; color:${this.goalSource.label === '模擬器設定' ? '#c99700' : this.goalSource.label === '手動編輯' ? '#6C5CE7' : '#6b7280'}; padding:1px 6px; border-radius:4px; font-weight:600;">來源：${this.goalSource.label}${this.goalSource.time ? ' ' + this.goalSource.time : ''}</span></td></tr>`;
+
+        // Reverse order: newest month first, future weeks last
+        // Order: current month → future weeks → older months
+        const igDataMonths = monthGroups.filter(k => k !== '_future').reverse();
+        const sortedIgMonths = [];
+        if (igDataMonths.length > 0) sortedIgMonths.push(igDataMonths[0]);
+        if (monthMap.has('_future')) sortedIgMonths.push('_future');
+        sortedIgMonths.push(...igDataMonths.slice(1));
+        sortedIgMonths.forEach(monthKey => {
+            const weeks = monthMap.get(monthKey);
+            html += renderMonthHeader(monthKey, weeks, 'ig', 6);
+            weeks.forEach(w => { html += renderIgWeekRow(w, monthKey); });
+        });
+
+        html += `</tbody></table></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 自然觸及</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(igMonthReach)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(igReachPct)}" style="width:${Math.min(igReachPct, 100)}%"></div></div>
+                        <span class="progress-label">${igReachPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igReachGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.ig.weekly.reach)} × 4</span></div>
+                    ${igReachGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igReachGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igReachGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
+                </div>
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${currentMonth}目標進度 — 新增追蹤</div>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-primary);">${this.fmt(igMonthFollowers)}</div>
+                    <div class="progress-row" style="margin:8px 0 4px;">
+                        <div class="progress-track"><div class="progress-fill ${progressColor(igFollowPct)}" style="width:${Math.min(igFollowPct, 100)}%"></div></div>
+                        <span class="progress-label">${igFollowPct}%</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary);">目標 <strong style="color:var(--text-primary);">${this.fmt(igFollowGoal)}</strong> <span style="font-size:10px; color:#999;">= 週目標 ${this.fmt(GOALS.ig.weekly.followers)} × 4</span></div>
+                    ${igFollowGap > 0 ? `<div style="font-size:11px; color:var(--negative); margin-top:6px;">差 ${this.fmt(igFollowGap)}，剩 ${remainWeeks} 週需每週 ${this.fmt(Math.ceil(igFollowGap / remainWeeks))}</div>` : `<div style="font-size:11px; color:var(--positive); margin-top:6px;">✓ 本月已達成</div>`}
+                </div>
+            </div>
+            <div class="pace-projection">目前 Q1 進度 ${igQ1PacePct}%，按此速度預估季末達成 ${igQ1ProjectedPct}%（預估 ${this.fmt(igQ1Projected)} / 目標 ${this.fmt(GOALS.ig.q1.reach)}）</div>
+        </div>`;
+
+        // Monthly Summary Table
+        const monthlySummary = monthGroups.filter(k => k !== '_future' && k !== 'unknown').reverse().map(monthKey => {
+            const weeks = monthMap.get(monthKey);
+            const monthNum = parseInt(monthKey);
+            return {
+                label: `${monthNum}月`,
+                fbReach: weeks.reduce((s, w) => s + (w.fb_reach || 0), 0),
+                fbFollowers: weeks.reduce((s, w) => s + (w.fb_followers || 0), 0),
+                igReach: weeks.reduce((s, w) => s + (w.ig_reach || 0), 0),
+                igFollowers: weeks.reduce((s, w) => s + (w.ig_followers || 0), 0),
+                weekCount: weeks.length,
+            };
+        });
+
+        html += `<div class="card">
+            <h4 style="font-size:14px; font-weight:600; margin-bottom:8px;">月度彙總 <span class="badge-src badge-calc">計算</span></h4>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th>月份</th>
+                    <th>FB 觸及</th>
+                    <th>FB 追蹤</th>
+                    <th>IG 觸及</th>
+                    <th>IG 追蹤</th>
+                    <th>週數</th>
+                </tr></thead><tbody>`;
+        monthlySummary.forEach(m => {
+            const isCurrent = m.label === currentMonth;
+            html += `<tr${isCurrent ? ' style="font-weight:600; background:#fffbeb;"' : ''}>
+                <td>${m.label}${isCurrent ? ' 📍' : ''}</td>
+                <td>${this.fmt(m.fbReach)}</td>
+                <td>${this.fmt(m.fbFollowers)}</td>
+                <td>${this.fmt(m.igReach)}</td>
+                <td>${this.fmt(m.igFollowers)}</td>
+                <td>${m.weekCount}</td>
+            </tr>`;
+        });
+        html += `</tbody></table></div></div>`;
+
+        // Line Section
+        const lineWeeks = WEEKLY_DATA.filter(w => w.line_opens !== null && w.line_opens !== undefined);
+        const recentLine = lineWeeks.slice(-8);
+        html += `<div class="card line-section">
+            <h4>Line 數據</h4>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th>週次</th>
+                    <th>開封數 <span class="badge-src badge-manual">手動</span></th>
+                    <th>淨新增聯絡人 <span class="badge-src badge-manual">手動</span></th>
+                </tr></thead>
+                <tbody>`;
+        recentLine.forEach(w => {
+            html += `<tr>
+                <td>${w.week}${w.dateRange ? ' (' + w.dateRange + ')' : ''}</td>
+                <td>${this.fmt(w.line_opens)}</td>
+                <td>${this.fmt(w.line_new)}</td>
+            </tr>`;
+        });
+        html += `</tbody></table></div></div>`;
+
+        panel.innerHTML = html;
+
+        // Bind click-to-edit on goal cells
+        panel.querySelectorAll('.editable-goal').forEach(span => {
+            span.title = '點擊編輯目標';
+            span.addEventListener('click', () => this.startGoalEdit(span));
+        });
+
+        // Bind month group toggle for weekly tracking tables
+        panel.querySelectorAll('.month-group-header[data-weekly-toggle]').forEach(header => {
+            header.addEventListener('click', () => {
+                const toggleKey = header.dataset.weeklyToggle;
+                const rows = panel.querySelectorAll(`.weekly-month-row[data-weekly-month="${toggleKey}"]`);
+                const toggleIcon = header.querySelector('.month-toggle');
+                const isCollapsed = rows.length > 0 && rows[0].style.display === 'none';
+                const isFutureGroup = toggleKey.endsWith('-_future');
+                rows.forEach(r => {
+                    if (isCollapsed) {
+                        // Expanding: restore future styling if applicable
+                        r.style.display = '';
+                        if (isFutureGroup) { r.style.opacity = '0.45'; r.style.fontStyle = 'italic'; }
+                    } else {
+                        r.style.display = 'none';
+                    }
+                });
+                if (toggleIcon) toggleIcon.textContent = isCollapsed ? '▼' : '▶';
+            });
+        });
+    }
+
+    startGoalEdit(span) {
+        const platform = span.dataset.platform;
+        const metric = span.dataset.metric;
+        const currentVal = GOALS[platform].weekly[metric];
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'goal-edit-input';
+        input.value = currentVal;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const commit = () => {
+            const newVal = parseInt(input.value);
+            if (!isNaN(newVal) && newVal > 0) {
+                GOALS[platform].weekly[metric] = newVal;
+                GOALS[platform].monthly[metric] = newVal * 4;
+                GOALS[platform].q1[metric] = newVal * 13;
+                // Sync annual goal: weekly × 4 × 12
+                GOALS.annual_2026[metric] = newVal * 4 * 12;
+                // Track goal source
+                this.goalSource = { label: '手動編輯', time: new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) };
+            }
+            this.renderWeeklyTracking();
+            this.renderOverview();
+        };
+
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { input.blur(); }
+            if (e.key === 'Escape') { this.renderWeeklyTracking(); }
+        });
+    }
+
+    // =============================
+    // TAB 4: POST ANALYSIS
+    // =============================
+    renderPostAnalysis() {
+        const panel = document.getElementById('tab-posts');
+        const f = this.postFilters;
+
+        // Filter bar
+        const platOpts = [['all', '全部'], ['FB', 'FB'], ['IG', 'IG']].map(([v, l]) =>
+            `<option value="${v}" ${f.platform === v ? 'selected' : ''}>${l}</option>`).join('');
+        const catOpts = [['all', '全部分類']].concat(POST_CATEGORIES.map(c => [c.name, c.name])).map(([v, l]) =>
+            `<option value="${v}" ${f.category === v ? 'selected' : ''}>${l}</option>`).join('');
+        const sortOpts = [['reach', '觸及數'], ['engagement', '互動數'], ['date', '日期'], ['month', '月份']].map(([v, l]) =>
+            `<option value="${v}" ${f.sortBy === v ? 'selected' : ''}>${l}</option>`).join('');
+
+        let filtered = [...POST_DATA];
+        if (f.platform !== 'all') filtered = filtered.filter(p => p.platform === f.platform);
+        if (f.category !== 'all') filtered = filtered.filter(p => p.category === f.category);
+        if (f.sortBy === 'reach') filtered.sort((a, b) => (b.organic_reach || 0) - (a.organic_reach || 0));
+        else if (f.sortBy === 'engagement') filtered.sort((a, b) => (b.engagement || 0) - (a.engagement || 0));
+        else filtered.sort((a, b) => a.date.localeCompare(b.date));
+
+        // Top 5 — respects platform filter
+        const top5Pool = f.platform !== 'all' ? POST_DATA.filter(p => p.platform === f.platform) : POST_DATA;
+        const top5 = [...top5Pool].sort((a, b) => (b.organic_reach || 0) - (a.organic_reach || 0)).slice(0, 5);
+        const top5Label = f.platform !== 'all' ? f.platform : '全平台';
+
+        let html = `<div class="card">
+            <div class="card-title" style="display:flex; align-items:center; gap:10px;">本期 Top 5 貼文
+                <div style="display:inline-flex; gap:4px; font-size:12px;">
+                    <button class="top5-plat-btn${f.platform === 'all' ? ' active' : ''}" data-plat="all">全部</button>
+                    <button class="top5-plat-btn${f.platform === 'FB' ? ' active' : ''}" data-plat="FB">FB</button>
+                    <button class="top5-plat-btn${f.platform === 'IG' ? ' active' : ''}" data-plat="IG">IG</button>
+                </div>
+            </div>
+            <div class="top-posts">`;
+        top5.forEach((p, i) => {
+            html += `<div class="top-post-card">
+                <div class="top-post-rank">${i + 1}</div>
+                <div class="top-post-title">${p.title}</div>
+                <div class="top-post-meta">${p.date} | <span class="platform-tag ${p.platform === 'FB' ? 'platform-fb' : 'platform-ig'}" style="font-size:10px;padding:1px 6px;">${p.platform}</span>${p.category ? ' | ' + p.category : ''}</div>
+                <div class="top-post-reach">${this.fmt(p.organic_reach)}<span style="font-size:10px; font-weight:400; color:var(--text-secondary); margin-left:4px;">累積</span></div>
+                <div style="font-size:13px; color:var(--text-primary); margin-top:6px; font-weight:600;">互動 ${this.fmt(p.engagement)}</div>
+            </div>`;
+        });
+        html += `</div></div>`;
+
+        // Filters + Batch
+        html += `<div class="card">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>平台</label><select id="paPlat">${platOpts}</select>
+                </div>
+                <div class="filter-group">
+                    <label>分類</label><select id="paCat">${catOpts}</select>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <label>排序</label><select id="paSort">${sortOpts}</select>
+                </div>
+            </div>
+            <div class="batch-actions">
+                <input type="checkbox" id="batchSelectAll"> <label for="batchSelectAll" style="font-size:13px;">全選</label>
+                <select id="batchCat"><option value="">選擇分類</option>${POST_CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}</select>
+                <button id="batchApply">批次套用分類</button>
+            </div>
+            <div class="table-wrap"><table>
+                <thead><tr>
+                    <th rowspan="2" style="width:30px;"></th>
+                    <th rowspan="2">日期 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">星期</th>
+                    <th rowspan="2">平台</th>
+                    <th rowspan="2">貼文主題 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">分類 <span class="badge-src badge-manual">手動</span></th>
+                    <th colspan="3" style="text-align:center; border-bottom:2px solid var(--border);">自然觸及 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">總互動 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">連結點擊 <span class="badge-src badge-auto">自動</span></th>
+                    <th rowspan="2">點擊率 <span class="badge-src badge-calc">計算</span></th>
+                </tr><tr>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">W1（7天）</th>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">W2（14天）</th>
+                    <th style="font-size:11px; font-weight:500; color:var(--text-secondary);">累積</th>
+                </tr></thead><tbody>`;
+
+        let currentWeek = null;
+        const dateSorted = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
+        const postsToShow = (f.sortBy === 'date' || f.sortBy === 'month') ? dateSorted : filtered;
+
+        const renderPostRow = (p, idx) => {
+            const catObj = POST_CATEGORIES.find(c => c.name === p.category);
+            const catHTML = catObj ? `<span class="category-tag" style="background:${catObj.color}">${catObj.name}</span>` : (p.category || '<span class="val-null">未分類</span>');
+            return `<tr>
+                <td><input type="checkbox" class="post-check" data-idx="${idx}"></td>
+                <td>${p.date}</td>
+                <td>${p.weekday}</td>
+                <td><span class="platform-tag ${p.platform === 'FB' ? 'platform-fb' : 'platform-ig'}">${p.platform}</span></td>
+                <td style="text-align:left; max-width:200px;">${p.title}</td>
+                <td>${catHTML}</td>
+                <td>${p.reach_w1 != null ? this.fmt(p.reach_w1) : '<span class="val-null">待接入</span>'}</td>
+                <td>${p.reach_w2 != null ? this.fmt(p.reach_w2) : '<span class="val-null">待接入</span>'}</td>
+                <td>${this.fmt(p.organic_reach)}</td>
+                <td>${this.fmt(p.engagement)}</td>
+                <td>${this.fmt(p.link_clicks)}</td>
+                <td>${p.click_rate !== null ? p.click_rate.toFixed(2) + '%' : this.fmt(null)}</td>
+            </tr>`;
+        };
+
+        if (f.sortBy === 'month') {
+            // Group by month
+            const monthGroups = {};
+            postsToShow.forEach((p, idx) => {
+                const monthKey = p.date.substring(0, 7); // "2025/08" etc.
+                if (!monthGroups[monthKey]) monthGroups[monthKey] = [];
+                monthGroups[monthKey].push({ post: p, idx });
+            });
+            // Sort months descending (newest first)
+            const sortedMonths = Object.keys(monthGroups).sort().reverse();
+            sortedMonths.forEach(monthKey => {
+                const posts = monthGroups[monthKey];
+                const totalReach = posts.reduce((s, x) => s + (x.post.organic_reach || 0), 0);
+                const totalEng = posts.reduce((s, x) => s + (x.post.engagement || 0), 0);
+                const [y, m] = monthKey.split('/');
+                const label = `${y} 年 ${parseInt(m)} 月`;
+                html += `<tr class="month-group-header" data-month="${monthKey}">
+                    <td colspan="12"><span class="month-toggle">▼</span>${label}<span class="month-stats">${posts.length} 篇　|　觸及 ${this.fmt(totalReach)}　|　互動 ${this.fmt(totalEng)}　|　篇均觸及 ${this.fmt(Math.round(totalReach / posts.length))}</span></td>
+                </tr>`;
+                posts.forEach(x => { html += renderPostRow(x.post, x.idx).replace('<tr>', `<tr class="month-row" data-month="${monthKey}">`); });
+            });
+        } else {
+            postsToShow.forEach((p, idx) => {
+                if (f.sortBy === 'date' && p.week_label && p.week_label !== currentWeek) {
+                    currentWeek = p.week_label;
+                    html += `<tr class="week-header-row"><td colspan="12">${p.week_label}${p.week_total_reach ? '  |  觸及 ' + this.fmt(p.week_total_reach) + '  |  追蹤 ' + (p.week_followers_delta !== null ? (p.week_followers_delta >= 0 ? '+' : '') + p.week_followers_delta : '--') : ''}</td></tr>`;
+                }
+                html += renderPostRow(p, idx);
+            });
+        }
+
+        html += `</tbody></table></div></div>`;
+
+        // Category Performance Chart
+        const catStats = {};
+        POST_DATA.forEach(p => {
+            if (!p.category) return;
+            if (!catStats[p.category]) catStats[p.category] = { totalReach: 0, count: 0 };
+            catStats[p.category].totalReach += p.organic_reach || 0;
+            catStats[p.category].count++;
+        });
+
+        html += `<div class="card">
+            <div class="card-title">分類平均觸及表現</div>
+            <div class="chart-container" style="height:250px;"><canvas id="chartCategoryPerf"></canvas></div>
+        </div>`;
+
+        panel.innerHTML = html;
+
+        // Bind filter events
+        document.getElementById('paPlat').addEventListener('change', e => { this.postFilters.platform = e.target.value; this.renderPostAnalysis(); });
+        document.getElementById('paCat').addEventListener('change', e => { this.postFilters.category = e.target.value; this.renderPostAnalysis(); });
+        document.getElementById('paSort').addEventListener('change', e => { this.postFilters.sortBy = e.target.value; this.renderPostAnalysis(); });
+
+        // Top 5 platform toggle
+        document.querySelectorAll('.top5-plat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const plat = btn.dataset.plat;
+                this.postFilters.platform = plat === 'all' ? 'all' : plat;
+                document.getElementById('paPlat').value = this.postFilters.platform;
+                this.renderPostAnalysis();
+            });
+        });
+
+        // Select all checkbox
+        document.getElementById('batchSelectAll').addEventListener('change', e => {
+            document.querySelectorAll('.post-check').forEach(cb => cb.checked = e.target.checked);
+        });
+
+        // Month group toggle (collapse/expand)
+        document.querySelectorAll('.month-group-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const month = header.dataset.month;
+                const rows = document.querySelectorAll(`.month-row[data-month="${month}"]`);
+                const toggle = header.querySelector('.month-toggle');
+                const isHidden = rows[0] && rows[0].style.display === 'none';
+                rows.forEach(r => r.style.display = isHidden ? '' : 'none');
+                toggle.textContent = isHidden ? '▼' : '▶';
+            });
+        });
+
+        // Category chart
+        const catLabels = Object.keys(catStats);
+        const catAvgs = catLabels.map(k => Math.round(catStats[k].totalReach / catStats[k].count));
+        const catColors = catLabels.map(k => {
+            const c = POST_CATEGORIES.find(pc => pc.name === k);
+            return c ? c.color : '#6c757d';
+        });
+
+        const ctxCat = document.getElementById('chartCategoryPerf').getContext('2d');
+        if (this.charts.catPerf) this.charts.catPerf.destroy();
+        this.charts.catPerf = new Chart(ctxCat, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{ label: '平均觸及', data: catAvgs, backgroundColor: catColors, borderRadius: 6 }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `平均觸及：${ctx.parsed.x.toLocaleString()}` } } },
+                scales: { x: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v / 1000) + 'K' : v } } }
+            }
+        });
+    }
+
+    // =============================
+    // TAB 5: GOAL SIMULATOR
+    // =============================
+    renderSimulator() {
+        const panel = document.getElementById('tab-simulator');
+
+        const metrics = [
+            { id: 'organic_reach', name: '自然觸及' },
+            { id: 'total_reach', name: '總觸及' },
+            { id: 'followers', name: '新增追蹤' },
+            { id: 'engagement', name: '互動數' },
+        ];
+        const metricOpts = metrics.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+
+        // Base period options: recent months with data
+        const basePeriods = [];
+        [2025, 2026].forEach(y => {
+            for (let m = 0; m < 12; m++) {
+                const fb = MONTHLY_DATA.fb[y] ? MONTHLY_DATA.fb[y][m] : null;
+                const ig = MONTHLY_DATA.ig[y] ? MONTHLY_DATA.ig[y][m] : null;
+                if (fb || ig) basePeriods.push({ year: y, month: m, label: `${y}/${m + 1}月` });
+            }
+        });
+        const baseOpts = basePeriods.reverse().map((p, i) => `<option value="${p.year}-${p.month}" ${i === 0 ? 'selected' : ''}>${p.label}</option>`).join('');
+
+        let html = `<div class="card">
+            <div class="card-title">目標模擬器</div>
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                選擇指標與基期，調整月成長率模擬未來 12 個月目標軌跡。確認後將同步更新週報追蹤的目標與達成率。
+            </p>
+            <div class="filter-bar" style="margin-bottom:16px;">
+                <div class="filter-group">
+                    <label>指標</label>
+                    <select id="simMetric">${metricOpts}</select>
+                </div>
+                <div class="filter-group">
+                    <label>平台</label>
+                    <select id="simPlatform">
+                        <option value="all">全部（FB + IG）</option>
+                        <option value="fb">Facebook</option>
+                        <option value="ig">Instagram</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>基期 <span class="badge-src badge-auto">自動</span></label>
+                    <select id="simBase">${baseOpts}</select>
+                </div>
+            </div>
+            <div style="background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <label style="font-size:13px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">月成長率 <span class="badge-src badge-manual">手動</span></label>
+                    <input type="range" id="simRate" min="0.5" max="30" step="0.5" value="5" style="flex:1; min-width:200px;">
+                    <span id="simRateLabel" style="font-size:20px; font-weight:700; color:var(--text-primary); min-width:60px;">5.0%</span>
+                </div>
+                <div class="sim-presets" style="margin-top:10px;">
+                    <button data-rate="2">保守 (2%)</button>
+                    <button data-rate="5">穩健 (5%)</button>
+                    <button data-rate="10">積極 (10%)</button>
+                    <button data-rate="15">衝刺 (15%)</button>
+                    <button data-rate="20">爆發 (20%)</button>
+                </div>
+            </div>
+            <div class="chart-container" style="height:350px;"><canvas id="chartSimulator"></canvas></div>
+            <div class="sim-result" id="simResult"></div>
+            <button class="confirm-btn" id="simConfirm">確認此目標設定 → 同步至週報追蹤</button>
+        </div>`;
+
+        panel.innerHTML = html;
+
+        // Bind events
+        const rate = document.getElementById('simRate');
+        const rateLabel = document.getElementById('simRateLabel');
+        rate.addEventListener('input', () => { rateLabel.textContent = rate.value + '%'; this.updateSimulator(); });
+
+        document.querySelectorAll('.sim-presets button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                rate.value = btn.dataset.rate;
+                rateLabel.textContent = btn.dataset.rate + '%';
+                this.updateSimulator();
+            });
+        });
+
+        ['simMetric', 'simPlatform', 'simBase'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => this.updateSimulator());
+        });
+
+        document.getElementById('simConfirm').addEventListener('click', () => {
+            this.syncGoalsFromSimulator();
+        });
+
+        this.updateSimulator();
+    }
+
+    updateSimulator() {
+        const metric = document.getElementById('simMetric').value;
+        const platform = document.getElementById('simPlatform').value;
+        const baseVal = document.getElementById('simBase').value.split('-');
+        const baseYear = parseInt(baseVal[0]);
+        const baseMonth = parseInt(baseVal[1]);
+        const growthRate = parseFloat(document.getElementById('simRate').value) / 100;
+
+        const baseData = this.getMonthData(platform, baseYear, baseMonth);
+        let baseValue = 0;
+        if (baseData) {
+            switch (metric) {
+                case 'organic_reach': baseValue = baseData.organic || 0; break;
+                case 'total_reach': baseValue = baseData.total || 0; break;
+                case 'followers': baseValue = baseData.followers || 0; break;
+                case 'engagement': baseValue = baseData.engagement || 0; break;
+            }
+        }
+
+        // Generate 12-month projection
+        const labels = [];
+        const actuals = [];
+        const targets = [];
+        let curYear = baseYear;
+        let curMonth = baseMonth;
+
+        for (let i = 0; i < 12; i++) {
+            curMonth++;
+            if (curMonth > 11) { curMonth = 0; curYear++; }
+            labels.push(`${curYear}/${curMonth + 1}月`);
+
+            const md = this.getMonthData(platform, curYear, curMonth);
+            let actual = null;
+            if (md) {
+                switch (metric) {
+                    case 'organic_reach': actual = md.organic; break;
+                    case 'total_reach': actual = md.total; break;
+                    case 'followers': actual = md.followers; break;
+                    case 'engagement': actual = md.engagement; break;
+                }
+            }
+            actuals.push(actual);
+            targets.push(Math.round(baseValue * Math.pow(1 + growthRate, i + 1)));
+        }
+
+        const ctx = document.getElementById('chartSimulator').getContext('2d');
+        if (this.charts.simulator) this.charts.simulator.destroy();
+        this.charts.simulator = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: '實際值',
+                        data: actuals,
+                        backgroundColor: 'rgba(108,92,231,0.6)',
+                        borderRadius: 4,
+                        order: 2,
+                    },
+                    {
+                        type: 'line',
+                        label: '目標軌跡',
+                        data: targets,
+                        borderColor: '#fdcb6e',
+                        borderWidth: 3,
+                        borderDash: [6, 3],
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fdcb6e',
+                        fill: false,
+                        order: 1,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toLocaleString() : '--'}` } },
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v } }
+                }
+            }
+        });
+
+        // Result summary — show the actionable weekly/monthly/quarterly goals
+        const nextMonthTarget = targets[0]; // first projected month
+        const weeklyTarget = Math.round(nextMonthTarget / 4);
+        const quarterlyTarget = nextMonthTarget * 3;
+        const month12Target = targets[11];
+        const annualTarget = targets.reduce((a, b) => a + b, 0);
+        const metricLabel = metric.includes('reach') ? '觸及' : metric === 'followers' ? '追蹤' : '互動';
+        const platLabel = platform === 'all' ? 'FB + IG' : platform.toUpperCase();
+
+        document.getElementById('simResult').innerHTML = `
+            <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">基期值 ${this.fmt(baseValue)}（${platLabel}）× 月成長率 ${(growthRate * 100).toFixed(1)}% → 確認後同步至週報追蹤</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">
+                <div style="background:#fff; border-radius:8px; padding:14px; border:2px solid #c99700;">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-secondary);">週目標${metricLabel}</div>
+                    <div style="font-size:28px; font-weight:700; color:#c99700; margin:4px 0;">${this.fmt(weeklyTarget)}</div>
+                    <div style="font-size:11px; color:var(--text-secondary);">= 月目標 ÷ 4</div>
+                </div>
+                <div style="background:#fff; border-radius:8px; padding:14px; border:1px solid var(--border);">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-secondary);">月目標${metricLabel}</div>
+                    <div style="font-size:28px; font-weight:700; color:var(--text-primary); margin:4px 0;">${this.fmt(nextMonthTarget)}</div>
+                    <div style="font-size:11px; color:var(--text-secondary);">= 基期 × (1+${(growthRate * 100).toFixed(1)}%)</div>
+                </div>
+                <div style="background:#fff; border-radius:8px; padding:14px; border:1px solid var(--border);">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-secondary);">季目標${metricLabel}</div>
+                    <div style="font-size:28px; font-weight:700; color:var(--text-primary); margin:4px 0;">${this.fmt(quarterlyTarget)}</div>
+                    <div style="font-size:11px; color:var(--text-secondary);">= 月目標 × 3</div>
+                </div>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:12px;">第 12 個月目標：${this.fmt(month12Target)}　|　年度累計：${this.fmt(annualTarget)}</div>
+        `;
+    }
+
+    syncGoalsFromSimulator() {
+        const metric = document.getElementById('simMetric').value;
+        const platform = document.getElementById('simPlatform').value;
+        const growthRate = parseFloat(document.getElementById('simRate').value) / 100;
+        const baseVal = document.getElementById('simBase').value.split('-');
+        const baseYear = parseInt(baseVal[0]);
+        const baseMonth = parseInt(baseVal[1]);
+        const baseData = this.getMonthData(platform, baseYear, baseMonth);
+
+        if (!baseData) { alert('找不到基期資料'); return; }
+
+        let baseValue = 0;
+        switch (metric) {
+            case 'organic_reach': baseValue = baseData.organic || 0; break;
+            case 'total_reach': baseValue = baseData.total || 0; break;
+            case 'followers': baseValue = baseData.followers || 0; break;
+            case 'engagement': baseValue = baseData.engagement || 0; break;
+        }
+
+        // Derive monthly target (next month's projected value)
+        const monthlyTarget = Math.round(baseValue * (1 + growthRate));
+        const weeklyTarget = Math.round(monthlyTarget / 4);
+        const quarterlyTarget = Math.round(monthlyTarget * 3);
+
+        // Determine which goal field to update
+        const isReach = metric === 'organic_reach' || metric === 'total_reach';
+        const goalKey = isReach ? 'reach' : 'followers';
+
+        const updatePlatformGoals = (p) => {
+            GOALS[p].weekly[goalKey] = weeklyTarget;
+            GOALS[p].monthly[goalKey] = monthlyTarget;
+            GOALS[p].q1[goalKey] = quarterlyTarget;
+        };
+
+        if (platform === 'all' || platform === 'fb') updatePlatformGoals('fb');
+        if (platform === 'all' || platform === 'ig') updatePlatformGoals('ig');
+
+        // Update annual goal: sum of 12 monthly projected targets
+        const annualTarget = Array.from({length: 12}, (_, i) => Math.round(baseValue * Math.pow(1 + growthRate, i + 1))).reduce((a, b) => a + b, 0);
+        GOALS.annual_2026[goalKey] = annualTarget;
+
+        // Track goal source
+        this.goalSource = { label: '模擬器設定', time: new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) };
+
+        // Re-render weekly tracking + overview to reflect new goals
+        this.renderWeeklyTracking();
+        this.renderOverview();
+
+        // Show confirmation with details
+        const platLabel = platform === 'all' ? 'FB + IG' : platform.toUpperCase();
+        const metricLabel = isReach ? '觸及' : '追蹤';
+        alert(`✅ 目標已更新！\n\n平台：${platLabel}｜指標：${metricLabel}\n週目標：${weeklyTarget.toLocaleString()}\n月目標：${monthlyTarget.toLocaleString()}\n季目標：${quarterlyTarget.toLocaleString()}\n年度目標：${annualTarget.toLocaleString()}\n\n週報追蹤 + 總覽 YTD 已同步更新。Phase 2 正式版將儲存至 Supabase。`);
+
+        // Switch to weekly tab so user can see the updated goals
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-tab="weekly"]').classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-weekly').classList.add('active');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    new Dashboard();
+});
+</script>
+</body>
+</html>
