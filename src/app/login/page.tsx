@@ -1,18 +1,33 @@
 "use client"
 
+import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 export default function LoginPage() {
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
   const handleGoogleLogin = async () => {
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      setLoading(true)
+      setError(null)
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (authError) {
+        setError(authError.message)
+        setLoading(false)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "登入時發生未知錯誤")
+      setLoading(false)
+    }
   }
 
   return (
@@ -28,8 +43,14 @@ export default function LoginPage() {
           <CardDescription>社群媒體儀表板</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <p className="mb-3 rounded-md bg-red-50 p-2 text-xs text-red-600">
+              {error}
+            </p>
+          )}
           <Button
             onClick={handleGoogleLogin}
+            disabled={loading}
             variant="outline"
             className="w-full"
           >
@@ -51,7 +72,7 @@ export default function LoginPage() {
                 fill="#EA4335"
               />
             </svg>
-            使用 Google 帳號登入
+            {loading ? "登入中..." : "使用 Google 帳號登入"}
           </Button>
         </CardContent>
       </Card>
