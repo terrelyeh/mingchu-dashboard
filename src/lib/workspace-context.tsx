@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 export type Workspace = {
   id: string
@@ -11,9 +12,11 @@ export type Workspace = {
 type WorkspaceContextValue = {
   workspaces: Workspace[]
   activeWorkspace: Workspace | null
+  loading: boolean
   setActiveWorkspaceId: (id: string) => void
   setWorkspaces: (ws: Workspace[]) => void
   addWorkspace: (ws: Workspace) => void
+  refreshWorkspaces: () => Promise<void>
 }
 
 const DEMO_WS: Workspace = {
@@ -26,15 +29,42 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([DEMO_WS])
   const [activeId, setActiveId] = useState<string | null>(DEMO_WS.id)
+  const [loading, setLoading] = useState(true)
 
   const activeWorkspace = workspaces.find((w) => w.id === activeId) ?? workspaces[0] ?? null
 
-  // Auto-select first workspace when loaded
-  useEffect(() => {
-    if (!activeId && workspaces.length > 0) {
-      setActiveId(workspaces[0].id)
+  const fetchWorkspaces = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("workspaces")
+        .select("id, name, description")
+        .order("created_at", { ascending: true })
+
+      if (error) {
+        console.warn("Failed to fetch workspaces, using defaults:", error.message)
+        // Keep the demo workspace as fallback
+        return
+      }
+
+      if (data && data.length > 0) {
+        setWorkspaces(data)
+        // If current activeId is not in fetched list, reset to first
+        const saved = localStorage.getItem("mingchu-active-workspace")
+        const targetId = saved && data.some((w) => w.id === saved) ? saved : data[0].id
+        setActiveId(targetId)
+      }
+    } catch {
+      console.warn("Workspace fetch error, using defaults")
+    } finally {
+      setLoading(false)
     }
-  }, [workspaces, activeId])
+  }, [])
+
+  // Fetch workspaces on mount
+  useEffect(() => {
+    fetchWorkspaces()
+  }, [fetchWorkspaces])
 
   const setActiveWorkspaceId = useCallback((id: string) => {
     setActiveId(id)
@@ -43,25 +73,29 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Restore from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("mingchu-active-workspace")
-    if (saved) setActiveId(saved)
-  }, [])
-
   const addWorkspace = useCallback((ws: Workspace) => {
     setWorkspaces((prev) => [...prev, ws])
     setActiveId(ws.id)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mingchu-active-workspace", ws.id)
+    }
   }, [])
+
+  const refreshWorkspaces = useCallback(async () => {
+    setLoading(true)
+    await fetchWorkspaces()
+  }, [fetchWorkspaces])
 
   return (
     <WorkspaceContext.Provider
       value={{
         workspaces,
         activeWorkspace,
+        loading,
         setActiveWorkspaceId,
         setWorkspaces,
         addWorkspace,
+        refreshWorkspaces,
       }}
     >
       {children}

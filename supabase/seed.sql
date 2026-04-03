@@ -203,3 +203,23 @@ INSERT INTO weekly_metrics (workspace_id, platform, year, week, week_start, reac
   ('00000000-0000-0000-0000-000000000001', 'instagram', 2026, 12, '2026-03-14', 13581, 236, 'manual'),
   ('00000000-0000-0000-0000-000000000001', 'instagram', 2026, 13, '2026-03-21', 18426, 197, 'manual'),
   ('00000000-0000-0000-0000-000000000001', 'instagram', 2026, 14, '2026-03-28', 15031, 127, 'manual');
+
+-- ============================================================
+-- 6. Demo Posts (Taiwan workspace)
+--    category_id references are dynamic; use subqueries
+-- ============================================================
+INSERT INTO posts (workspace_id, platform, post_id, message, published_at, organic_reach, total_engagement, link_clicks, reach_w1, reach_w2, category_id, source) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_001', '【主廚專訪】米其林三星主廚分享料理哲學，從食材到擺盤的極致追求', '2026-02-15 10:00:00+08', 45200, 3210, 890, 38000, 43500, (SELECT id FROM post_categories WHERE name = '2B 採訪報導' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_002', '台北最新日式割烹開幕！隱身巷弄的 omakase 體驗', '2026-02-12 14:30:00+08', 62800, 4580, 1250, 55000, 61200, (SELECT id FROM post_categories WHERE name = '2C 餐飲食事' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_003', 'MINGCHU 品牌五週年！感謝每一位支持我們的讀者', '2026-02-08 09:00:00+08', 128500, 12340, 2100, 95000, 125000, (SELECT id FROM post_categories WHERE name = '品牌聚焦' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_004', '2026 餐飲趨勢報告：永續食材、在地化與 AI 點餐的崛起', '2026-02-01 11:00:00+08', 35600, 2890, 1680, 30000, 34200, (SELECT id FROM post_categories WHERE name = '產業動態' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_005', '週末限定！台北 5 間必訪 brunch 推薦', '2026-01-25 08:00:00+08', 78400, 6720, 950, 65000, 76000, (SELECT id FROM post_categories WHERE name = '2C 餐飲食事' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_006', '【活動預告】2026 台北國際美食展 MINGCHU 攤位搶先看', '2026-01-20 16:00:00+08', 42100, 3560, 2340, 36000, 40800, (SELECT id FROM post_categories WHERE name = '活動推廣' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_007', '年菜特輯：六道經典台菜的現代演繹', '2026-01-15 12:00:00+08', 92300, 8910, 780, 80000, 90500, (SELECT id FROM post_categories WHERE name = '2C 餐飲食事' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'facebook', 'fb_post_008', '專訪：從產地到餐桌，有機農場主的堅持', '2026-01-10 10:30:00+08', 28900, 2150, 620, 24000, 27800, (SELECT id FROM post_categories WHERE name = '2B 採訪報導' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'instagram', 'ig_post_001', '冬日暖心甜點 草莓千層的完美層次', '2026-02-14 15:00:00+08', 18500, 2840, NULL, 15000, 17800, (SELECT id FROM post_categories WHERE name = '2C 餐飲食事' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'instagram', 'ig_post_002', 'Behind the scenes 拍攝日常', '2026-02-10 18:00:00+08', 12300, 1960, NULL, 10500, 11800, (SELECT id FROM post_categories WHERE name = '品牌聚焦' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'instagram', 'ig_post_003', '台南古早味巡禮 你吃過幾間？', '2026-02-05 12:00:00+08', 35600, 5420, NULL, 28000, 34000, (SELECT id FROM post_categories WHERE name = '2C 餐飲食事' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'instagram', 'ig_post_004', '咖啡豆產區指南 衣索比亞 vs 哥倫比亞', '2026-01-28 09:00:00+08', 22100, 3180, NULL, 18000, 21500, (SELECT id FROM post_categories WHERE name = '產業動態' LIMIT 1), 'manual'),
+  ('00000000-0000-0000-0000-000000000001', 'instagram', 'ig_post_005', '新年快樂！2026 MINGCHU 繼續陪你吃好料', '2026-01-01 00:01:00+08', 45800, 7650, NULL, 38000, 44200, (SELECT id FROM post_categories WHERE name = '品牌聚焦' LIMIT 1), 'manual')
+ON CONFLICT (post_id) DO NOTHING;

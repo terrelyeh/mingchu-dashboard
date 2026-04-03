@@ -242,7 +242,25 @@ INSERT INTO post_categories (name, color, sort_order) VALUES
   ('活動推廣', '#8E44AD', 5),
   ('其他', '#95A5A6', 99);
 
--- 15. Seed: Allowed users
+-- 15. Workspace UPDATE / DELETE policies (admin-only)
+CREATE POLICY "Admins can update workspace" ON workspaces FOR UPDATE
+  USING (EXISTS (
+    SELECT 1 FROM workspace_members WHERE workspace_id = workspaces.id AND user_id = auth.uid() AND role = 'admin'
+  ));
+
+CREATE POLICY "Admins can delete workspace" ON workspaces FOR DELETE
+  USING (EXISTS (
+    SELECT 1 FROM workspace_members WHERE workspace_id = workspaces.id AND user_id = auth.uid() AND role = 'admin'
+  ));
+
+-- Allow whitelisted users to join workspaces themselves (for auto-join on login)
+CREATE POLICY "Users can join workspaces" ON workspace_members FOR INSERT
+  WITH CHECK (
+    user_id = auth.uid()
+    AND EXISTS (SELECT 1 FROM allowed_users WHERE email = auth.jwt()->>'email')
+  );
+
+-- 16. Seed: Allowed users
 INSERT INTO allowed_users (email, display_name) VALUES
   ('yoyoyo.chuhai@gmail.com', 'Terrel Yeh'),
   ('terrel.yeh@gmail.com', 'Terrelyeh'),

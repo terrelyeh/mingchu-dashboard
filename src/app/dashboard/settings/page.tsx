@@ -137,18 +137,26 @@ export default function SettingsPage() {
     [editingPic]
   )
 
+  const [catError, setCatError] = useState<string | null>(null)
+
   // Category CRUD
   const addCategory = async () => {
     const name = newCatName.trim()
     if (!name) return
     setSavingCat(true)
+    setCatError(null)
     const supabase = createClient()
     const maxOrder = categories.reduce((max, c) => Math.max(max, c.sort_order), 0)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("post_categories")
       .insert({ name, color: newCatColor, sort_order: maxOrder + 1 })
       .select("id, name, color, sort_order")
       .single()
+    if (error) {
+      setCatError(`新增分類失敗：${error.message}`)
+      setSavingCat(false)
+      return
+    }
     if (data) {
       setCategories((prev) => [...prev, data])
     }
@@ -216,17 +224,37 @@ export default function SettingsPage() {
     ])
   }
 
+  const [wsError, setWsError] = useState<string | null>(null)
+
   // Workspace CRUD
   const handleCreateWorkspace = async () => {
     const name = newWsName.trim()
     if (!name) return
+    setWsError(null)
     const supabase = createClient()
-    const { data } = await supabase
+
+    // 1. Create workspace
+    const { data, error } = await supabase
       .from("workspaces")
       .insert({ name })
       .select("id, name, description")
       .single()
+
+    if (error) {
+      setWsError(`建立失敗：${error.message}`)
+      return
+    }
+
     if (data) {
+      // 2. Auto-join as admin
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from("workspace_members").insert({
+          workspace_id: data.id,
+          user_id: user.id,
+          role: "admin",
+        })
+      }
       addWorkspace(data)
     }
     setNewWsName("")
@@ -235,8 +263,13 @@ export default function SettingsPage() {
   const handleRenameWorkspace = async (id: string) => {
     const name = renameValue.trim()
     if (!name) return
+    setWsError(null)
     const supabase = createClient()
-    await supabase.from("workspaces").update({ name }).eq("id", id)
+    const { error } = await supabase.from("workspaces").update({ name }).eq("id", id)
+    if (error) {
+      setWsError(`重新命名失敗：${error.message}`)
+      return
+    }
     setWorkspaces(
       workspaces.map((w) => (w.id === id ? { ...w, name } : w))
     )
@@ -246,11 +279,16 @@ export default function SettingsPage() {
   const handleDeleteWorkspace = async (id: string) => {
     if (workspaces.length <= 1) return
     if (!confirm("確定要刪除此工作區嗎？所有相關數據將一併刪除，此操作無法復原。")) return
+    setWsError(null)
     const supabase = createClient()
-    await supabase.from("workspaces").delete().eq("id", id)
-    setWorkspaces(workspaces.filter((w) => w.id !== id))
-    if (activeWorkspace?.id === id && workspaces.length > 1) {
-      const remaining = workspaces.filter((w) => w.id !== id)
+    const { error } = await supabase.from("workspaces").delete().eq("id", id)
+    if (error) {
+      setWsError(`刪除失敗：${error.message}`)
+      return
+    }
+    const remaining = workspaces.filter((w) => w.id !== id)
+    setWorkspaces(remaining)
+    if (activeWorkspace?.id === id && remaining.length > 0) {
       setActiveWorkspaceId(remaining[0].id)
     }
   }
@@ -303,6 +341,11 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {wsError && (
+                <p className="rounded-md bg-red-50 p-2 text-xs text-red-600">
+                  {wsError}
+                </p>
+              )}
               {/* Existing workspaces */}
               <div className="space-y-2">
                 {workspaces.map((ws) => (
@@ -517,6 +560,11 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {catError && (
+                <p className="mb-3 rounded-md bg-red-50 p-2 text-xs text-red-600">
+                  {catError}
+                </p>
+              )}
               {catLoading ? (
                 <div className="flex h-[80px] items-center justify-center text-muted-foreground">
                   載入中...
