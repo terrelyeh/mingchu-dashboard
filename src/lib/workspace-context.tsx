@@ -16,11 +16,16 @@ type WorkspaceContextValue = {
   addWorkspace: (ws: Workspace) => void
 }
 
+const DEMO_WS: Workspace = {
+  id: "00000000-0000-0000-0000-000000000001",
+  name: "MINGCHU 臺灣",
+}
+
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([DEMO_WS])
+  const [activeId, setActiveId] = useState<string | null>(DEMO_WS.id)
 
   const activeWorkspace = workspaces.find((w) => w.id === activeId) ?? workspaces[0] ?? null
 
