@@ -29,13 +29,11 @@ import {
   TargetIcon,
   SettingsIcon,
   ActivityIcon,
-  DollarSignIcon,
 } from "lucide-react"
 
 const navItems = [
   { title: "總覽", url: "/dashboard", icon: LayoutDashboardIcon },
-  { title: "營收追蹤", url: "/dashboard/revenue", icon: DollarSignIcon },
-  { title: "月度明細", url: "/dashboard/monthly", icon: CalendarIcon },
+{ title: "月度明細", url: "/dashboard/monthly", icon: CalendarIcon },
   { title: "週報追蹤", url: "/dashboard/weekly", icon: ClipboardListIcon },
   { title: "貼文分析", url: "/dashboard/posts", icon: FileTextIcon },
   { title: "目標模擬器", url: "/dashboard/simulator", icon: TargetIcon },
